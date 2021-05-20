@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: zepben.eas
+Version: 0.1
+Summary: Python SDK for interacting with the Evolve App Server
+Home-page: https://bitbucket.org/zepben/eas-python-client
+Author: Ramon Bouckaert
+Author-email: ramon.bouckaert@zepben.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
