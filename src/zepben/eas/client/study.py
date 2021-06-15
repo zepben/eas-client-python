@@ -48,7 +48,6 @@ class Study:
         sections: List[Section] = field(default_factory=lambda: [])
 
     name: str
-    created_by: str
     description: str
     tags: List[str]
     results: List[Result]

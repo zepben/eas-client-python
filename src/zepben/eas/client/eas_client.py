@@ -71,7 +71,6 @@ class EasClient:
                     "variables": {
                         "study": {
                             "name": study.name,
-                            "createdBy": study.created_by,
                             "description": study.description,
                             "tags": study.tags,
                             "styles": study.styles,
