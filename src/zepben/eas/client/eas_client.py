@@ -29,7 +29,7 @@ class EasClient:
             self,
             host: str,
             port: int,
-            authenticator: EasAuthenticator,
+            authenticator: EasAuthenticator = None,
             verify_certificate: bool = True
     ):
         """
@@ -44,6 +44,8 @@ class EasClient:
 
     def __get_request_headers(self, content_type: str = "application/json") -> dict:
         headers = {"content-type": content_type}
+        if self.__authenticator is None:
+            return headers
         if self.__authenticator.get_server_config().auth_method is not self.__authenticator.ServerConfig.AuthMethod.NONE:
             headers["authorization"] = "Bearer {token}".format(token=self.__authenticator.get_token())
         return headers
