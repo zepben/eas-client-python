@@ -8,7 +8,7 @@ import warnings
 
 import requests
 from urllib3.exceptions import InsecureRequestWarning
-from zepben.auth.eas.authenticator import EasAuthenticator
+from zepben.eas.client.util import construct_url
 from zepben.eas.client.study import Study
 
 __all__ = ["EasClient"]
@@ -62,7 +62,12 @@ class EasClient:
             if self.__verify_certificate is False:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             requests.post(
-                "{host}:{port}/api/graphql".format(host=self.__host, port=self.__port),
+                construct_url(
+                    protocol=self.__protocol,
+                    host=self.__host,
+                    port=self.__port,
+                    path="/api/graphql"
+                ),
                 headers=self.__get_request_headers(),
                 json={
                     "query": """
