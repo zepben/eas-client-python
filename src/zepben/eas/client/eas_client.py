@@ -10,6 +10,9 @@ import requests
 from urllib3.exceptions import InsecureRequestWarning
 from zepben.eas.client.util import construct_url
 from zepben.eas.client.study import Study
+from zepben.auth import ZepbenAuthenticator, create_authenticator, AuthMethod
+from hashlib import sha256
+from typing import Optional
 
 __all__ = ["EasClient"]
 
@@ -19,17 +22,22 @@ class EasClient:
     A class used to represent a client to the Evolve App Server, with methods that represent requests to its API.
     """
 
+    __protocol: str
     __host: str
     __port: int
+    __authenticator: Optional[ZepbenAuthenticator]
     __verify_certificate: bool = True
-    __access_token: str = None
-    __authenticator = None
+    __access_token: Optional[str] = None
 
     def __init__(
             self,
             host: str,
             port: int,
-            authenticator: EasAuthenticator = None,
+            client_id: str,
+            client_secret: Optional[str] = None,
+            username: Optional[str] = None,
+            password: Optional[str] = None,
+            protocol: str = "https",
             verify_certificate: bool = True
     ):
         """
@@ -37,17 +45,55 @@ class EasClient:
         :param port: The port on which to make requests to the Evolve App Server, e.g. 7624
         :param verify_certificate: Set this to False to disable SSH certificate verification
         """
+        self.__protocol = protocol
         self.__host = host
         self.__port = port
-        self.__authenticator = authenticator
         self.__verify_certificate = verify_certificate
+        self.__authenticator = create_authenticator(
+            conf_address=construct_url(
+                protocol="https",
+                host=self.__host,
+                port=self.__port,
+                path="/api/config/auth"
+            ),
+            verify_certificate=self.__verify_certificate,
+            auth_type_field="configType",
+            audience_field="audience",
+            issuer_domain_field="issuerDomain"
+        )
+        if self.__authenticator is not None:
+            if client_id is None:
+                raise ValueError(
+                    "Incompatible arguments passed to connect to secured Evolve App Server. You must specify (client_id) "
+                    "to establish a secure connection with token based auth.")
+            self.__authenticator.token_request_data.update({
+                'client_id': client_id,
+                'scope': 'trusted' if self.__authenticator.auth_method is AuthMethod.SELF else 'offline_access openid profile email0'
+            })
+            if username is not None and password is not None:
+                self.__authenticator.token_request_data.update({
+                    'grant_type': 'password',
+                    'username': username,
+                    'password': sha256(password.encode('utf-8')).hexdigest() if self.__authenticator.auth_method is AuthMethod.SELF else password
+                })
+                if client_secret is not None:
+                    self.__authenticator.token_request_data.update({'client_secret': client_secret})
+            elif client_secret is not None:
+                self.__authenticator.token_request_data.update({
+                    'grant_type': 'client_credentials',
+                    'client_secret': client_secret
+                })
+            else:
+                raise ValueError(
+                    "Incompatible arguments passed to connect to secured Evolve App Server. You must specify at least "
+                    "(username, password) or (client_secret) for a secure connection with token based auth.")
 
     def __get_request_headers(self, content_type: str = "application/json") -> dict:
         headers = {"content-type": content_type}
         if self.__authenticator is None:
             return headers
-        if self.__authenticator.get_server_config().auth_method is not self.__authenticator.ServerConfig.AuthMethod.NONE:
-            headers["authorization"] = "Bearer {token}".format(token=self.__authenticator.get_token())
+        else:
+            headers["authorization"] = self.__authenticator.fetch_token()
         return headers
 
     def upload_study(
