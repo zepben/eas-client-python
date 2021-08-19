@@ -35,6 +35,7 @@ jobs:
       - name: Build and publish
         run: |
           mkdir -p /pipcache
+          pip install --upgrade pip
           pip install --cache-dir /pipcache -r requirements.txt
           python setup.py sdist bdist_wheel
         shell: bash
