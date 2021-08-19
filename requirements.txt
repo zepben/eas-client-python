@@ -2,3 +2,4 @@ geojson~=2.5.0
 requests~=2.25.1
 setuptools~=41.2.0
 urllib3~=1.26.4
+zepben.auth~=0.5.0b1
