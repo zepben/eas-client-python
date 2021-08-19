@@ -23,9 +23,9 @@ setup(
     python_requires='>=3.7',
     install_requires=[
         "geojson~=2.5.0",
-        "requests~=2.25.1",
-        "setuptools~=41.2.0",
-        "urllib3~=1.26.4",
+        "requests~=2.26.0",
+        "setuptools~=57.4.0",
+        "urllib3~=1.26.6",
         "zepben.auth~=0.5.0b2",
     ]
 )
