@@ -74,6 +74,11 @@ class EasClient:
                     'client_id': client_id,
                     'scope': 'trusted' if self.__authenticator.auth_method is AuthMethod.SELF else 'offline_access openid profile email0'
                 })
+                self.__authenticator.refresh_request_data.update({
+                    "grant_type": "refresh_token",
+                    'client_id': client_id,
+                    'scope': 'trusted' if self.__authenticator.auth_method is AuthMethod.SELF else 'offline_access openid profile email0'
+                })
                 if username is not None and password is not None:
                     self.__authenticator.token_request_data.update({
                         'grant_type': 'password',
