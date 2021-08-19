@@ -1,0 +1,12 @@
+[run]
+source = zepben.eas
+
+[paths]
+source = src/
+
+[report]
+fail_under = 0
+skip_empty = True
+skip_covered = True
+exclude_lines =
+    if TYPE_CHECKING:

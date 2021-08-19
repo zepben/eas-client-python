@@ -5,15 +5,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  licence-check:
+  check-licence-and-test:
     runs-on: ubuntu-latest
-    container: python:3.7-alpine
+    container: python:3.7
     steps:
       - uses: actions/checkout@v2
 
       - name: Install dependencies
         run: |
-          apk add tar curl bash
+          pip install tox
 
       - name: Cache licence-check
         uses: actions/cache@v2
@@ -24,18 +24,11 @@ jobs:
       - name: Check licence
         uses: zepben/licence-check-action@main
         with:
-          LC_URL: ${{ secrets.LC_URL }}
+          PATH: src
 
-      - name: Cache python deps
-        uses: actions/cache@v2
-        with:
-          path: /pipcache
-          key: pip
-
-      - name: Build and publish
+      - name: Build and test
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
         run: |
-          mkdir -p /pipcache
-          pip install --upgrade pip
-          pip install --cache-dir /pipcache -r requirements.txt
-          python setup.py sdist bdist_wheel
+          tox
         shell: bash

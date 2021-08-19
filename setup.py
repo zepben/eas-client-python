@@ -9,9 +9,10 @@ from setuptools import setup, find_namespace_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+test_deps = ["pytest", "pytest-cov"]
 setup(
     name="zepben.eas",
-    version="1.0",
+    version="0.1.0",
     description="Python SDK for interacting with the Evolve App Server",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -19,13 +20,15 @@ setup(
     author="Ramon Bouckaert",
     author_email="ramon.bouckaert@zepben.com",
     package_dir={"": "src"},
-    packages=find_namespace_packages(where="src", include="zepben.*"),
     python_requires='>=3.7',
+    packages=find_namespace_packages(where="src"),
     install_requires=[
-        "geojson~=2.5.0",
-        "requests~=2.26.0",
-        "setuptools~=57.4.0",
-        "urllib3~=1.26.6",
-        "zepben.auth~=0.5.0b2",
-    ]
+        "geojson==2.5.0",
+        "requests==2.26.0",
+        "urllib3==1.26.6",
+        "zepben.auth==0.5.0b2",
+    ],
+    extras_require={
+        "test": test_deps,
+    }
 )
