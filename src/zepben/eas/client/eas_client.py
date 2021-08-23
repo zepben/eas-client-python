@@ -8,12 +8,8 @@ import warnings
 
 import requests
 from urllib3.exceptions import InsecureRequestWarning
-<<<<<<< Updated upstream
 from zepben.eas.client.util import construct_url
-=======
-from zepben.auth import ZepbenAuthenticator
 
->>>>>>> Stashed changes
 from zepben.eas.client.study import Study
 from zepben.auth import ZepbenAuthenticator, create_authenticator, AuthMethod
 from hashlib import sha256
@@ -32,29 +28,19 @@ class EasClient:
     __port: int
     __authenticator: Optional[ZepbenAuthenticator]
     __verify_certificate: bool = True
-<<<<<<< Updated upstream
-    __access_token: Optional[str] = None
-=======
     __access_token: str = None
     _authenticator = None
->>>>>>> Stashed changes
 
     def __init__(
             self,
             host: str,
             port: int,
-<<<<<<< Updated upstream
             client_id: str,
             authenticator: Optional[ZepbenAuthenticator] = None,
             client_secret: Optional[str] = None,
             username: Optional[str] = None,
             password: Optional[str] = None,
             protocol: str = "https",
-=======
-            username: str,
-            password: str,
-            authenticator: ZepbenAuthenticator = None,
->>>>>>> Stashed changes
             verify_certificate: bool = True
     ):
         """
