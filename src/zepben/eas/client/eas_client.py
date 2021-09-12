@@ -57,7 +57,7 @@ class EasClient:
         else:
             self.__authenticator = create_authenticator(
                 conf_address=construct_url(
-                    protocol="https",
+                    protocol=protocol,
                     host=self.__host,
                     port=self.__port,
                     path="/api/config/auth"
