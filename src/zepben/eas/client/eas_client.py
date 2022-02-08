@@ -54,7 +54,7 @@ class EasClient:
                     port=self._port,
                     path="/api/config/auth"
                 ),
-                verify_certificate=self._verify_certificate,
+                verify_certificates=self._verify_certificate,
                 auth_type_field="configType",
                 audience_field="audience",
                 issuer_domain_field="issuerDomain"
