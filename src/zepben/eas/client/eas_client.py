@@ -46,7 +46,7 @@ class EasClient:
         self._verify_certificate = verify_certificate
         if token_fetcher is not None:
             self._token_fetcher = token_fetcher
-        else:
+        elif client_id is not None:
             self._token_fetcher = create_token_fetcher(
                 conf_address=construct_url(
                     protocol=protocol,
@@ -60,10 +60,6 @@ class EasClient:
                 issuer_domain_field="issuerDomain"
             )
             if self._token_fetcher is not None:
-                if client_id is None:
-                    raise ValueError(
-                        "Incompatible arguments passed to connect to secured Evolve App Server. "
-                        "You must specify (client_id) to establish a secure connection with token based auth.")
                 self._token_fetcher.token_request_data.update({
                     'client_id': client_id,
                     'scope':
@@ -99,7 +95,7 @@ class EasClient:
                         "You must specify at least (username, password) or (client_secret) for a secure connection "
                         "with token based auth.")
 
-    def __get_request_headers(self, content_type: str = "application/json") -> dict:
+    def _get_request_headers(self, content_type: str = "application/json") -> dict:
         headers = {"content-type": content_type}
         if self._token_fetcher is None:
             return headers
@@ -125,7 +121,7 @@ class EasClient:
                     port=self._port,
                     path="/api/graphql"
                 ),
-                headers=self.__get_request_headers(),
+                headers=self._get_request_headers(),
                 json={
                     "query": """
                         mutation uploadStudy($study: StudyInput!) {
