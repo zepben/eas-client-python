@@ -33,7 +33,7 @@ class EasClient:
             username: Optional[str] = None,
             password: Optional[str] = None,
             protocol: str = "https",
-            verify_certificate: bool = True
+            verify_certificate: bool = False
     ):
         """
         :param host: The host string of the Evolve App Server, including the protocol, e.g."https://evolve.local"
@@ -94,6 +94,8 @@ class EasClient:
                         "Incompatible arguments passed to connect to secured Evolve App Server. "
                         "You must specify at least (username, password) or (client_secret) for a secure connection "
                         "with token based auth.")
+        else:
+            self._token_fetcher = None
 
     def _get_request_headers(self, content_type: str = "application/json") -> dict:
         headers = {"content-type": content_type}
@@ -114,6 +116,40 @@ class EasClient:
         with warnings.catch_warnings():
             if self._verify_certificate is False:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json={
+                "query": """
+                    mutation uploadStudy($study: StudyInput!) {
+                        addStudies(studies: [$study])
+                    }
+                """,
+                "variables": {
+                    "study": {
+                        "name": study.name,
+                        "description": study.description,
+                        "tags": study.tags,
+                        "styles": study.styles,
+                        "results": [{
+                            "name": result.name,
+                            "geoJsonOverlay": {
+                                "data": result.geo_json_overlay.data,
+                                "sourceProperties": result.geo_json_overlay.source_properties,
+                                "styles": result.geo_json_overlay.styles
+                            } if result.geo_json_overlay else None,
+                            "stateOverlay": {
+                                "data": result.state_overlay.data,
+                                "styles": result.state_overlay.styles
+                            } if result.state_overlay else None,
+                            "sections": [{
+                                "type": section.type,
+                                "name": section.name,
+                                "description": section.description,
+                                "columns": section.columns,
+                                "data": section.data
+                            } for section in result.sections]
+                        } for result in study.results]
+                    }
+                }
+            }
             requests.post(
                 construct_url(
                     protocol=self._protocol,
@@ -122,39 +158,6 @@ class EasClient:
                     path="/api/graphql"
                 ),
                 headers=self._get_request_headers(),
-                json={
-                    "query": """
-                        mutation uploadStudy($study: StudyInput!) {
-                            addStudies(studies: [$study])
-                        }
-                    """,
-                    "variables": {
-                        "study": {
-                            "name": study.name,
-                            "description": study.description,
-                            "tags": study.tags,
-                            "styles": study.styles,
-                            "results": [{
-                                "name": result.name,
-                                "geoJsonOverlay": {
-                                    "data": result.geo_json_overlay.data,
-                                    "sourceProperties": result.geo_json_overlay.source_properties,
-                                    "styles": result.geo_json_overlay.styles
-                                } if result.geo_json_overlay else None,
-                                "stateOverlay": {
-                                    "data": result.state_overlay.data,
-                                    "styles": result.state_overlay.styles
-                                } if result.state_overlay else None,
-                                "sections": [{
-                                    "type": section.type,
-                                    "name": section.name,
-                                    "description": section.description,
-                                    "columns": section.columns,
-                                    "data": section.data
-                                } for section in result.sections]
-                            } for result in study.results]
-                        }
-                    }
-                },
+                json=json,
                 verify=self._verify_certificate
             )
