@@ -9,7 +9,7 @@ from typing import List, Any
 
 from geojson import GeoJSON
 
-__all__ = ["Study"]
+__all__ = ["GeoJsonOverlay", "StateOverlay", "Section", "Result", "Study"]
 
 
 @dataclass

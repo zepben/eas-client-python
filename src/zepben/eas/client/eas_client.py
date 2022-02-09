@@ -27,7 +27,7 @@ class EasClient:
             self,
             host: str,
             port: int,
-            client_id: str,
+            client_id: Optional[str] = None,
             token_fetcher: Optional[ZepbenTokenFetcher] = None,
             client_secret: Optional[str] = None,
             username: Optional[str] = None,
