@@ -118,7 +118,7 @@ class EasClient:
         with warnings.catch_warnings():
             if self.__verify_certificate is False:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            return requests.post(
+            response = requests.post(
                 construct_url(
                     protocol=self.__protocol,
                     host=self.__host,
@@ -162,3 +162,7 @@ class EasClient:
                 },
                 verify=self.__verify_certificate
             )
+            if not response.ok:
+                warnings.warn(f"Attempted to upload study; "
+                              f"Evolve App Server responded with {response.status_code}: {response.text}")
+            return response
