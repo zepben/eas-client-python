@@ -114,9 +114,9 @@ class EasClient:
         :param study: An instance of a data class representing a new study
         """
         with warnings.catch_warnings():
-            if self._verify_certificate is False:
+            if not self._verify_certificate:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json={
+            json = {
                 "query": """
                     mutation uploadStudy($study: StudyInput!) {
                         addStudies(studies: [$study])
