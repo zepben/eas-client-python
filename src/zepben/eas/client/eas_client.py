@@ -153,7 +153,7 @@ class EasClient:
                     }
                 }
             }
-            response = requests.post(
+            return requests.post(
                 construct_url(
                     protocol=self._protocol,
                     host=self._host,
@@ -164,7 +164,3 @@ class EasClient:
                 json=json,
                 verify=self._verify_certificate and (self._ca_filename or True)
             )
-            if not response.ok:
-                warnings.warn(f"Attempted to upload study; "
-                              f"Evolve App Server responded with {response.status_code}: {response.text}")
-            return response
