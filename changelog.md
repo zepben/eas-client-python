@@ -4,7 +4,7 @@
 * None.
 
 ##### New Features
-* None.
+* `EasClient.upload_study` now returns a HTTP response.
 
 ##### Enhancements
 * None.
