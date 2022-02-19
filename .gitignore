@@ -50,3 +50,7 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
+
+# Signing keys
+*.key
+*.key.pem

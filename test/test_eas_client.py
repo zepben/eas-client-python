@@ -5,11 +5,14 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import random
 import string
+from http.server import HTTPServer
 from unittest import mock
 
-from zepben.auth.client.token_fetcher import create_token_fetcher
+import pytest
 
-from zepben.eas import EasClient
+from zepben.eas import EasClient, Study
+from mock_https_server import always_respond_with, with_https_server
+from zepben.eas.client.study import Result
 
 mock_host = ''.join(random.choices(string.ascii_lowercase, k=10))
 mock_port = random.randrange(1024)
@@ -97,3 +100,16 @@ def test_create_eas_client_with_client_secret_success(_):
     assert eas_client._port == mock_port
     assert eas_client._protocol == mock_protocol
     assert eas_client._verify_certificate == mock_verify_certificate
+
+
+@pytest.mark.skip(reason="Need a triple of files that actually work")
+@with_https_server(always_respond_with("Upload success"), "ewb.local.cert", "ewb.local.key", port=8234)
+def test_upload_study_valid_certificate_success():
+    eas_client = EasClient(
+        "localhost",
+        8234,
+        verify_certificate=True,
+        ca_filename="ewb.local.cert"
+    )
+
+    eas_client.upload_study(Study("Test study", "description", ["tag"], [Result("Huge success")], []))

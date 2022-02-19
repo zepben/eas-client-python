@@ -33,7 +33,8 @@ class EasClient:
             username: Optional[str] = None,
             password: Optional[str] = None,
             protocol: str = "https",
-            verify_certificate: bool = False
+            verify_certificate: bool = False,
+            ca_filename: Optional[str] = None
     ):
         """
         :param host: The host string of the Evolve App Server, including the protocol, e.g."https://evolve.local"
@@ -44,6 +45,7 @@ class EasClient:
         self._host = host
         self._port = port
         self._verify_certificate = verify_certificate
+        self._ca_filename = ca_filename
         if token_fetcher is not None:
             self._token_fetcher = token_fetcher
         elif client_id is not None:
