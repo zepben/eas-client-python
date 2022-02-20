@@ -13,13 +13,13 @@ dist/
 # Compiled Python bytecode
 *.py[cod]
 build/
+*.egg-info/
 
 # Log files
 *.log
 
 # Package files
 *.jar
-*.egg-info/
 
 # Maven
 target/
@@ -51,6 +51,3 @@ Thumbs.db
 *.mov
 *.wmv
 
-# Signing keys
-*.key
-*.key.pem

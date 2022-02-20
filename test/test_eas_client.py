@@ -9,7 +9,8 @@ import string
 from unittest import mock
 
 import pytest
-from pytest_httpserver import HTTPServer # noqa (httpserver is a fixture)
+import requests.exceptions
+from pytest_httpserver import HTTPServer
 import trustme
 
 from zepben.eas import EasClient, Study
@@ -25,6 +26,8 @@ mock_protocol = ''.join(random.choices(string.ascii_lowercase, k=10))
 mock_verify_certificate = bool(random.getrandbits(1))
 
 mock_audience = ''.join(random.choices(string.ascii_lowercase, k=10))
+
+LOCALHOST = "127.0.0.1"
 
 
 class MockResponse:
@@ -110,7 +113,7 @@ def ca():
 
 @pytest.fixture(scope="session")
 def localhost_cert(ca):
-    return ca.issue_cert("localhost")
+    return ca.issue_cert(LOCALHOST)
 
 
 @pytest.fixture(scope="session")
@@ -125,14 +128,45 @@ def httpserver_ssl_context(localhost_cert):
     return context
 
 
-def test_upload_study_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
-    with ca.cert_pem.tempfile() as ca_filename:
+def test_upload_study_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_data("OK")
+    res = eas_client.upload_study(Study("Test study", "description", ["tag"], [Result("Huge success")], []))
+    httpserver.check_assertions()
+    assert res.status_code == 200
+    assert res.text == "OK"
+
+
+def test_upload_study_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         eas_client = EasClient(
-            "localhost",
+            LOCALHOST,
             httpserver.port,
             verify_certificate=True,
             ca_filename=ca_filename
         )
 
         httpserver.expect_oneshot_request("/api/graphql").respond_with_data("OK")
-        eas_client.upload_study(Study("Test study", "description", ["tag"], [Result("Huge success")], []))
+        with pytest.raises(requests.exceptions.SSLError):
+            eas_client.upload_study(Study("Test study", "description", ["tag"], [Result("Huge success")], []))
+
+
+def test_upload_study_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_data("OK")
+        res = eas_client.upload_study(Study("Test study", "description", ["tag"], [Result("Huge success")], []))
+        httpserver.check_assertions()
+        assert res.status_code == 200
+        assert res.text == "OK"

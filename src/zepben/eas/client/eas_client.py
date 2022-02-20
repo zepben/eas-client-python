@@ -110,10 +110,11 @@ class EasClient:
     def upload_study(
             self,
             study: Study
-    ):
+    ) -> requests.Response:
         """
         Uploads a new study to the Evolve App Server
         :param study: An instance of a data class representing a new study
+        :return: The HTTP response received from the Evolve App Server after attempting to upload the study
         """
         with warnings.catch_warnings():
             if not self._verify_certificate:
@@ -152,7 +153,7 @@ class EasClient:
                     }
                 }
             }
-            requests.post(
+            return requests.post(
                 construct_url(
                     protocol=self._protocol,
                     host=self._host,
