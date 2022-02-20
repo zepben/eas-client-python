@@ -4,14 +4,15 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import random
+import ssl
 import string
-from http.server import HTTPServer
 from unittest import mock
 
 import pytest
+from pytest_httpserver import HTTPServer # noqa (httpserver is a fixture)
+import trustme
 
 from zepben.eas import EasClient, Study
-from mock_https_server import always_respond_with, with_https_server
 from zepben.eas.client.study import Result
 
 mock_host = ''.join(random.choices(string.ascii_lowercase, k=10))
@@ -102,14 +103,36 @@ def test_create_eas_client_with_client_secret_success(_):
     assert eas_client._verify_certificate == mock_verify_certificate
 
 
-@pytest.mark.skip(reason="Need a triple of files that actually work")
-@with_https_server(always_respond_with("Upload success"), "ewb.local.cert", "ewb.local.key", port=8234)
-def test_upload_study_valid_certificate_success():
-    eas_client = EasClient(
-        "localhost",
-        8234,
-        verify_certificate=True,
-        ca_filename="ewb.local.cert"
-    )
+@pytest.fixture(scope="session")
+def ca():
+    return trustme.CA()
 
-    eas_client.upload_study(Study("Test study", "description", ["tag"], [Result("Huge success")], []))
+
+@pytest.fixture(scope="session")
+def localhost_cert(ca):
+    return ca.issue_cert("localhost")
+
+
+@pytest.fixture(scope="session")
+def httpserver_ssl_context(localhost_cert):
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+
+    crt = localhost_cert.cert_chain_pems[0]
+    key = localhost_cert.private_key_pem
+    with crt.tempfile() as crt_file, key.tempfile() as key_file:
+        context.load_cert_chain(crt_file, key_file)
+
+    return context
+
+
+def test_upload_study_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            "localhost",
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_data("OK")
+        eas_client.upload_study(Study("Test study", "description", ["tag"], [Result("Huge success")], []))

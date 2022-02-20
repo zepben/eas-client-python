@@ -161,5 +161,5 @@ class EasClient:
                 ),
                 headers=self._get_request_headers(),
                 json=json,
-                verify=self._verify_certificate
+                verify=self._verify_certificate and (self._ca_filename or True)
             )
