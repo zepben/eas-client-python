@@ -8,5 +8,6 @@ __all__ = ["construct_url"]
 
 from typing import Union
 
+
 def construct_url(protocol, host, path, port: Union[str, int] = None) -> str:
     return f"{protocol}://{host}{f':{port}' if port else ''}{path}"

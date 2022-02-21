@@ -12,6 +12,8 @@ dist/
 
 # Compiled Python bytecode
 *.py[cod]
+build/
+*.egg-info/
 
 # Log files
 *.log
@@ -24,7 +26,8 @@ target/
 dist/
 
 # JetBrains IDE
-.idea/
+.idea/*
+!.idea/copyright
 
 # Unit test reports
 TEST*.xml

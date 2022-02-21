@@ -9,7 +9,7 @@ from setuptools import setup, find_namespace_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-test_deps = ["pytest", "pytest-cov"]
+test_deps = ["pytest", "pytest-cov", "pytest-httpserver==1.0.4", "trustme==0.9.0"]
 setup(
     name="zepben.eas",
     version="0.7.0b1",
@@ -26,7 +26,7 @@ setup(
         "geojson==2.5.0",
         "requests==2.26.0",
         "urllib3==1.26.6",
-        "zepben.auth==0.6.0",
+        "zepben.auth==0.7.0b2",
     ],
     extras_require={
         "test": test_deps,
