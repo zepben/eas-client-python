@@ -27,6 +27,7 @@ setup(
         "requests==2.26.0",
         "urllib3==1.26.6",
         "zepben.auth==0.7.0b2",
+        "aiohttp[speedups]==3.8.1",
     ],
     extras_require={
         "test": test_deps,
