@@ -3,12 +3,14 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+import json
 import ssl
 import warnings
 from asyncio import get_event_loop
 from hashlib import sha256
 from typing import Optional
 
+import aiohttp
 from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
 from zepben.auth.client import AuthMethod, ZepbenTokenFetcher, create_token_fetcher
@@ -36,12 +38,17 @@ class EasClient:
         protocol: str = "https",
         verify_certificate: bool = False,
         ca_filename: Optional[str] = None,
-        session: ClientSession = None
+        session: ClientSession = None,
+        json_serialiser = None
     ):
         """
         :param host: The host string of the Evolve App Server, including the protocol, e.g."https://evolve.local"
         :param port: The port on which to make requests to the Evolve App Server, e.g. 7624
-        :param verify_certificate: Set this to False to disable SSH certificate verification
+        :param verify_certificate: Set this to False to disable certificate verification
+        :param ca_filename: Path to CA file to use for verification.
+        :param session: aiohttp CLientSession to use, if not provided a new session will be created for you. You should typically only use one aiohttp session
+        per application.
+        :param json_serialiser: JSON serialiser to use for requests e.g ujson.dumps. Defaults to json.dumps
         """
         self._protocol = protocol
         self._host = host
@@ -101,7 +108,12 @@ class EasClient:
         else:
             self._token_fetcher = None
 
-        self.session = session
+        if session is None:
+            conn = aiohttp.TCPConnector(limit=200, limit_per_host=0)
+            timeout = aiohttp.ClientTimeout(total=60)
+            self.session = aiohttp.ClientSession(json_serialize=json_serialiser if json_serialiser is not None else json.dumps, connector=conn, timeout=timeout)
+        else:
+            self.session = session
 
     def close(self):
         return get_event_loop().run_until_complete(self.aclose())
