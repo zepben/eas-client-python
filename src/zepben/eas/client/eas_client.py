@@ -170,7 +170,7 @@ class EasClient:
             if self._verify_certificate:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
-            async with self.session.get(construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+            async with self.session.post(construct_url(protocol='https', host=self._host, port=self._port, path="/api/graphql"),
                                         headers=self._get_request_headers(), json=json, ssl=sslcontext if self._verify_certificate else False) as response:
                 if response.ok:
                     response = await response.json()
