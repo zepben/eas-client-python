@@ -5,8 +5,8 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
-__all__ = ["EasClient", "Study"]
+__all__ = ["EasClient", "Study", "Result", "Section", "StateOverlay", "GeoJsonOverlay"]
 
 from zepben.eas.client.eas_client import EasClient
-from zepben.eas.client.study import Study
+from zepben.eas.client.study import *
 
