@@ -30,45 +30,73 @@ class EasClient:
         self,
         host: str,
         port: int,
-        client_id: Optional[str] = None,
+        protocol: str = "https",
         token_fetcher: Optional[ZepbenTokenFetcher] = None,
+        client_id: Optional[str] = None,
         client_secret: Optional[str] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
-        protocol: str = "https",
-        verify_certificate: bool = False,
+        verify_certificate: bool = True,
         ca_filename: Optional[str] = None,
         session: ClientSession = None,
         json_serialiser = None
     ):
         """
-        :param host: The host string of the Evolve App Server, including the protocol, e.g."https://evolve.local"
+        Construct a client for the Evolve App Server. If the server is HTTPS, authentication may be configured.
+        Authentication may be configured in one of two ways:
+            - Specifying a ZepbenTokenFetcher directly via the token_fetcher parameter
+            - Specifying the client ID of the Auth0 via the client_id parameter, plus one of the following:
+                - The client secret via the client_secret parameter (M2M authentication)
+                - A username and password pair via the username and password parameters (account authentication)
+              If this method id used, the auth configuration will be fetched from the Evolve App Server at the path
+              "/api/config/auth".
+
+        Address parameters:
+        :param host: The domain of the Evolve App Server, including the protocol, e.g. "evolve.local"
         :param port: The port on which to make requests to the Evolve App Server, e.g. 7624
-        :param verify_certificate: Set this to False to disable certificate verification
-        :param ca_filename: Path to CA file to use for verification.
-        :param session: aiohttp CLientSession to use, if not provided a new session will be created for you. You should typically only use one aiohttp session
-        per application.
-        :param json_serialiser: JSON serialiser to use for requests e.g ujson.dumps. Defaults to json.dumps
+        :param protocol: The protocol of the Evolve App Server. Should be either "http" or "https". Must be "https" if
+                         auth is configured. (Defaults to "https")
+
+        Authentication parameters:
+        :param token_fetcher: A ZepbenTokenFetcher used to fetch auth tokens for access to the Evolve App Server.
+                              (Optional)
+        :param client_id: The Auth0 client ID used to specify to the auth server which application to request a token
+                          for. (Optional)
+        :param client_secret: The Auth0 client secret used for M2M authentication. (Optional)
+        :param username: The username used for account authentication. (Optional)
+        :param password: The password used for account authentication. (Optional)
+
+        HTTP/HTTPS parameters:
+        :param verify_certificate: Set this to False to disable certificate verification. This will also apply to the
+                                   auth provider if auth is initialised via client_id + client_secret or client id +
+                                   username + password. (Defaults to True)
+        :param ca_filename: Path to CA file to use for verification. (Optional)
+        :param session: aiohttp ClientSession to use, if not provided a new session will be created for you. You should
+                        typically only use one aiohttp session per application.
+        :param json_serialiser: JSON serialiser to use for requests e.g. ujson.dumps. (Defaults to json.dumps)
         """
         self._protocol = protocol
         self._host = host
         self._port = port
         self._verify_certificate = verify_certificate
         self._ca_filename = ca_filename
+        if protocol != "https" and (token_fetcher or client_id):
+            raise ValueError(
+                "Incompatible arguments passed to connect to secured Evolve App Server. "
+                "Authentication tokens must be sent via https. "
+                "To resolve this issue, exclude the \"protocol\" argument when initialising the EasClient.")
         if token_fetcher:
             self._token_fetcher = token_fetcher
         elif client_id:
             self._token_fetcher = create_token_fetcher(
-                conf_address=construct_url(
-                    protocol=protocol,
-                    host=self._host,
-                    port=self._port,
-                    path="/api/config/auth"
-                ),
+                host=self._host,
+                port=self._port,
+                path="/api/config/auth",
                 verify_certificates=self._verify_certificate,
                 auth_type_field="configType",
                 audience_field="audience",
-                issuer_domain_field="issuerDomain"
+                issuer_domain_field="issuerDomain",
+                conf_ca_filename=self._ca_filename
             )
             if self._token_fetcher:
                 self._token_fetcher.token_request_data.update({
@@ -111,7 +139,7 @@ class EasClient:
         if session is None:
             conn = aiohttp.TCPConnector(limit=200, limit_per_host=0)
             timeout = aiohttp.ClientTimeout(total=60)
-            self.session = aiohttp.ClientSession(json_serialize=json_serialiser if json_serialiser is not None else json.dumps, connector=conn, timeout=timeout)
+            self.session = aiohttp.ClientSession(json_serialize=json_serialiser or json.dumps, connector=conn, timeout=timeout)
         else:
             self.session = session
 
@@ -182,8 +210,12 @@ class EasClient:
             if self._verify_certificate:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
-            async with self.session.post(construct_url(protocol='https', host=self._host, port=self._port, path="/api/graphql"),
-                                        headers=self._get_request_headers(), json=json, ssl=sslcontext if self._verify_certificate else False) as response:
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
                 if response.ok:
                     response = await response.json()
                 else:
