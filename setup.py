@@ -9,7 +9,7 @@ from setuptools import setup, find_namespace_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-test_deps = ["pytest", "pytest-cov", "json", "pytest-httpserver==1.0.4", "trustme==0.9.0"]
+test_deps = ["pytest", "pytest-cov", "pytest-httpserver==1.0.4", "trustme==0.9.0"]
 setup(
     name="zepben.eas",
     version="0.8.0b1",
