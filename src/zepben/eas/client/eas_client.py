@@ -31,11 +31,11 @@ class EasClient:
         host: str,
         port: int,
         protocol: str = "https",
-        token_fetcher: Optional[ZepbenTokenFetcher] = None,
         client_id: Optional[str] = None,
-        client_secret: Optional[str] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
+        client_secret: Optional[str] = None,
+        token_fetcher: Optional[ZepbenTokenFetcher] = None,
         verify_certificate: bool = True,
         ca_filename: Optional[str] = None,
         session: ClientSession = None,
@@ -44,32 +44,32 @@ class EasClient:
         """
         Construct a client for the Evolve App Server. If the server is HTTPS, authentication may be configured.
         Authentication may be configured in one of two ways:
-            - Specifying a ZepbenTokenFetcher directly via the token_fetcher parameter
-            - Specifying the client ID of the Auth0 via the client_id parameter, plus one of the following:
-                - The client secret via the client_secret parameter (M2M authentication)
+            - Specifying the client ID of the Auth0 application via the client_id parameter, plus one of the following:
                 - A username and password pair via the username and password parameters (account authentication)
-              If this method id used, the auth configuration will be fetched from the Evolve App Server at the path
+                - The client secret via the client_secret parameter (M2M authentication)
+              If this method is used, the auth configuration will be fetched from the Evolve App Server at the path
               "/api/config/auth".
+            - Specifying a ZepbenTokenFetcher directly via the token_fetcher parameter
 
         Address parameters:
-        :param host: The domain of the Evolve App Server, including the protocol, e.g. "evolve.local"
+        :param host: The domain of the Evolve App Server, e.g. "evolve.local"
         :param port: The port on which to make requests to the Evolve App Server, e.g. 7624
         :param protocol: The protocol of the Evolve App Server. Should be either "http" or "https". Must be "https" if
                          auth is configured. (Defaults to "https")
 
         Authentication parameters:
-        :param token_fetcher: A ZepbenTokenFetcher used to fetch auth tokens for access to the Evolve App Server.
-                              (Optional)
         :param client_id: The Auth0 client ID used to specify to the auth server which application to request a token
                           for. (Optional)
-        :param client_secret: The Auth0 client secret used for M2M authentication. (Optional)
         :param username: The username used for account authentication. (Optional)
         :param password: The password used for account authentication. (Optional)
+        :param client_secret: The Auth0 client secret used for M2M authentication. (Optional)
+        :param token_fetcher: A ZepbenTokenFetcher used to fetch auth tokens for access to the Evolve App Server.
+                              (Optional)
 
         HTTP/HTTPS parameters:
         :param verify_certificate: Set this to False to disable certificate verification. This will also apply to the
-                                   auth provider if auth is initialised via client_id + client_secret or client id +
-                                   username + password. (Defaults to True)
+                                   auth provider if auth is initialised via client id + username + password or
+                                   client_id + client_secret. (Defaults to True)
         :param ca_filename: Path to CA file to use for verification. (Optional)
         :param session: aiohttp ClientSession to use, if not provided a new session will be created for you. You should
                         typically only use one aiohttp session per application.
@@ -85,9 +85,7 @@ class EasClient:
                 "Incompatible arguments passed to connect to secured Evolve App Server. "
                 "Authentication tokens must be sent via https. "
                 "To resolve this issue, exclude the \"protocol\" argument when initialising the EasClient.")
-        if token_fetcher:
-            self._token_fetcher = token_fetcher
-        elif client_id:
+        if client_id:
             self._token_fetcher = create_token_fetcher(
                 host=self._host,
                 port=self._port,
@@ -133,6 +131,8 @@ class EasClient:
                         "Incompatible arguments passed to connect to secured Evolve App Server. "
                         "You must specify at least (username, password) or (client_secret) for a secure connection "
                         "with token based auth.")
+        elif token_fetcher:
+            self._token_fetcher = token_fetcher
         else:
             self._token_fetcher = None
 
