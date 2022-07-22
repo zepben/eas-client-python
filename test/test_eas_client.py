@@ -3,6 +3,7 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+import json
 import random
 import ssl
 import string
@@ -12,6 +13,7 @@ import pytest
 import requests.exceptions
 from pytest_httpserver import HTTPServer
 import trustme
+from zepben.auth.client import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study
 from zepben.eas.client.study import Result
@@ -68,7 +70,6 @@ def test_create_eas_client_with_password_success(_):
         client_id=mock_client_id,
         username=mock_username,
         password=mock_password,
-        protocol=mock_protocol,
         verify_certificate=mock_verify_certificate
     )
 
@@ -80,7 +81,6 @@ def test_create_eas_client_with_password_success(_):
     assert eas_client._token_fetcher.token_request_data["password"] == mock_password
     assert eas_client._host == mock_host
     assert eas_client._port == mock_port
-    assert eas_client._protocol == mock_protocol
     assert eas_client._verify_certificate == mock_verify_certificate
 
 
@@ -92,7 +92,6 @@ def test_create_eas_client_with_client_secret_success(_):
         mock_port,
         client_id=mock_client_id,
         client_secret=mock_client_secret,
-        protocol=mock_protocol,
         verify_certificate=mock_verify_certificate
     )
 
@@ -102,7 +101,6 @@ def test_create_eas_client_with_client_secret_success(_):
     assert eas_client._token_fetcher.token_request_data["client_secret"] == mock_client_secret
     assert eas_client._host == mock_host
     assert eas_client._port == mock_port
-    assert eas_client._protocol == mock_protocol
     assert eas_client._verify_certificate == mock_verify_certificate
 
 
@@ -135,11 +133,10 @@ def test_upload_study_no_verify_success(httpserver: HTTPServer):
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_data("OK")
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
     res = eas_client.upload_study(Study("Test study", "description", ["tag"], [Result("Huge success")], []))
     httpserver.check_assertions()
-    assert res.status_code == 200
-    assert res.text == "OK"
+    assert res == {"result": "success"}
 
 
 def test_upload_study_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
@@ -151,8 +148,8 @@ def test_upload_study_invalid_certificate_failure(ca: trustme.CA, httpserver: HT
             ca_filename=ca_filename
         )
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_data("OK")
-        with pytest.raises(requests.exceptions.SSLError):
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+        with pytest.raises(ssl.SSLError):
             eas_client.upload_study(Study("Test study", "description", ["tag"], [Result("Huge success")], []))
 
 
@@ -165,8 +162,65 @@ def test_upload_study_valid_certificate_success(ca: trustme.CA, httpserver: HTTP
             ca_filename=ca_filename
         )
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_data("OK")
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
         res = eas_client.upload_study(Study("Test study", "description", ["tag"], [Result("Huge success")], []))
         httpserver.check_assertions()
-        assert res.status_code == 200
-        assert res.text == "OK"
+        assert res == {"result": "success"}
+
+
+def test_raises_error_if_auth_configured_with_http_server(httpserver: HTTPServer):
+    with pytest.raises(ValueError):
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="http",
+            client_id=mock_client_id,
+            username=mock_username,
+            password=mock_password
+        )
+
+
+def test_raises_error_if_token_fetcher_and_creds_configured(httpserver: HTTPServer):
+    with pytest.raises(ValueError, match="You cannot provide both a token_fetcher and credentials"):
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            client_id=mock_client_id,
+            username=mock_username,
+            password=mock_password,
+            token_fetcher=ZepbenTokenFetcher(audience="test", issuer_domain="test", auth_method="test")
+        )
+
+    with pytest.raises(ValueError, match="You cannot provide both a token_fetcher and credentials"):
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            client_id=mock_client_id,
+            client_secret=mock_client_secret,
+            token_fetcher=ZepbenTokenFetcher(audience="test", issuer_domain="test", auth_method="test")
+        )
+
+
+def test_raises_error_if_secret_and_creds_configured(httpserver: HTTPServer):
+    with pytest.raises(ValueError, match="You cannot provide both a client_secret and username/password"):
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            client_id=mock_client_id,
+            client_secret=mock_client_secret,
+            username=mock_username,
+        )
+
+    with pytest.raises(ValueError,
+                       match="You cannot provide both a client_secret and username/password"):
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            client_id=mock_client_id,
+            client_secret=mock_client_secret,
+            password=mock_password,
+        )
