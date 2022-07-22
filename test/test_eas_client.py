@@ -13,6 +13,7 @@ import pytest
 import requests.exceptions
 from pytest_httpserver import HTTPServer
 import trustme
+from zepben.auth.client import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study
 from zepben.eas.client.study import Result
@@ -176,4 +177,50 @@ def test_raises_error_if_auth_configured_with_http_server(httpserver: HTTPServer
             client_id=mock_client_id,
             username=mock_username,
             password=mock_password
+        )
+
+
+def test_raises_error_if_token_fetcher_and_creds_configured(httpserver: HTTPServer):
+    with pytest.raises(ValueError, match="You cannot provide both a token_fetcher and credentials"):
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            client_id=mock_client_id,
+            username=mock_username,
+            password=mock_password,
+            token_fetcher=ZepbenTokenFetcher(audience="test", issuer_domain="test", auth_method="test")
+        )
+
+    with pytest.raises(ValueError, match="You cannot provide both a token_fetcher and credentials"):
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            client_id=mock_client_id,
+            client_secret=mock_client_secret,
+            token_fetcher=ZepbenTokenFetcher(audience="test", issuer_domain="test", auth_method="test")
+        )
+
+
+def test_raises_error_if_secret_and_creds_configured(httpserver: HTTPServer):
+    with pytest.raises(ValueError, match="You cannot provide both a client_secret and username/password"):
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            client_id=mock_client_id,
+            client_secret=mock_client_secret,
+            username=mock_username,
+        )
+
+    with pytest.raises(ValueError,
+                       match="You cannot provide both a client_secret and username/password"):
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            client_id=mock_client_id,
+            client_secret=mock_client_secret,
+            password=mock_password,
         )
