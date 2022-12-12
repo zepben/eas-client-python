@@ -3,17 +3,15 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-import json
 import random
 import ssl
 import string
 from unittest import mock
 
 import pytest
-import requests.exceptions
 from pytest_httpserver import HTTPServer
 import trustme
-from zepben.auth.client import ZepbenTokenFetcher
+from zepben.auth import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study
 from zepben.eas.client.study import Result
@@ -61,7 +59,7 @@ def test_create_eas_client_success():
     assert eas_client._verify_certificate == mock_verify_certificate
 
 
-@mock.patch("zepben.auth.client.token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
+@mock.patch("zepben.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
     {"configType": "AUTH0", "audience": mock_audience, "issuerDomain": "test_issuer"}, 200))
 def test_create_eas_client_with_password_success(_):
     eas_client = EasClient(
@@ -84,7 +82,7 @@ def test_create_eas_client_with_password_success(_):
     assert eas_client._verify_certificate == mock_verify_certificate
 
 
-@mock.patch("zepben.auth.client.token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
+@mock.patch("zepben.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
     {"configType": "AUTH0", "audience": mock_audience, "issuerDomain": "test_issuer"}, 200))
 def test_create_eas_client_with_client_secret_success(_):
     eas_client = EasClient(

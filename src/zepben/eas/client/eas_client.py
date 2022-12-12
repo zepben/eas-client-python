@@ -13,7 +13,7 @@ from typing import Optional
 import aiohttp
 from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
-from zepben.auth.client import AuthMethod, ZepbenTokenFetcher, create_token_fetcher
+from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher
 
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
@@ -88,26 +88,25 @@ class EasClient:
 
         if token_fetcher and (client_id or client_secret or username or password):
             raise ValueError(
-                "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide both a token_fetcher and credentials, "
+                "Incompatible arguments passed to connect to secured Evolve App Server. "
+                "You cannot provide both a token_fetcher and credentials, "
                 "please provide either client_id + client_secret, username + password, or token_fetcher."
             )
 
         if client_secret and (username or password):
             raise ValueError(
-                "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide both a client_secret and username/password, "
+                "Incompatible arguments passed to connect to secured Evolve App Server. "
+                "You cannot provide both a client_secret and username/password, "
                 "please provide either client_id + client_secret or client_id + username + password."
             )
 
         if client_id:
             self._token_fetcher = create_token_fetcher(
-                host=self._host,
-                port=self._port,
-                path="/api/config/auth",
-                verify_certificates=self._verify_certificate,
+                conf_address=f"{self._protocol}://{self._host}:{self._port}/api/config/auth",
+                verify_conf=self._verify_certificate,
                 auth_type_field="configType",
                 audience_field="audience",
-                issuer_domain_field="issuerDomain",
-                conf_ca_filename=self._ca_filename
+                issuer_domain_field="issuerDomain"
             )
             if self._token_fetcher:
                 self._token_fetcher.token_request_data.update({
