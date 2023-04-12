@@ -9,12 +9,13 @@ import string
 from unittest import mock
 
 import pytest
-from pytest_httpserver import HTTPServer
 import trustme
+from pytest_httpserver import HTTPServer
 from zepben.auth import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study
 from zepben.eas.client.study import Result
+from zepben.eas.client.work_package import WorkPackageConfig
 
 mock_host = ''.join(random.choices(string.ascii_lowercase, k=10))
 mock_port = random.randrange(1024)
@@ -122,6 +123,48 @@ def httpserver_ssl_context(localhost_cert):
         context.load_cert_chain(crt_file, key_file)
 
     return context
+
+
+def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runHostingCapacity": "workPackageId"}})
+    res = eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"]))
+    httpserver.check_assertions()
+    assert res == {"data": {"runHostingCapacity": "workPackageId"}}
+
+
+def test_run_hosting_capacity_work_package_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runHostingCapacity": "workPackageId"}})
+        with pytest.raises(ssl.SSLError):
+            eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"]))
+
+
+def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runHostingCapacity": "workPackageId"}})
+        res = eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"]))
+        httpserver.check_assertions()
+        assert res == {"data": {"runHostingCapacity": "workPackageId"}}
 
 
 def test_upload_study_no_verify_success(httpserver: HTTPServer):

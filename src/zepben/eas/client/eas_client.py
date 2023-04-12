@@ -14,9 +14,9 @@ import aiohttp
 from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
 from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher
-
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
+from zepben.eas.client.work_package import WorkPackageConfig
 
 __all__ = ["EasClient"]
 
@@ -27,19 +27,19 @@ class EasClient:
     """
 
     def __init__(
-        self,
-        host: str,
-        port: int,
-        protocol: str = "https",
-        client_id: Optional[str] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        client_secret: Optional[str] = None,
-        token_fetcher: Optional[ZepbenTokenFetcher] = None,
-        verify_certificate: bool = True,
-        ca_filename: Optional[str] = None,
-        session: ClientSession = None,
-        json_serialiser = None
+            self,
+            host: str,
+            port: int,
+            protocol: str = "https",
+            client_id: Optional[str] = None,
+            username: Optional[str] = None,
+            password: Optional[str] = None,
+            client_secret: Optional[str] = None,
+            token_fetcher: Optional[ZepbenTokenFetcher] = None,
+            verify_certificate: bool = True,
+            ca_filename: Optional[str] = None,
+            session: ClientSession = None,
+            json_serialiser=None
     ):
         """
         Construct a client for the Evolve App Server. If the server is HTTPS, authentication may be configured.
@@ -168,6 +168,52 @@ class EasClient:
         else:
             headers["authorization"] = self._token_fetcher.fetch_token()
         return headers
+
+    def run_hosting_capacity_work_package(self, work_package: WorkPackageConfig):
+        """
+        Send request to hosting capacity service to run work package
+
+        :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
+        :return: The HTTP response received from the Evolve App Server after attempting to run work package
+        """
+        return get_event_loop().run_until_complete(self.async_run_hosting_capacity_work_package(work_package))
+
+    async def async_run_hosting_capacity_work_package(self, work_package: WorkPackageConfig):
+        """
+        Send asynchronous request to hosting capacity service to run work package
+
+        :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
+        :return: The HTTP response received from the Evolve App Server after attempting to run work package
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    mutation runHostingCapacity($input: WorkPackageInput!) {
+                        runHostingCapacity(input: $input)
+                    }
+                """,
+                "variables": {
+                    "input": {
+                        "feeders": work_package.feeders
+                    }
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
 
     def upload_study(self, study: Study):
         """
