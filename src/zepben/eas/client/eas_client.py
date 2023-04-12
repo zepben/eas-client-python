@@ -14,7 +14,6 @@ import aiohttp
 from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
 from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher
-
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
 from zepben.eas.client.work_package import WorkPackageConfig
