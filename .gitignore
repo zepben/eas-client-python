@@ -15,6 +15,9 @@ dist/
 build/
 *.egg-info/
 
+# Python venv
+.venv*
+
 # Log files
 *.log
 
