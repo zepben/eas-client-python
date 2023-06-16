@@ -14,3 +14,5 @@ __all__ = ["WorkPackageConfig"]
 class WorkPackageConfig:
     """ A data class representing the configuration for a hosting capacity work package """
     feeders: List[str]
+    years: List[int]
+    scenarios: List[str]

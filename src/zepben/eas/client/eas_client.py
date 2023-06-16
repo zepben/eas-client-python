@@ -197,7 +197,9 @@ class EasClient:
                 """,
                 "variables": {
                     "input": {
-                        "feeders": work_package.feeders
+                        "feeders": work_package.feeders,
+                        "years": work_package.years,
+                        "scenarios": work_package.scenarios
                     }
                 }
             }
