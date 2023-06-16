@@ -133,7 +133,7 @@ def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPSer
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runHostingCapacity": "workPackageId"}})
-    res = eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"]))
+    res = eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"], [1], ["scenario"]))
     httpserver.check_assertions()
     assert res == {"data": {"runHostingCapacity": "workPackageId"}}
 
@@ -149,7 +149,7 @@ def test_run_hosting_capacity_work_package_invalid_certificate_failure(ca: trust
 
         httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runHostingCapacity": "workPackageId"}})
         with pytest.raises(ssl.SSLError):
-            eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"]))
+            eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"], [1], ["scenario"]))
 
 
 def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
@@ -162,7 +162,7 @@ def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme
         )
 
         httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runHostingCapacity": "workPackageId"}})
-        res = eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"]))
+        res = eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"], [1], ["scenario"]))
         httpserver.check_assertions()
         assert res == {"data": {"runHostingCapacity": "workPackageId"}}
 
