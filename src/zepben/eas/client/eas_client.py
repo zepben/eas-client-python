@@ -152,7 +152,8 @@ class EasClient:
         if session is None:
             conn = aiohttp.TCPConnector(limit=200, limit_per_host=0)
             timeout = aiohttp.ClientTimeout(total=60)
-            self.session = aiohttp.ClientSession(json_serialize=json_serialiser or json.dumps, connector=conn, timeout=timeout)
+            self.session = aiohttp.ClientSession(json_serialize=json_serialiser or json.dumps, connector=conn,
+                                                 timeout=timeout)
         else:
             self.session = session
 
@@ -199,7 +200,35 @@ class EasClient:
                     "input": {
                         "feeders": work_package.feeders,
                         "years": work_package.years,
-                        "scenarios": work_package.scenarios
+                        "scenarios": work_package.scenarios,
+                        "modelConfig": {
+                            "vmPu": work_package.modelConfig.vmPu if work_package.modelConfig.vmPu is not None else None,
+                            "vMinPu": work_package.modelConfig.vMinPu if work_package.modelConfig.vMinPu is not None else None,
+                            "vMaxPu": work_package.modelConfig.vMaxPu if work_package.modelConfig.vMaxPu is not None else None,
+                            "loadModel": work_package.modelConfig.loadModel if work_package.modelConfig.loadModel is not None else None,
+                            "collapseSWER": work_package.modelConfig.collapseSWER if work_package.modelConfig.collapseSWER is not None else None,
+                            "meterAtHVSource": work_package.modelConfig.meterAtHVSource if work_package.modelConfig.meterAtHVSource is not None else None,
+                            "metersAtDistTransformers": work_package.modelConfig.metersAtDistTransformers if work_package.modelConfig.metersAtDistTransformers is not None else None,
+                            "switchMeterPlacementConfigs": [{
+                                "meterSwitchClass": spc.meterSwitchClass.name if spc.meterSwitchClass is not None else None,
+                                "namePattern": spc.namePattern if spc.namePattern is not None else None,
+                            } for spc in
+                                work_package.modelConfig.switchMeterPlacementConfigs] if work_package.modelConfig.switchMeterPlacementConfigs is not None else None,
+                        } if work_package.modelConfig is not None else None,
+                        "solveConfig": {
+                            "normVMinPu": work_package.solveConfig.normVMinPu if work_package.solveConfig.normVMinPu is not None else None,
+                            "normVMaxPu": work_package.solveConfig.normVMaxPu if work_package.solveConfig.normVMaxPu is not None else None,
+                            "emergVMinPu": work_package.solveConfig.emergVMinPu if work_package.solveConfig.emergVMinPu is not None else None,
+                            "emergVMaxPu": work_package.solveConfig.emergVMaxPu if work_package.solveConfig.emergVMaxPu is not None else None,
+                            "baseFrequency": work_package.solveConfig.baseFrequency if work_package.solveConfig.baseFrequency is not None else None,
+                            "voltageBases": work_package.solveConfig.voltageBases if work_package.solveConfig.voltageBases is not None else None,
+                            "maxIter": work_package.solveConfig.maxIter if work_package.solveConfig.maxIter is not None else None,
+                            "maxControlIter": work_package.solveConfig.maxControlIter if work_package.solveConfig.maxControlIter is not None else None,
+                            "mode": work_package.solveConfig.mode.name if work_package.solveConfig.mode is not None else None,
+                            "stepSizeMinutes": work_package.solveConfig.stepSizeMinutes if work_package.solveConfig.stepSizeMinutes is not None else None,
+                        } if work_package.solveConfig is not None else None,
+                        "resultsDetailLevel": work_package.resultsDetailLevel.name if work_package.resultsDetailLevel is not None else None,
+                        "qualityAssuranceProcessing": work_package.qualityAssuranceProcessing if work_package.qualityAssuranceProcessing is not None else None
                     }
                 }
             }
