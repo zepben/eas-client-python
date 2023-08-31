@@ -192,8 +192,8 @@ class EasClient:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             json = {
                 "query": """
-                    mutation runHostingCapacity($input: WorkPackageInput!) {
-                        runHostingCapacity(input: $input)
+                    mutation runWorkPackage($input: WorkPackageInput!) {
+                        runWorkPackage(input: $input)
                     }
                 """,
                 "variables": {
@@ -231,6 +231,100 @@ class EasClient:
                         "qualityAssuranceProcessing": work_package.qualityAssuranceProcessing if work_package.qualityAssuranceProcessing is not None else None
                     }
                 }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def cancel_hosting_capacity_work_package(self, work_package_id: str):
+        """
+        Send request to hosting capacity service to cancel a running work package
+
+        :param work_package_id: The id of the running work package to cancel
+        :return: The HTTP response received from the Evolve App Server after attempting to cancel work package
+        """
+        return get_event_loop().run_until_complete(self.async_cancel_hosting_capacity_work_package(work_package_id))
+
+    async def async_cancel_hosting_capacity_work_package(self, work_package_id: str):
+        """
+        Send asynchronous request to hosting capacity service to cancel a running work package
+
+        :param work_package_id: The id of the running work package to cancel
+        :return: The HTTP response received from the Evolve App Server after attempting to cancel work package
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    mutation cancelWorkPackage($workPackageId: ID!) {
+                        cancelWorkPackage(workPackageId: $workPackageId)
+                    }
+                """,
+                "variables": {"workPackageId": work_package_id}
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def get_hosting_capacity_work_packages_progress(self):
+        """
+        Retrieve running work packages progress information from hosting capacity service
+
+        :return: The HTTP response received from the Evolve App Server after requesting work packages progress info
+        """
+        return get_event_loop().run_until_complete(self.async_get_hosting_capacity_work_packages_progress())
+
+    async def async_get_hosting_capacity_work_packages_progress(self):
+        """
+        Asynchronously retrieve running work packages progress information from hosting capacity service
+
+        :return: The HTTP response received from the Evolve App Server after requesting work packages progress info
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    query getWorkPackageProgress {
+                        getWorkPackageProgress {
+                            pending
+                            inProgress {
+                               id
+                               progressPercent
+                               pending
+                               generation
+                               execution
+                               resultProcessing
+                               failureProcessing
+                               complete
+                            }
+                        }
+                    }
+                """,
+                "variables": {}
             }
             if self._verify_certificate:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)

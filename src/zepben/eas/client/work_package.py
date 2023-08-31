@@ -80,3 +80,21 @@ class WorkPackageConfig:
     solveConfig: Optional[SolveConfig] = None
     resultsDetailLevel: Optional[ResultsDetailLevel] = None
     qualityAssuranceProcessing: Optional[bool] = None
+
+
+@dataclass
+class WorkPackageProgress:
+    id: str
+    progressPercent: int
+    pending: List[str]
+    generation: List[str]
+    execution: List[str]
+    resultProcessing: List[str]
+    failureProcessing: List[str]
+    complete: List[str]
+
+
+@dataclass
+class WorkPackagesProgress:
+    pending: List[str]
+    inProgress: List[WorkPackageProgress]

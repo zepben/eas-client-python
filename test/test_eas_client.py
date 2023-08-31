@@ -132,10 +132,10 @@ def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPSer
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runHostingCapacity": "workPackageId"}})
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runWorkPackage": "workPackageId"}})
     res = eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"], [1], ["scenario"]))
     httpserver.check_assertions()
-    assert res == {"data": {"runHostingCapacity": "workPackageId"}}
+    assert res == {"data": {"runWorkPackage": "workPackageId"}}
 
 
 def test_run_hosting_capacity_work_package_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
@@ -147,7 +147,8 @@ def test_run_hosting_capacity_work_package_invalid_certificate_failure(ca: trust
             ca_filename=ca_filename
         )
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runHostingCapacity": "workPackageId"}})
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+            {"data": {"runWorkPackage": "workPackageId"}})
         with pytest.raises(ssl.SSLError):
             eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"], [1], ["scenario"]))
 
@@ -161,10 +162,103 @@ def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme
             ca_filename=ca_filename
         )
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runHostingCapacity": "workPackageId"}})
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+            {"data": {"runWorkPackage": "workPackageId"}})
         res = eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"], [1], ["scenario"]))
         httpserver.check_assertions()
-        assert res == {"data": {"runHostingCapacity": "workPackageId"}}
+        assert res == {"data": {"runWorkPackage": "workPackageId"}}
+
+
+def test_cancel_hosting_capacity_work_package_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"data": {"cancelHostingCapacity": "workPackageId"}}
+    )
+    res = eas_client.cancel_hosting_capacity_work_package(work_package_id="workPackageId")
+    httpserver.check_assertions()
+    assert res == {"data": {"cancelHostingCapacity": "workPackageId"}}
+
+
+def test_cancel_hosting_capacity_work_package_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+            {"data": {"cancelWorkPackage": "workPackageId"}})
+        with pytest.raises(ssl.SSLError):
+            eas_client.cancel_hosting_capacity_work_package("workPackageId")
+
+
+def test_cancel_hosting_capacity_work_package_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+            {"data": {"cancelWorkPackage": "workPackageId"}})
+        res = eas_client.cancel_hosting_capacity_work_package("workPackageId")
+        httpserver.check_assertions()
+        assert res == {"data": {"cancelWorkPackage": "workPackageId"}}
+
+
+def test_get_hosting_capacity_work_package_progress_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"data": {"getWorkPackageProgress": {}}}
+    )
+    res = eas_client.get_hosting_capacity_work_packages_progress()
+    httpserver.check_assertions()
+    assert res == {"data": {"getWorkPackageProgress": {}}}
+
+
+def test_get_hosting_capacity_work_package_progress_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+            {"data": {"getWorkPackageProgress": {}}})
+        with pytest.raises(ssl.SSLError):
+            eas_client.get_hosting_capacity_work_packages_progress()
+
+
+def test_get_hosting_capacity_work_package_progress_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+            {"data": {"getWorkPackageProgress": {}}})
+        res = eas_client.get_hosting_capacity_work_packages_progress()
+        httpserver.check_assertions()
+        assert res == {"data": {"getWorkPackageProgress": {}}}
 
 
 def test_upload_study_no_verify_success(httpserver: HTTPServer):
