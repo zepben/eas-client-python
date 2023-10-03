@@ -3,8 +3,8 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
@@ -33,6 +33,12 @@ class SwitchMeterPlacementConfig:
 
 
 @dataclass
+class TimePeriod:
+    startTime: datetime
+    endTime: datetime
+
+
+@dataclass
 class ModelConfig:
     vmPu: Optional[float] = None
     vMinPu: Optional[float] = None
@@ -41,7 +47,9 @@ class ModelConfig:
     collapseSWER: Optional[bool] = None
     meterAtHVSource: Optional[bool] = None
     metersAtDistTransformers: Optional[bool] = None
-    switchMeterPlacementConfigs: Optional[List[SwitchMeterPlacementConfig]] = None
+    switchMeterPlacementConfigs: Optional[List[SwitchMeterPlacementConfig]] = None,
+    fixedTime: Optional[datetime] = None,
+    timePeriod: Optional[TimePeriod] = None
 
 
 class SolveMode(Enum):

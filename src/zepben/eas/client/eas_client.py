@@ -214,6 +214,11 @@ class EasClient:
                                 "namePattern": spc.namePattern if spc.namePattern is not None else None,
                             } for spc in
                                 work_package.modelConfig.switchMeterPlacementConfigs] if work_package.modelConfig.switchMeterPlacementConfigs is not None else None,
+                            "fixedTime": work_package.modelConfig.fixedTime if work_package.modelConfig.fixedTime is not None else None,
+                            "timePeriod": {
+                                "startTime": work_package.modelConfig.timePeriod.startTime,
+                                "endTime": work_package.modelConfig.timePeriod.endTime
+                            } if work_package.modelConfig.timePeriod is not None else None
                         } if work_package.modelConfig is not None else None,
                         "solveConfig": {
                             "normVMinPu": work_package.solveConfig.normVMinPu if work_package.solveConfig.normVMinPu is not None else None,
