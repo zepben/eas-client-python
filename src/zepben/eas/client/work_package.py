@@ -3,9 +3,9 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-from datetime import datetime
+from datetime import datetime, tzinfo
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Union
 
 __all__ = ["WorkPackageConfig",
            "SwitchClass",
@@ -13,7 +13,9 @@ __all__ = ["WorkPackageConfig",
            "ModelConfig",
            "SolveMode",
            "SolveConfig",
-           "ResultsDetailLevel"]
+           "ResultsDetailLevel",
+           "FixedTime",
+           "TimePeriod"]
 
 
 class SwitchClass(Enum):
@@ -38,6 +40,13 @@ class SwitchMeterPlacementConfig:
         self.name_pattern = name_pattern
 
 
+class FixedTime:
+    time: datetime
+
+    def __init__(self, time: datetime, timezone: tzinfo):
+        self.time = time.replace(tzinfo=timezone)
+
+
 class TimePeriod:
     start_time: datetime
     end_time: datetime
@@ -46,12 +55,28 @@ class TimePeriod:
             self,
             start_time: datetime,
             end_time: datetime,
+            timezone: tzinfo
     ):
-        self.start_time = start_time
-        self.end_time = end_time
+        self._validate(start_time, end_time)
+        self.start_time = start_time.replace(tzinfo=timezone)
+        self.end_time = end_time.replace(tzinfo=timezone)
+
+    @staticmethod
+    def _validate(start_time: datetime, end_time: datetime):
+        ddelta = (end_time - start_time).days
+
+        if ddelta > 365:
+            raise ValueError("The difference between 'start_time' and 'end_time' cannot be greater than a year.")
+
+        if ddelta < 1:
+            raise ValueError("The difference between 'start_time' and 'end_time' cannot be less than a day.")
+
+        if ddelta < 0:
+            raise ValueError("The 'start_time' must be before 'end_time'.")
 
 
 class ModelConfig:
+    load_time: Union[TimePeriod, FixedTime]
     vm_pu: Optional[float]
     vmin_pu: Optional[float]
     vmax_pu: Optional[float]
@@ -60,11 +85,10 @@ class ModelConfig:
     meter_at_hv_source: Optional[bool]
     meters_at_dist_transformers: Optional[bool]
     switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]]
-    fixed_time: Optional[datetime]
-    time_period: Optional[TimePeriod]
 
     def __init__(
             self,
+            load_time: Union[TimePeriod, FixedTime],
             vm_pu: Optional[float] = None,
             vmin_pu: Optional[float] = None,
             vmax_pu: Optional[float] = None,
@@ -72,10 +96,9 @@ class ModelConfig:
             collapse_swer: Optional[bool] = None,
             meter_at_hv_source: Optional[bool] = None,
             meters_at_dist_transformers: Optional[bool] = None,
-            switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]] = None,
-            fixed_time: Optional[datetime] = None,
-            time_period: Optional[TimePeriod] = None,
+            switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]] = None
     ):
+        self.load_time = load_time
         self.vm_pu = vm_pu
         self.vmin_pu = vmin_pu
         self.vmax_pu = vmax_pu
@@ -84,8 +107,6 @@ class ModelConfig:
         self.meter_at_hv_source = meter_at_hv_source
         self.meters_at_dist_transformers = meters_at_dist_transformers
         self.switch_meter_placement_configs = switch_meter_placement_configs
-        self.fixed_time = fixed_time
-        self.time_period = time_period
 
 
 class SolveMode(Enum):
@@ -152,7 +173,7 @@ class WorkPackageConfig:
             feeders: List[str],
             years: List[int],
             scenarios: List[str],
-            model_config: Optional[ModelConfig] = None,
+            model_config: ModelConfig,
             solve_config: Optional[SolveConfig] = None,
             results_detail_level: Optional[ResultsDetailLevel] = None,
             quality_assurance_processing: Optional[bool] = None,

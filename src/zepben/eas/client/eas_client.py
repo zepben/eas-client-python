@@ -18,7 +18,7 @@ from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher
 
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
-from zepben.eas.client.work_package import WorkPackageConfig
+from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod
 
 __all__ = ["EasClient"]
 
@@ -215,15 +215,15 @@ class EasClient:
                                 "namePattern": spc.name_pattern if spc.name_pattern is not None else None,
                             } for spc in
                                 work_package.model_config.switch_meter_placement_configs] if work_package.model_config.switch_meter_placement_configs is not None else None,
-                            "fixedTime": work_package.model_config.fixed_time.astimezone(
-                                timezone.utc).isoformat().replace(
-                                "+00:00", "Z") if work_package.model_config.fixed_time is not None else None,
+                            "fixedTime": work_package.model_config.load_time.time.astimezone(
+                                timezone.utc).isoformat().replace("+00:00", "Z")
+                            if isinstance(work_package.model_config.load_time, FixedTime) else None,
                             "timePeriod": {
-                                "startTime": work_package.model_config.time_period.start_time.astimezone(
+                                "startTime": work_package.model_config.load_time.start_time.astimezone(
                                     timezone.utc).isoformat().replace("+00:00", "Z"),
-                                "endTime": work_package.model_config.time_period.end_time.astimezone(
+                                "endTime": work_package.model_config.load_time.end_time.astimezone(
                                     timezone.utc).isoformat().replace("+00:00", "Z"),
-                            } if work_package.model_config.time_period is not None else None
+                            } if isinstance(work_package.model_config.load_time, TimePeriod) else None
                         } if work_package.model_config is not None else None,
                         "solveConfig": {
                             "normVMinPu": work_package.solve_config.norm_vmin_pu if work_package.solve_config.norm_vmin_pu is not None else None,
