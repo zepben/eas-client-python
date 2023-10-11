@@ -237,7 +237,18 @@ class EasClient:
                             "mode": work_package.solve_config.mode.name if work_package.solve_config.mode is not None else None,
                             "stepSizeMinutes": work_package.solve_config.step_size_minutes if work_package.solve_config.step_size_minutes is not None else None,
                         } if work_package.solve_config is not None else None,
-                        "resultsDetailLevel": work_package.results_detail_level.name if work_package.results_detail_level is not None else None,
+                        "resultsConfig": {
+                            "rawConfig": {
+                                "energy_meter_voltages_raw": work_package.results_config.rawConfig.energy_meter_voltages_raw if work_package.results_config.rawConfig.energy_meter_voltages_raw is not None else None,
+                                "energy_meters_raw": work_package.results_config.rawConfig.energy_meters_raw if work_package.results_config.rawConfig.energy_meters_raw is not None else None,
+                                "results_per_meter": work_package.results_config.rawConfig.results_per_meter if work_package.results_config.rawConfig.results_per_meter is not None else None,
+                                "over_loads_raw": work_package.results_config.rawConfig.over_loads_raw if work_package.results_config.rawConfig.over_loads_raw is not None else None,
+                                "voltage_exceptions_raw": work_package.results_config.rawConfig.voltage_exceptions_raw if work_package.results_config.rawConfig.voltage_exceptions_raw is not None else None,
+                            } if work_package.results_config.rawConfig is not None else None,
+                            "metricsConfig": {
+                                "calculate_performance_metrics": work_package.results_config.metricsConfig.calculate_performance_metrics if work_package.results_config.metricsConfig.calculate_performance_metrics is not None else None
+                            } if work_package.results_config.metricsConfig is not None else None
+                        } if work_package.results_config is not None else None,
                         "qualityAssuranceProcessing": work_package.quality_assurance_processing if work_package.quality_assurance_processing is not None else None
                     }
                 }

@@ -13,7 +13,7 @@ __all__ = ["WorkPackageConfig",
            "ModelConfig",
            "SolveMode",
            "SolveConfig",
-           "ResultsDetailLevel",
+           "ResultsConfig",
            "FixedTime",
            "TimePeriod"]
 
@@ -151,11 +151,21 @@ class SolveConfig:
         self.step_size_minutes = step_size_minutes
 
 
-class ResultsDetailLevel(Enum):
-    STANDARD = "STANDARD"
-    BASIC = "BASIC"
-    EXTENDED = "EXTENDED"
-    RAW = "RAW"
+class RawResultsConfig:
+    energy_meter_voltages_raw: Optional[bool]
+    energy_meters_raw: Optional[bool]
+    results_per_meter: Optional[bool]
+    over_loads_raw: Optional[bool]
+    voltage_exceptions_raw: Optional[bool]
+
+
+class MetricsResultsConfig:
+    calculate_performance_metrics: Optional[bool]
+
+
+class ResultsConfig:
+    rawConfig: Optional[RawResultsConfig]
+    metricsConfig: Optional[MetricsResultsConfig]
 
 
 class WorkPackageConfig:
@@ -165,7 +175,7 @@ class WorkPackageConfig:
     scenarios: List[str]
     model_config: Optional[ModelConfig]
     solve_config: Optional[SolveConfig]
-    results_detail_level: Optional[ResultsDetailLevel]
+    results_config: Optional[ResultsConfig]
     quality_assurance_processing: Optional[bool]
 
     def __init__(
@@ -175,7 +185,7 @@ class WorkPackageConfig:
             scenarios: List[str],
             model_config: ModelConfig,
             solve_config: Optional[SolveConfig] = None,
-            results_detail_level: Optional[ResultsDetailLevel] = None,
+            results_config: Optional[ResultsConfig] = None,
             quality_assurance_processing: Optional[bool] = None,
     ):
         self.feeders = feeders
@@ -183,7 +193,7 @@ class WorkPackageConfig:
         self.scenarios = scenarios
         self.model_config = model_config
         self.solve_config = solve_config
-        self.results_detail_level = results_detail_level
+        self.results_config = results_config
         self.quality_assurance_processing = quality_assurance_processing
 
 
