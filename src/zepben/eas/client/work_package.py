@@ -14,6 +14,9 @@ __all__ = ["WorkPackageConfig",
            "SolveMode",
            "SolveConfig",
            "ResultsConfig",
+           "RawResultsConfig",
+           "MetricsResultsConfig",
+           "StoredResultsConfig",
            "FixedTime",
            "TimePeriod"]
 
@@ -163,9 +166,17 @@ class MetricsResultsConfig:
     calculate_performance_metrics: Optional[bool]
 
 
+class StoredResultsConfig:
+    energy_meter_voltages_raw: Optional[bool]
+    energy_meters_raw: Optional[bool]
+    over_loads_raw: Optional[bool]
+    voltage_exceptions_raw: Optional[bool]
+
+
 class ResultsConfig:
-    rawConfig: Optional[RawResultsConfig]
-    metricsConfig: Optional[MetricsResultsConfig]
+    raw_config: Optional[RawResultsConfig]
+    stored_results_config: Optional[StoredResultsConfig]
+    metrics_config: Optional[MetricsResultsConfig]
 
 
 class WorkPackageConfig:

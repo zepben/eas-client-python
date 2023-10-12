@@ -239,15 +239,21 @@ class EasClient:
                         } if work_package.solve_config is not None else None,
                         "resultsConfig": {
                             "rawConfig": {
-                                "energy_meter_voltages_raw": work_package.results_config.rawConfig.energy_meter_voltages_raw if work_package.results_config.rawConfig.energy_meter_voltages_raw is not None else None,
-                                "energy_meters_raw": work_package.results_config.rawConfig.energy_meters_raw if work_package.results_config.rawConfig.energy_meters_raw is not None else None,
-                                "results_per_meter": work_package.results_config.rawConfig.results_per_meter if work_package.results_config.rawConfig.results_per_meter is not None else None,
-                                "over_loads_raw": work_package.results_config.rawConfig.over_loads_raw if work_package.results_config.rawConfig.over_loads_raw is not None else None,
-                                "voltage_exceptions_raw": work_package.results_config.rawConfig.voltage_exceptions_raw if work_package.results_config.rawConfig.voltage_exceptions_raw is not None else None,
-                            } if work_package.results_config.rawConfig is not None else None,
+                                "energy_meter_voltages_raw": work_package.results_config.raw_config.energy_meter_voltages_raw if work_package.results_config.raw_config.energy_meter_voltages_raw is not None else None,
+                                "energy_meters_raw": work_package.results_config.raw_config.energy_meters_raw if work_package.results_config.raw_config.energy_meters_raw is not None else None,
+                                "results_per_meter": work_package.results_config.raw_config.results_per_meter if work_package.results_config.raw_config.results_per_meter is not None else None,
+                                "over_loads_raw": work_package.results_config.raw_config.over_loads_raw if work_package.results_config.raw_config.over_loads_raw is not None else None,
+                                "voltage_exceptions_raw": work_package.results_config.raw_config.voltage_exceptions_raw if work_package.results_config.raw_config.voltage_exceptions_raw is not None else None,
+                            } if work_package.results_config.raw_config is not None else None,
+                            "storedResultsConfig": {
+                                "energy_meter_voltages_raw": work_package.results_config.stored_results_config.energy_meter_voltages_raw if work_package.results_config.stored_results_config.energy_meter_voltages_raw is not None else None,
+                                "energy_meters_raw": work_package.results_config.stored_results_config.energy_meters_raw if work_package.results_config.stored_results_config.energy_meters_raw is not None else None,
+                                "over_loads_raw": work_package.results_config.stored_results_config.over_loads_raw if work_package.results_config.stored_results_config.over_loads_raw is not None else None,
+                                "voltage_exceptions_raw": work_package.results_config.stored_results_config.voltage_exceptions_raw if work_package.results_config.stored_results_config.voltage_exceptions_raw is not None else None,
+                            } if work_package.results_config.stored_results_config is not None else None,
                             "metricsConfig": {
-                                "calculate_performance_metrics": work_package.results_config.metricsConfig.calculate_performance_metrics if work_package.results_config.metricsConfig.calculate_performance_metrics is not None else None
-                            } if work_package.results_config.metricsConfig is not None else None
+                                "calculate_performance_metrics": work_package.results_config.metrics_config.calculate_performance_metrics if work_package.results_config.metrics_config.calculate_performance_metrics is not None else None
+                            } if work_package.results_config.metrics_config is not None else None
                         } if work_package.results_config is not None else None,
                         "qualityAssuranceProcessing": work_package.quality_assurance_processing if work_package.quality_assurance_processing is not None else None
                     }
