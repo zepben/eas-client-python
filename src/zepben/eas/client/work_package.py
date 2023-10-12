@@ -47,7 +47,7 @@ class FixedTime:
     time: datetime
 
     def __init__(self, time: datetime, timezone: tzinfo):
-        self.time = time.replace(tzinfo=timezone)
+        self.time = time.replace(tzinfo=None)
 
 
 class TimePeriod:
@@ -57,12 +57,11 @@ class TimePeriod:
     def __init__(
             self,
             start_time: datetime,
-            end_time: datetime,
-            timezone: tzinfo
+            end_time: datetime
     ):
         self._validate(start_time, end_time)
-        self.start_time = start_time.replace(tzinfo=timezone)
-        self.end_time = end_time.replace(tzinfo=timezone)
+        self.start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+        self.end_time = end_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
 
     @staticmethod
     def _validate(start_time: datetime, end_time: datetime):
@@ -161,9 +160,26 @@ class RawResultsConfig:
     over_loads_raw: Optional[bool]
     voltage_exceptions_raw: Optional[bool]
 
+    def __init__(
+            self,
+            energy_meter_voltages_raw: Optional[bool],
+            energy_meters_raw: Optional[bool],
+            results_per_meter: Optional[bool],
+            over_loads_raw: Optional[bool],
+            voltage_exceptions_raw: Optional[bool],
+    ):
+        self.energy_meter_voltages_raw = energy_meter_voltages_raw
+        self.energy_meters_raw = energy_meters_raw
+        self.results_per_meter = results_per_meter
+        self.over_loads_raw = over_loads_raw
+        self.voltage_exceptions_raw = voltage_exceptions_raw
+
 
 class MetricsResultsConfig:
     calculate_performance_metrics: Optional[bool]
+
+    def __init__(self, calculate_performance_metrics: Optional[bool]):
+        self.calculate_performance_metrics = calculate_performance_metrics
 
 
 class StoredResultsConfig:
@@ -172,11 +188,33 @@ class StoredResultsConfig:
     over_loads_raw: Optional[bool]
     voltage_exceptions_raw: Optional[bool]
 
+    def __init__(
+            self,
+            energy_meter_voltages_raw: Optional[bool],
+            energy_meters_raw: Optional[bool],
+            over_loads_raw: Optional[bool],
+            voltage_exceptions_raw: Optional[bool]
+    ):
+        self.energy_meter_voltages_raw = energy_meter_voltages_raw
+        self.energy_meters_raw = energy_meters_raw
+        self.over_loads_raw = over_loads_raw
+        self.voltage_exceptions_raw = voltage_exceptions_raw
+
 
 class ResultsConfig:
     raw_config: Optional[RawResultsConfig]
     stored_results_config: Optional[StoredResultsConfig]
     metrics_config: Optional[MetricsResultsConfig]
+
+    def __init__(
+            self,
+            raw_config: Optional[RawResultsConfig],
+            stored_results_config: Optional[StoredResultsConfig],
+            metrics_config: Optional[MetricsResultsConfig],
+    ):
+        self.raw_config = raw_config
+        self.stored_results_config = stored_results_config
+        self.metrics_config = metrics_config
 
 
 class WorkPackageConfig:
