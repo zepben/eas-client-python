@@ -87,6 +87,7 @@ class ModelConfig:
     meter_at_hv_source: Optional[bool]
     meters_at_dist_transformers: Optional[bool]
     switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]]
+    calibration: Optional[bool]
 
     def __init__(
             self,
@@ -98,7 +99,8 @@ class ModelConfig:
             collapse_swer: Optional[bool] = None,
             meter_at_hv_source: Optional[bool] = None,
             meters_at_dist_transformers: Optional[bool] = None,
-            switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]] = None
+            switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]] = None,
+            calibration: Optional[bool] = None
     ):
         self.load_time = load_time
         self.vm_pu = vm_pu
@@ -109,6 +111,7 @@ class ModelConfig:
         self.meter_at_hv_source = meter_at_hv_source
         self.meters_at_dist_transformers = meters_at_dist_transformers
         self.switch_meter_placement_configs = switch_meter_placement_configs
+        self.calibration = calibration
 
 
 class SolveMode(Enum):

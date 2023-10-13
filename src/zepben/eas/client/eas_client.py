@@ -6,7 +6,6 @@
 import ssl
 import warnings
 from asyncio import get_event_loop
-from datetime import timezone
 from hashlib import sha256
 from json import dumps
 from typing import Optional
@@ -215,15 +214,13 @@ class EasClient:
                                 "namePattern": spc.name_pattern if spc.name_pattern is not None else None,
                             } for spc in
                                 work_package.model_config.switch_meter_placement_configs] if work_package.model_config.switch_meter_placement_configs is not None else None,
-                            "fixedTime": work_package.model_config.load_time.time.astimezone(
-                                timezone.utc).isoformat().replace("+00:00", "Z")
+                            "fixedTime": work_package.model_config.load_time.time.isoformat()
                             if isinstance(work_package.model_config.load_time, FixedTime) else None,
                             "timePeriod": {
-                                "startTime": work_package.model_config.load_time.start_time.astimezone(
-                                    timezone.utc).isoformat().replace("+00:00", "Z"),
-                                "endTime": work_package.model_config.load_time.end_time.astimezone(
-                                    timezone.utc).isoformat().replace("+00:00", "Z"),
-                            } if isinstance(work_package.model_config.load_time, TimePeriod) else None
+                                "startTime": work_package.model_config.load_time.start_time.isoformat(),
+                                "endTime": work_package.model_config.load_time.end_time.isoformat(),
+                            } if isinstance(work_package.model_config.load_time, TimePeriod) else None,
+                            "calibration": work_package.model_config.calibration if work_package.model_config.calibration is not None else None
                         } if work_package.model_config is not None else None,
                         "solveConfig": {
                             "normVMinPu": work_package.solve_config.norm_vmin_pu if work_package.solve_config.norm_vmin_pu is not None else None,
