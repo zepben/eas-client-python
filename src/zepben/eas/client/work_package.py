@@ -46,7 +46,7 @@ class SwitchMeterPlacementConfig:
 class FixedTime:
     time: datetime
 
-    def __init__(self, time: datetime, timezone: tzinfo):
+    def __init__(self, time: datetime):
         self.time = time.replace(tzinfo=None)
 
 
