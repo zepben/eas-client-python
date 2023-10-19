@@ -3,7 +3,7 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-from datetime import datetime, tzinfo
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Union
 
@@ -165,11 +165,11 @@ class RawResultsConfig:
 
     def __init__(
             self,
-            energy_meter_voltages_raw: Optional[bool],
-            energy_meters_raw: Optional[bool],
-            results_per_meter: Optional[bool],
-            over_loads_raw: Optional[bool],
-            voltage_exceptions_raw: Optional[bool],
+            energy_meter_voltages_raw: Optional[bool] = None,
+            energy_meters_raw: Optional[bool] = None,
+            results_per_meter: Optional[bool] = None,
+            over_loads_raw: Optional[bool] = None,
+            voltage_exceptions_raw: Optional[bool] = None,
     ):
         self.energy_meter_voltages_raw = energy_meter_voltages_raw
         self.energy_meters_raw = energy_meters_raw
@@ -181,7 +181,7 @@ class RawResultsConfig:
 class MetricsResultsConfig:
     calculate_performance_metrics: Optional[bool]
 
-    def __init__(self, calculate_performance_metrics: Optional[bool]):
+    def __init__(self, calculate_performance_metrics: Optional[bool] = None):
         self.calculate_performance_metrics = calculate_performance_metrics
 
 
@@ -193,10 +193,10 @@ class StoredResultsConfig:
 
     def __init__(
             self,
-            energy_meter_voltages_raw: Optional[bool],
-            energy_meters_raw: Optional[bool],
-            over_loads_raw: Optional[bool],
-            voltage_exceptions_raw: Optional[bool]
+            energy_meter_voltages_raw: Optional[bool] = None,
+            energy_meters_raw: Optional[bool] = None,
+            over_loads_raw: Optional[bool] = None,
+            voltage_exceptions_raw: Optional[bool] = None
     ):
         self.energy_meter_voltages_raw = energy_meter_voltages_raw
         self.energy_meters_raw = energy_meters_raw
@@ -211,9 +211,9 @@ class ResultsConfig:
 
     def __init__(
             self,
-            raw_config: Optional[RawResultsConfig],
-            stored_results_config: Optional[StoredResultsConfig],
-            metrics_config: Optional[MetricsResultsConfig],
+            raw_config: Optional[RawResultsConfig] = None,
+            stored_results_config: Optional[StoredResultsConfig] = None,
+            metrics_config: Optional[MetricsResultsConfig] = None,
     ):
         self.raw_config = raw_config
         self.stored_results_config = stored_results_config
