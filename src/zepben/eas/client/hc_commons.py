@@ -69,7 +69,7 @@ RESULTS_CONFIG_DEFAULT_RESULTS_CONFIG = ResultsConfig(
 STANDARD_RESULTS_CONFIG = ResultsConfig(
     raw_config=RAW_RESULTS_CONFIG_STANDARD,
     metrics_config=METRICS_RESULTS_CONFIG_CALCULATE_PERFORMANCE_METRICS,
-    stored_results_config=STORED_RESULTS_CONFIG_STORE_NONE
+    stored_results_config=StoredResultsConfig(voltage_exceptions_raw=True, over_loads_raw=True)
 )
 
 BASIC_RESULTS_CONFIG = ResultsConfig(
