@@ -6,6 +6,7 @@
 import random
 import ssl
 import string
+from datetime import datetime
 from unittest import mock
 
 import pytest
@@ -15,7 +16,7 @@ from zepben.auth import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study
 from zepben.eas.client.study import Result
-from zepben.eas.client.work_package import WorkPackageConfig
+from zepben.eas.client.work_package import WorkPackageConfig, ModelConfig, TimePeriod
 
 mock_host = ''.join(random.choices(string.ascii_lowercase, k=10))
 mock_port = random.randrange(1024)
@@ -133,7 +134,18 @@ def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPSer
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runWorkPackage": "workPackageId"}})
-    res = eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"], [1], ["scenario"]))
+    res = eas_client.run_hosting_capacity_work_package(
+        WorkPackageConfig(
+            ["feeder"],
+            [1],
+            ["scenario"],
+            model_config=ModelConfig(
+                load_time=TimePeriod(
+                    datetime(2022, 1, 1),
+                    datetime(2022, 1, 2))
+            )
+        )
+    )
     httpserver.check_assertions()
     assert res == {"data": {"runWorkPackage": "workPackageId"}}
 
@@ -150,7 +162,18 @@ def test_run_hosting_capacity_work_package_invalid_certificate_failure(ca: trust
         httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
             {"data": {"runWorkPackage": "workPackageId"}})
         with pytest.raises(ssl.SSLError):
-            eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"], [1], ["scenario"]))
+            eas_client.run_hosting_capacity_work_package(
+                WorkPackageConfig(
+                    ["feeder"],
+                    [1],
+                    ["scenario"],
+                    model_config=ModelConfig(
+                        load_time=TimePeriod(
+                            datetime(2022, 1, 1),
+                            datetime(2022, 1, 2))
+                    )
+                )
+            )
 
 
 def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
@@ -164,7 +187,18 @@ def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme
 
         httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
             {"data": {"runWorkPackage": "workPackageId"}})
-        res = eas_client.run_hosting_capacity_work_package(WorkPackageConfig(["feeder"], [1], ["scenario"]))
+        res = eas_client.run_hosting_capacity_work_package(
+            WorkPackageConfig(
+                ["feeder"],
+                [1],
+                ["scenario"],
+                model_config=ModelConfig(
+                    load_time=TimePeriod(
+                        datetime(2022, 1, 1),
+                        datetime(2022, 1, 2))
+                )
+            )
+        )
         httpserver.check_assertions()
         assert res == {"data": {"runWorkPackage": "workPackageId"}}
 
