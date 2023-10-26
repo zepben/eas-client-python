@@ -20,7 +20,7 @@ setup(
     author="Ramon Bouckaert",
     author_email="ramon.bouckaert@zepben.com",
     package_dir={"": "src"},
-    python_requires='>=3.7',
+    python_requires='>=3.9',
     packages=find_namespace_packages(where="src"),
     install_requires=[
         "geojson==2.5.0",
