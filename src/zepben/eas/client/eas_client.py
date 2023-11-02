@@ -3,11 +3,11 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-import json
 import ssl
 import warnings
 from asyncio import get_event_loop
 from hashlib import sha256
+from json import dumps
 from typing import Optional
 
 import aiohttp
@@ -17,7 +17,7 @@ from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher
 
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
-from zepben.eas.client.work_package import WorkPackageConfig
+from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod
 
 __all__ = ["EasClient"]
 
@@ -152,7 +152,7 @@ class EasClient:
         if session is None:
             conn = aiohttp.TCPConnector(limit=200, limit_per_host=0)
             timeout = aiohttp.ClientTimeout(total=60)
-            self.session = aiohttp.ClientSession(json_serialize=json_serialiser or json.dumps, connector=conn,
+            self.session = aiohttp.ClientSession(json_serialize=json_serialiser or dumps, connector=conn,
                                                  timeout=timeout)
         else:
             self.session = session
@@ -202,33 +202,57 @@ class EasClient:
                         "years": work_package.years,
                         "scenarios": work_package.scenarios,
                         "modelConfig": {
-                            "vmPu": work_package.modelConfig.vmPu if work_package.modelConfig.vmPu is not None else None,
-                            "vMinPu": work_package.modelConfig.vMinPu if work_package.modelConfig.vMinPu is not None else None,
-                            "vMaxPu": work_package.modelConfig.vMaxPu if work_package.modelConfig.vMaxPu is not None else None,
-                            "loadModel": work_package.modelConfig.loadModel if work_package.modelConfig.loadModel is not None else None,
-                            "collapseSWER": work_package.modelConfig.collapseSWER if work_package.modelConfig.collapseSWER is not None else None,
-                            "meterAtHVSource": work_package.modelConfig.meterAtHVSource if work_package.modelConfig.meterAtHVSource is not None else None,
-                            "metersAtDistTransformers": work_package.modelConfig.metersAtDistTransformers if work_package.modelConfig.metersAtDistTransformers is not None else None,
+                            "vmPu": work_package.model_config.vm_pu if work_package.model_config.vm_pu is not None else None,
+                            "vMinPu": work_package.model_config.vmin_pu if work_package.model_config.vmin_pu is not None else None,
+                            "vMaxPu": work_package.model_config.vmax_pu if work_package.model_config.vmax_pu is not None else None,
+                            "loadModel": work_package.model_config.load_model if work_package.model_config.load_model is not None else None,
+                            "collapseSWER": work_package.model_config.collapse_swer if work_package.model_config.collapse_swer is not None else None,
+                            "meterAtHVSource": work_package.model_config.meter_at_hv_source if work_package.model_config.meter_at_hv_source is not None else None,
+                            "metersAtDistTransformers": work_package.model_config.meters_at_dist_transformers if work_package.model_config.meters_at_dist_transformers is not None else None,
                             "switchMeterPlacementConfigs": [{
-                                "meterSwitchClass": spc.meterSwitchClass.name if spc.meterSwitchClass is not None else None,
-                                "namePattern": spc.namePattern if spc.namePattern is not None else None,
+                                "meterSwitchClass": spc.meter_switch_class.name if spc.meter_switch_class is not None else None,
+                                "namePattern": spc.name_pattern if spc.name_pattern is not None else None,
                             } for spc in
-                                work_package.modelConfig.switchMeterPlacementConfigs] if work_package.modelConfig.switchMeterPlacementConfigs is not None else None,
-                        } if work_package.modelConfig is not None else None,
+                                work_package.model_config.switch_meter_placement_configs] if work_package.model_config.switch_meter_placement_configs is not None else None,
+                            "fixedTime": work_package.model_config.load_time.time.isoformat()
+                            if isinstance(work_package.model_config.load_time, FixedTime) else None,
+                            "timePeriod": {
+                                "startTime": work_package.model_config.load_time.start_time.isoformat(),
+                                "endTime": work_package.model_config.load_time.end_time.isoformat(),
+                            } if isinstance(work_package.model_config.load_time, TimePeriod) else None,
+                            "calibration": work_package.model_config.calibration if work_package.model_config.calibration is not None else None
+                        } if work_package.model_config is not None else None,
                         "solveConfig": {
-                            "normVMinPu": work_package.solveConfig.normVMinPu if work_package.solveConfig.normVMinPu is not None else None,
-                            "normVMaxPu": work_package.solveConfig.normVMaxPu if work_package.solveConfig.normVMaxPu is not None else None,
-                            "emergVMinPu": work_package.solveConfig.emergVMinPu if work_package.solveConfig.emergVMinPu is not None else None,
-                            "emergVMaxPu": work_package.solveConfig.emergVMaxPu if work_package.solveConfig.emergVMaxPu is not None else None,
-                            "baseFrequency": work_package.solveConfig.baseFrequency if work_package.solveConfig.baseFrequency is not None else None,
-                            "voltageBases": work_package.solveConfig.voltageBases if work_package.solveConfig.voltageBases is not None else None,
-                            "maxIter": work_package.solveConfig.maxIter if work_package.solveConfig.maxIter is not None else None,
-                            "maxControlIter": work_package.solveConfig.maxControlIter if work_package.solveConfig.maxControlIter is not None else None,
-                            "mode": work_package.solveConfig.mode.name if work_package.solveConfig.mode is not None else None,
-                            "stepSizeMinutes": work_package.solveConfig.stepSizeMinutes if work_package.solveConfig.stepSizeMinutes is not None else None,
-                        } if work_package.solveConfig is not None else None,
-                        "resultsDetailLevel": work_package.resultsDetailLevel.name if work_package.resultsDetailLevel is not None else None,
-                        "qualityAssuranceProcessing": work_package.qualityAssuranceProcessing if work_package.qualityAssuranceProcessing is not None else None
+                            "normVMinPu": work_package.solve_config.norm_vmin_pu if work_package.solve_config.norm_vmin_pu is not None else None,
+                            "normVMaxPu": work_package.solve_config.norm_vmax_pu if work_package.solve_config.norm_vmax_pu is not None else None,
+                            "emergVMinPu": work_package.solve_config.emerg_vmin_pu if work_package.solve_config.emerg_vmin_pu is not None else None,
+                            "emergVMaxPu": work_package.solve_config.emerg_vmax_pu if work_package.solve_config.emerg_vmax_pu is not None else None,
+                            "baseFrequency": work_package.solve_config.base_frequency if work_package.solve_config.base_frequency is not None else None,
+                            "voltageBases": work_package.solve_config.voltage_bases if work_package.solve_config.voltage_bases is not None else None,
+                            "maxIter": work_package.solve_config.max_iter if work_package.solve_config.max_iter is not None else None,
+                            "maxControlIter": work_package.solve_config.max_control_iter if work_package.solve_config.max_control_iter is not None else None,
+                            "mode": work_package.solve_config.mode.name if work_package.solve_config.mode is not None else None,
+                            "stepSizeMinutes": work_package.solve_config.step_size_minutes if work_package.solve_config.step_size_minutes is not None else None,
+                        } if work_package.solve_config is not None else None,
+                        "resultsConfig": {
+                            "rawConfig": {
+                                "energyMeterVoltagesRaw": work_package.results_config.raw_config.energy_meter_voltages_raw if work_package.results_config.raw_config.energy_meter_voltages_raw is not None else None,
+                                "energyMetersRaw": work_package.results_config.raw_config.energy_meters_raw if work_package.results_config.raw_config.energy_meters_raw is not None else None,
+                                "resultsPerMeter": work_package.results_config.raw_config.results_per_meter if work_package.results_config.raw_config.results_per_meter is not None else None,
+                                "overloadsRaw": work_package.results_config.raw_config.over_loads_raw if work_package.results_config.raw_config.over_loads_raw is not None else None,
+                                "voltageExceptionsRaw": work_package.results_config.raw_config.voltage_exceptions_raw if work_package.results_config.raw_config.voltage_exceptions_raw is not None else None,
+                            } if work_package.results_config.raw_config is not None else None,
+                            "storedResultsConfig": {
+                                "energyMeterVoltagesRaw": work_package.results_config.stored_results_config.energy_meter_voltages_raw if work_package.results_config.stored_results_config.energy_meter_voltages_raw is not None else None,
+                                "energyMetersRaw": work_package.results_config.stored_results_config.energy_meters_raw if work_package.results_config.stored_results_config.energy_meters_raw is not None else None,
+                                "overloadsRaw": work_package.results_config.stored_results_config.over_loads_raw if work_package.results_config.stored_results_config.over_loads_raw is not None else None,
+                                "voltageExceptionsRaw": work_package.results_config.stored_results_config.voltage_exceptions_raw if work_package.results_config.stored_results_config.voltage_exceptions_raw is not None else None,
+                            } if work_package.results_config.stored_results_config is not None else None,
+                            "metricsConfig": {
+                                "calculatePerformanceMetrics": work_package.results_config.metrics_config.calculate_performance_metrics if work_package.results_config.metrics_config.calculate_performance_metrics is not None else None
+                            } if work_package.results_config.metrics_config is not None else None
+                        } if work_package.results_config is not None else None,
+                        "qualityAssuranceProcessing": work_package.quality_assurance_processing if work_package.quality_assurance_processing is not None else None
                     }
                 }
             }
