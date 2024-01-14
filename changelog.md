@@ -12,6 +12,9 @@
 * Added basic client method to run hosting capacity work packages
 * Added basic client method to cancel hosting capacity work packages
 * Added basic client method to request hosting capacity work packages progress
+* Added options to WorkPackageaConfig for:
+    - Configuring load/export power factor.
+    - Configuring running of NetworkFixer steps
 
 ##### Enhancements
 

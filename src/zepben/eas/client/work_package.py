@@ -88,6 +88,16 @@ class ModelConfig:
     meters_at_dist_transformers: Optional[bool]
     switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]]
     calibration: Optional[bool]
+    p_factor_base_exports: Optional[float]
+    p_factor_forecast_pv: Optional[float]
+    p_factor_base_imports: Optional[float]
+    fix_single_phase_loads: Optional[bool]
+    max_single_phase_load: Optional[float]
+    fix_overloading_consumers: Optional[bool]
+    max_load_tx_ratio: Optional[float]
+    max_gen_tx_ratio: Optional[float]
+    fix_undersized_service_lines: Optional[bool]
+    max_load_line_ratio: Optional[float]
 
     def __init__(
             self,
@@ -100,7 +110,18 @@ class ModelConfig:
             meter_at_hv_source: Optional[bool] = None,
             meters_at_dist_transformers: Optional[bool] = None,
             switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]] = None,
-            calibration: Optional[bool] = None
+            calibration: Optional[bool] = None,
+            p_factor_base_exports: Optional[float] = None,
+            p_factor_forecast_pv: Optional[float] = None,
+            p_factor_base_imports: Optional[float] = None,
+            fix_single_phase_loads: Optional[bool] = None,
+            max_single_phase_load: Optional[float] = None,
+            fix_overloading_consumers: Optional[bool] = None,
+            max_load_tx_ratio: Optional[float] = None,
+            max_gen_tx_ratio: Optional[float] = None,
+            fix_undersized_service_lines: Optional[bool] = None,
+            max_load_line_ratio: Optional[float] = None,
+
     ):
         self.load_time = load_time
         self.vm_pu = vm_pu
@@ -112,6 +133,16 @@ class ModelConfig:
         self.meters_at_dist_transformers = meters_at_dist_transformers
         self.switch_meter_placement_configs = switch_meter_placement_configs
         self.calibration = calibration
+        self.p_factor_base_exports = p_factor_base_exports
+        self.p_factor_forecast_pv = p_factor_forecast_pv
+        self.p_factor_base_imports = p_factor_base_imports
+        self.fix_single_phase_loads = fix_single_phase_loads
+        self.max_single_phase_load = max_single_phase_load
+        self.fix_overloading_consumers = fix_overloading_consumers
+        self.max_load_tx_ratio = max_load_tx_ratio
+        self.max_gen_tx_ratio = max_gen_tx_ratio
+        self.fix_undersized_service_lines = fix_undersized_service_lines
+        self.max_load_line_ratio = max_load_line_ratio
 
 
 class SolveMode(Enum):

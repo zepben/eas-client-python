@@ -220,7 +220,17 @@ class EasClient:
                                 "startTime": work_package.model_config.load_time.start_time.isoformat(),
                                 "endTime": work_package.model_config.load_time.end_time.isoformat(),
                             } if isinstance(work_package.model_config.load_time, TimePeriod) else None,
-                            "calibration": work_package.model_config.calibration if work_package.model_config.calibration is not None else None
+                            "calibration": work_package.model_config.calibration if work_package.model_config.calibration is not None else None,
+                            "pFactorBaseExports": work_package.model_config.p_factor_base_exports,
+                            "pFactorForecastPv": work_package.model_config.p_factor_forecast_pv,
+                            "pFactorBaseImports": work_package.model_config.p_factor_base_imports,
+                            "fixSinglePhaseLoads": work_package.model_config.fix_single_phase_loads,
+                            "maxSinglePhaseLoad": work_package.model_config.max_single_phase_load,
+                            "fixOverloadingConsumers": work_package.model_config.fix_overloading_consumers,
+                            "maxLoadTxRatio": work_package.model_config.max_load_tx_ratio,
+                            "maxGenTxRatio": work_package.model_config.max_gen_tx_ratio,
+                            "fixUndersizedServiceLines": work_package.model_config.fix_undersized_service_lines,
+                            "maxLoadLineRatio": work_package.model_config.max_load_line_ratio,
                         } if work_package.model_config is not None else None,
                         "solveConfig": {
                             "normVMinPu": work_package.solve_config.norm_vmin_pu if work_package.solve_config.norm_vmin_pu is not None else None,
