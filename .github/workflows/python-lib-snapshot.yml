@@ -10,4 +10,7 @@ on:
 jobs:
   run:
     uses: zepben/.github/.github/workflows/python-lib-snapshot.yml@main
+    with:
+      product-key: "eas-client-python"
+      product-repo: "zepben/eas-client-python"
     secrets: inherit
