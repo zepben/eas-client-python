@@ -13,4 +13,5 @@ jobs:
     with:
       product-key: "eas-client-python"
       product-repo: "zepben/eas-client-python"
+      pypi-project-name: "zepben.eas"
     secrets: inherit
