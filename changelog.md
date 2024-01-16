@@ -1,29 +1,16 @@
-## [0.7.0]
+## [0.14.1]
 
-##### Breaking Changes
-
-* Updated the WorkPackageConfig to include ResultsConfig
-* The ModelConfig in a WorkPackageConfig is not optional anymore
-* The ModelConfig now includes load time information
-* The ModelConfig now includes a flag to signal the model is a calibration model
-
-##### New Features
-
-* Added basic client method to run hosting capacity work packages
-* Added basic client method to cancel hosting capacity work packages
-* Added basic client method to request hosting capacity work packages progress
-* Added options to WorkPackageaConfig for:
-    - Configuring load/export power factor.
-    - Configuring running of NetworkFixer steps
-
-##### Enhancements
-
+### Breaking Changes
 * None.
 
-##### Fixes
-
+### New Features
 * None.
 
-##### Notes
+### Enhancements
+* None.
 
+### Fixes
+* None.
+
+### Notes
 * None.
