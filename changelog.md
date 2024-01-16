@@ -1,16 +1,5 @@
 ## [0.14.1]
 
-### Breaking Changes
-* None.
-
-### New Features
-* None.
-
-### Enhancements
-* None.
-
 ### Fixes
-* None.
+* Use correct version of zepben.auth.
 
-### Notes
-* None.
