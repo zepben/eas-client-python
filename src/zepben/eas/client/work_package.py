@@ -99,6 +99,11 @@ class ModelConfig:
     fix_undersized_service_lines: Optional[bool]
     max_load_line_ratio: Optional[float]
 
+    # GeneratorConfig
+    collapse_lv_networks: Optional[bool]
+    feeder_scenario_allocation_strategy: Optional[str]  # "RANDOM" | "ADDITIVE"
+    include_energy_consumer_meter_group: Optional[str]
+
     def __init__(
             self,
             load_time: Union[TimePeriod, FixedTime],
@@ -121,7 +126,9 @@ class ModelConfig:
             max_gen_tx_ratio: Optional[float] = None,
             fix_undersized_service_lines: Optional[bool] = None,
             max_load_line_ratio: Optional[float] = None,
-
+            collapse_lv_networks: Optional[bool] = None,
+            feeder_scenario_allocation_strategy: Optional[str] = None,  # "RANDOM" | "ADDITIVE"
+            include_energy_consumer_meter_group: Optional[str] = None
     ):
         self.load_time = load_time
         self.vm_pu = vm_pu
@@ -143,6 +150,9 @@ class ModelConfig:
         self.max_gen_tx_ratio = max_gen_tx_ratio
         self.fix_undersized_service_lines = fix_undersized_service_lines
         self.max_load_line_ratio = max_load_line_ratio
+        self.collapse_lv_networks = collapse_lv_networks
+        self.feeder_scenario_allocation_strategy = feeder_scenario_allocation_strategy
+        self.include_energy_consumer_meter_group = include_energy_consumer_meter_group
 
 
 class SolveMode(Enum):
@@ -269,7 +279,7 @@ class WorkPackageConfig:
             model_config: ModelConfig,
             solve_config: Optional[SolveConfig] = None,
             results_config: Optional[ResultsConfig] = None,
-            quality_assurance_processing: Optional[bool] = None,
+            quality_assurance_processing: Optional[bool] = None
     ):
         self.feeders = feeders
         self.years = years
