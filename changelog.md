@@ -15,6 +15,9 @@
 * Added options to WorkPackageaConfig for:
     - Configuring load/export power factor.
     - Configuring running of NetworkFixer steps
+* Added 'collapse_lv_networks' field to ModelConfig
+* Added 'feeder_scenario_allocation_strategy' field to ModelConfig
+* Added 'include_energy_consumer_meter_group' field to ModelConfig
 
 ##### Enhancements
 
