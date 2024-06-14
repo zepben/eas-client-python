@@ -91,7 +91,7 @@ class EasClient:
             raise ValueError(
                 "Incompatible arguments passed to connect to secured Evolve App Server. "
                 "You cannot provide both a token_fetcher and credentials, "
-                "please provide either client_id + client_secret, username + password, or token_fetcher."
+                "please provide either client_id, client_id + client_secret, username + password, or token_fetcher."
             )
 
         if client_secret and (username or password):
@@ -102,48 +102,48 @@ class EasClient:
             )
 
         if client_id:
-            self._token_fetcher = create_token_fetcher(
-                conf_address=f"{self._protocol}://{self._host}:{self._port}/api/config/auth",
-                verify_conf=self._verify_certificate,
-                auth_type_field="configType",
-                audience_field="audience",
-                issuer_domain_field="issuerDomain"
-            )
-            if self._token_fetcher:
-                self._token_fetcher.token_request_data.update({
-                    'client_id': client_id,
-                    'scope':
-                        'trusted' if self._token_fetcher.auth_method is AuthMethod.SELF
-                        else 'offline_access openid profile email0'
-                })
-                self._token_fetcher.refresh_request_data.update({
-                    "grant_type": "refresh_token",
-                    'client_id': client_id,
-                    'scope':
-                        'trusted' if self._token_fetcher.auth_method is AuthMethod.SELF
-                        else 'offline_access openid profile email0'
-                })
-                if username and password:
+            if not client_secret:
+                # will try managed identity
+                url = "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01"
+                self._token_fetcher = create_token_fetcher_managed_identity(
+                    identity_url=f"{url}&resource={client_id}",
+                    verify_auth=self._verify_certificate
+                )
+            else:
+                self._token_fetcher = create_token_fetcher(
+                    conf_address=f"{self._protocol}://{self._host}:{self._port}/api/config/auth",
+                    verify_conf=self._verify_certificate,
+                )
+                if self._token_fetcher:
                     self._token_fetcher.token_request_data.update({
-                        'grant_type': 'password',
-                        'username': username,
-                        'password':
-                            sha256(password.encode('utf-8')).hexdigest()
-                            if self._token_fetcher.auth_method is AuthMethod.SELF
-                            else password
+                        'client_id': client_id,
+                        'scope':
+                            'trusted' if self._token_fetcher.auth_method is AuthMethod.SELF
+                            else 'offline_access openid profile email0'
                     })
-                    if client_secret:
-                        self._token_fetcher.token_request_data.update({'client_secret': client_secret})
-                elif client_secret:
-                    self._token_fetcher.token_request_data.update({
-                        'grant_type': 'client_credentials',
-                        'client_secret': client_secret
+                    self._token_fetcher.refresh_request_data.update({
+                        "grant_type": "refresh_token",
+                        'client_id': client_id,
+                        'scope':
+                            'trusted' if self._token_fetcher.auth_method is AuthMethod.SELF
+                            else 'offline_access openid profile email0'
                     })
-                else:
-                    raise ValueError(
-                        "Incompatible arguments passed to connect to secured Evolve App Server. "
-                        "You must specify at least (username, password) or (client_secret) for a secure connection "
-                        "with token based auth.")
+                    if username and password:
+                        self._token_fetcher.token_request_data.update({
+                            'grant_type': 'password',
+                            'username': username,
+                            'password':
+                                sha256(password.encode('utf-8')).hexdigest()
+                                if self._token_fetcher.auth_method is AuthMethod.SELF
+                                else password
+                        })
+                        if client_secret:
+                            self._token_fetcher.token_request_data.update({'client_secret': client_secret})
+                    elif client_secret:
+                        self._token_fetcher.token_request_data.update({
+                            'grant_type': 'client_credentials',
+                            'client_secret': client_secret
+                        })
         elif token_fetcher:
             self._token_fetcher = token_fetcher
         else:
