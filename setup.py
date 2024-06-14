@@ -26,7 +26,7 @@ setup(
         "geojson==2.5.0",
         "requests==2.26.0",
         "urllib3==1.26.6",
-        "zepben.auth==0.12.0b1",
+        "zepben.auth>=0.12.0b1",
         "aiohttp[speedups]==3.9.0",
     ],
     extras_require={
