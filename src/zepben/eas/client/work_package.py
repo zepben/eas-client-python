@@ -7,18 +7,30 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Union
 
-__all__ = ["WorkPackageConfig",
-           "SwitchClass",
-           "SwitchMeterPlacementConfig",
-           "ModelConfig",
-           "SolveMode",
-           "SolveConfig",
-           "ResultsConfig",
-           "RawResultsConfig",
-           "MetricsResultsConfig",
-           "StoredResultsConfig",
-           "FixedTime",
-           "TimePeriod"]
+__all__ = [
+    "SwitchClass",
+    "SwitchMeterPlacementConfig",
+    "FixedTime",
+    "TimePeriod",
+    "LoadPlacement",
+    "FeederScenarioAllocationStrategy",
+    "MeterPlacementConfig",
+    "ModelConfig",
+    "SolveMode",
+    "SolveConfig",
+    "RawResultsConfig",
+    "MetricsResultsConfig",
+    "StoredResultsConfig",
+    "GeneratorConfig",
+    "ResultProcessorConfig",
+    "WorkPackageConfig",
+    "WorkPackageProgress",
+    "WorkPackagesProgress",
+    "EnhancedMetricsConfig",
+    "WriterType",
+    "WriterOutputConfig",
+    "WriterConfig"
+]
 
 
 class SwitchClass(Enum):
@@ -36,8 +48,8 @@ class SwitchMeterPlacementConfig:
 
     def __init__(
             self,
-            meter_switch_class: Optional[SwitchClass] = None,
-            name_pattern: Optional[str] = None,
+            meter_switch_class: Optional[SwitchClass],
+            name_pattern: Optional[str]
     ):
         self.meter_switch_class = meter_switch_class
         self.name_pattern = name_pattern
@@ -77,16 +89,41 @@ class TimePeriod:
             raise ValueError("The 'start_time' must be before 'end_time'.")
 
 
+class LoadPlacement(Enum):
+    PER_ENERGY_CONSUMER = "PER_ENERGY_CONSUMER"
+    PER_USAGE_POINT = "PER_USAGE_POINT"
+
+
+class FeederScenarioAllocationStrategy(Enum):
+    RANDOM = "RANDOM"
+    ADDITIVE = "ADDITIVE"
+
+
+class MeterPlacementConfig:
+    feeder_head: Optional[bool]
+    dist_transformers: Optional[bool]
+    switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]]
+    energy_consumer_meter_group: Optional[str]
+
+    def __init__(
+            self,
+            feeder_head: Optional[bool] = None,
+            dist_transformers: Optional[bool] = None,
+            switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]] = None,
+            energy_consumer_meter_group: Optional[str] = None
+    ):
+        self.feeder_head = feeder_head
+        self.dist_transformers = dist_transformers
+        self.switch_meter_placement_configs = switch_meter_placement_configs
+        self.energy_consumer_meter_group = energy_consumer_meter_group
+
+
 class ModelConfig:
-    load_time: Union[TimePeriod, FixedTime]
     vm_pu: Optional[float]
     vmin_pu: Optional[float]
     vmax_pu: Optional[float]
     load_model: Optional[int]
     collapse_swer: Optional[bool]
-    meter_at_hv_source: Optional[bool]
-    meters_at_dist_transformers: Optional[bool]
-    switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]]
     calibration: Optional[bool]
     p_factor_base_exports: Optional[float]
     p_factor_forecast_pv: Optional[float]
@@ -97,24 +134,33 @@ class ModelConfig:
     max_load_tx_ratio: Optional[float]
     max_gen_tx_ratio: Optional[float]
     fix_undersized_service_lines: Optional[bool]
-    max_load_line_ratio: Optional[float]
-
-    # GeneratorConfig
+    max_load_service_line_ratio: Optional[float]
+    max_load_lv_line_ratio: Optional[float]
     collapse_lv_networks: Optional[bool]
-    feeder_scenario_allocation_strategy: Optional[str]  # "RANDOM" | "ADDITIVE"
-    include_energy_consumer_meter_group: Optional[str]
+    feeder_scenario_allocation_strategy: Optional[FeederScenarioAllocationStrategy]
+    closed_loop_v_reg_enabled: Optional[bool]
+    closed_loop_v_reg_replace_all: Optional[bool]
+    closed_loop_v_reg_set_point: Optional[float]
+    closed_loop_v_band: Optional[float]
+    closed_loop_time_delay: Optional[int]
+    closed_loop_v_limit: Optional[float]
+    default_tap_changer_time_delay: Optional[int]
+    default_tap_changer_set_point_pu: Optional[float]
+    default_tap_changer_band: Optional[float]
+    split_phase_default_load_loss_percentage: Optional[float]
+    split_phase_lv_kv: Optional[float]
+    swer_voltage_to_line_voltage: Optional[List[List[int]]]
+    load_placement: Optional[LoadPlacement]
+    load_interval_length_hours: Optional[float]
+    meter_placement_config: Optional[MeterPlacementConfig]
 
     def __init__(
             self,
-            load_time: Union[TimePeriod, FixedTime],
             vm_pu: Optional[float] = None,
             vmin_pu: Optional[float] = None,
             vmax_pu: Optional[float] = None,
             load_model: Optional[int] = None,
             collapse_swer: Optional[bool] = None,
-            meter_at_hv_source: Optional[bool] = None,
-            meters_at_dist_transformers: Optional[bool] = None,
-            switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]] = None,
             calibration: Optional[bool] = None,
             p_factor_base_exports: Optional[float] = None,
             p_factor_forecast_pv: Optional[float] = None,
@@ -125,20 +171,31 @@ class ModelConfig:
             max_load_tx_ratio: Optional[float] = None,
             max_gen_tx_ratio: Optional[float] = None,
             fix_undersized_service_lines: Optional[bool] = None,
-            max_load_line_ratio: Optional[float] = None,
+            max_load_service_line_ratio: Optional[float] = None,
+            max_load_lv_line_ratio: Optional[float] = None,
             collapse_lv_networks: Optional[bool] = None,
-            feeder_scenario_allocation_strategy: Optional[str] = None,  # "RANDOM" | "ADDITIVE"
-            include_energy_consumer_meter_group: Optional[str] = None
+            feeder_scenario_allocation_strategy: Optional[FeederScenarioAllocationStrategy] = None,
+            closed_loop_v_reg_enabled: Optional[bool] = None,
+            closed_loop_v_reg_replace_all: Optional[bool] = None,
+            closed_loop_v_reg_set_point: Optional[float] = None,
+            closed_loop_v_band: Optional[float] = None,
+            closed_loop_time_delay: Optional[int] = None,
+            closed_loop_v_limit: Optional[float] = None,
+            default_tap_changer_time_delay: Optional[int] = None,
+            default_tap_changer_set_point_pu: Optional[float] = None,
+            default_tap_changer_band: Optional[float] = None,
+            split_phase_default_load_loss_percentage: Optional[float] = None,
+            split_phase_lv_kv: Optional[float] = None,
+            swer_voltage_to_line_voltage: Optional[List[List[int]]] = None,
+            load_placement: Optional[LoadPlacement] = None,
+            load_interval_length_hours: Optional[float] = None,
+            meter_placement_config: Optional[MeterPlacementConfig] = None,
     ):
-        self.load_time = load_time
         self.vm_pu = vm_pu
         self.vmin_pu = vmin_pu
         self.vmax_pu = vmax_pu
         self.load_model = load_model
         self.collapse_swer = collapse_swer
-        self.meter_at_hv_source = meter_at_hv_source
-        self.meters_at_dist_transformers = meters_at_dist_transformers
-        self.switch_meter_placement_configs = switch_meter_placement_configs
         self.calibration = calibration
         self.p_factor_base_exports = p_factor_base_exports
         self.p_factor_forecast_pv = p_factor_forecast_pv
@@ -149,10 +206,25 @@ class ModelConfig:
         self.max_load_tx_ratio = max_load_tx_ratio
         self.max_gen_tx_ratio = max_gen_tx_ratio
         self.fix_undersized_service_lines = fix_undersized_service_lines
-        self.max_load_line_ratio = max_load_line_ratio
+        self.max_load_service_line_ratio = max_load_service_line_ratio
+        self.max_load_lv_line_ratio = max_load_lv_line_ratio
         self.collapse_lv_networks = collapse_lv_networks
         self.feeder_scenario_allocation_strategy = feeder_scenario_allocation_strategy
-        self.include_energy_consumer_meter_group = include_energy_consumer_meter_group
+        self.closed_loop_v_reg_enabled = closed_loop_v_reg_enabled
+        self.closed_loop_v_reg_replace_all = closed_loop_v_reg_replace_all
+        self.closed_loop_v_reg_set_point = closed_loop_v_reg_set_point
+        self.closed_loop_v_band = closed_loop_v_band
+        self.closed_loop_time_delay = closed_loop_time_delay
+        self.closed_loop_v_limit = closed_loop_v_limit
+        self.default_tap_changer_time_delay = default_tap_changer_time_delay
+        self.default_tap_changer_set_point_pu = default_tap_changer_set_point_pu
+        self.default_tap_changer_band = default_tap_changer_band
+        self.split_phase_default_load_loss_percentage = split_phase_default_load_loss_percentage
+        self.split_phase_lv_kv = split_phase_lv_kv
+        self.swer_voltage_to_line_voltage = swer_voltage_to_line_voltage
+        self.load_placement = load_placement
+        self.load_interval_length_hours = load_interval_length_hours
+        self.meter_placement_config = meter_placement_config
 
 
 class SolveMode(Enum):
@@ -201,7 +273,7 @@ class RawResultsConfig:
     energy_meter_voltages_raw: Optional[bool]
     energy_meters_raw: Optional[bool]
     results_per_meter: Optional[bool]
-    over_loads_raw: Optional[bool]
+    overloads_raw: Optional[bool]
     voltage_exceptions_raw: Optional[bool]
 
     def __init__(
@@ -209,13 +281,13 @@ class RawResultsConfig:
             energy_meter_voltages_raw: Optional[bool] = None,
             energy_meters_raw: Optional[bool] = None,
             results_per_meter: Optional[bool] = None,
-            over_loads_raw: Optional[bool] = None,
+            overloads_raw: Optional[bool] = None,
             voltage_exceptions_raw: Optional[bool] = None,
     ):
         self.energy_meter_voltages_raw = energy_meter_voltages_raw
         self.energy_meters_raw = energy_meters_raw
         self.results_per_meter = results_per_meter
-        self.over_loads_raw = over_loads_raw
+        self.overloads_raw = overloads_raw
         self.voltage_exceptions_raw = voltage_exceptions_raw
 
 
@@ -229,36 +301,117 @@ class MetricsResultsConfig:
 class StoredResultsConfig:
     energy_meter_voltages_raw: Optional[bool]
     energy_meters_raw: Optional[bool]
-    over_loads_raw: Optional[bool]
+    overloads_raw: Optional[bool]
     voltage_exceptions_raw: Optional[bool]
 
     def __init__(
             self,
             energy_meter_voltages_raw: Optional[bool] = None,
             energy_meters_raw: Optional[bool] = None,
-            over_loads_raw: Optional[bool] = None,
-            voltage_exceptions_raw: Optional[bool] = None
+            overloads_raw: Optional[bool] = None,
+            voltage_exceptions_raw: Optional[bool] = None,
     ):
         self.energy_meter_voltages_raw = energy_meter_voltages_raw
         self.energy_meters_raw = energy_meters_raw
-        self.over_loads_raw = over_loads_raw
+        self.overloads_raw = overloads_raw
         self.voltage_exceptions_raw = voltage_exceptions_raw
 
 
-class ResultsConfig:
-    raw_config: Optional[RawResultsConfig]
-    stored_results_config: Optional[StoredResultsConfig]
-    metrics_config: Optional[MetricsResultsConfig]
+class GeneratorConfig:
+    model: Optional[ModelConfig]
+    solve: Optional[SolveConfig]
+    raw_results: Optional[RawResultsConfig]
 
     def __init__(
             self,
-            raw_config: Optional[RawResultsConfig] = None,
-            stored_results_config: Optional[StoredResultsConfig] = None,
-            metrics_config: Optional[MetricsResultsConfig] = None,
+            model: Optional[ModelConfig] = None,
+            solve: Optional[SolveConfig] = None,
+            raw_results: Optional[RawResultsConfig] = None,
     ):
-        self.raw_config = raw_config
-        self.stored_results_config = stored_results_config
-        self.metrics_config = metrics_config
+        self.model = model
+        self.solve = solve
+        self.raw_results = raw_results
+
+
+class EnhancedMetricsConfig:
+    populate_enhanced_metrics: Optional[bool]
+    populate_enhanced_metrics_profile: Optional[bool]
+    populate_duration_curves: Optional[bool]
+    populate_constraints: Optional[bool]
+    populate_weekly_reports: Optional[bool]
+    calculate_normal_for_load_thermal: Optional[bool]
+    calculate_emerg_for_load_thermal: Optional[bool]
+    calculate_normal_for_gen_thermal: Optional[bool]
+    calculate_emerg_for_gen_thermal: Optional[bool]
+    calculate_co2: Optional[bool]
+
+    def __init__(
+            self,
+            populate_enhanced_metrics: Optional[bool] = None,
+            populate_enhanced_metrics_profile: Optional[bool] = None,
+            populate_duration_curves: Optional[bool] = None,
+            populate_constraints: Optional[bool] = None,
+            populate_weekly_reports: Optional[bool] = None,
+            calculate_normal_for_load_thermal: Optional[bool] = None,
+            calculate_emerg_for_load_thermal: Optional[bool] = None,
+            calculate_normal_for_gen_thermal: Optional[bool] = None,
+            calculate_emerg_for_gen_thermal: Optional[bool] = None,
+            calculate_co2: Optional[bool] = None
+    ):
+        self.populate_enhanced_metrics = populate_enhanced_metrics
+        self.populate_enhanced_metrics_profile = populate_enhanced_metrics_profile
+        self.populate_duration_curves = populate_duration_curves
+        self.populate_constraints = populate_constraints
+        self.populate_weekly_reports = populate_weekly_reports
+        self.calculate_normal_for_load_thermal = calculate_normal_for_load_thermal
+        self.calculate_emerg_for_load_thermal = calculate_emerg_for_load_thermal
+        self.calculate_normal_for_gen_thermal = calculate_normal_for_gen_thermal
+        self.calculate_emerg_for_gen_thermal = calculate_emerg_for_gen_thermal
+        self.calculate_co2 = calculate_co2
+
+
+class WriterType(Enum):
+    POSTGRES = "POSTGRES",
+    PARQUET = "PARQUET"
+
+
+class WriterOutputConfig:
+    enhanced_metrics_config: Optional[EnhancedMetricsConfig]
+
+    def __init__(
+            self,
+            enhanced_metrics_config: Optional[EnhancedMetricsConfig] = None
+    ):
+        self.enhanced_metrics_config = enhanced_metrics_config
+
+
+class WriterConfig:
+    writer_type: Optional[WriterType]
+    output_writer_config: Optional[WriterOutputConfig]
+
+    def __init__(
+            self,
+            writer_type: Optional[WriterType] = None,
+            output_writer_config: Optional[WriterOutputConfig] = None
+    ):
+        self.writer_type = writer_type
+        self.output_writer_config = output_writer_config
+
+
+class ResultProcessorConfig:
+    stored_results: Optional[StoredResultsConfig]
+    metrics: Optional[MetricsResultsConfig]
+    writer_config: Optional[WriterConfig]
+
+    def __init__(
+            self,
+            stored_results: Optional[StoredResultsConfig] = None,
+            metrics: Optional[MetricsResultsConfig] = None,
+            writer_config: Optional[WriterConfig] = None
+    ):
+        self.stored_results = stored_results
+        self.metrics = metrics
+        self.writer_config = writer_config
 
 
 class WorkPackageConfig:
@@ -266,28 +419,31 @@ class WorkPackageConfig:
     feeders: List[str]
     years: List[int]
     scenarios: List[str]
-    model_config: Optional[ModelConfig]
-    solve_config: Optional[SolveConfig]
-    results_config: Optional[ResultsConfig]
+    load_time: Union[TimePeriod, FixedTime]
     quality_assurance_processing: Optional[bool]
+    generator_config: Optional[GeneratorConfig]
+    executor_config: Optional[object]
+    result_processor_config: Optional[ResultProcessorConfig]
 
     def __init__(
             self,
-            feeders: List[str],
-            years: List[int],
-            scenarios: List[str],
-            model_config: ModelConfig,
-            solve_config: Optional[SolveConfig] = None,
-            results_config: Optional[ResultsConfig] = None,
-            quality_assurance_processing: Optional[bool] = None
+            feeders: List[str] = None,
+            years: List[int] = None,
+            scenarios: List[str] = None,
+            load_time: Union[TimePeriod, FixedTime] = None,
+            quality_assurance_processing: Optional[bool] = None,
+            generator_config: Optional[GeneratorConfig] = None,
+            executor_config: Optional[object] = None,
+            result_processor_config: Optional[ResultProcessorConfig] = None,
     ):
         self.feeders = feeders
         self.years = years
         self.scenarios = scenarios
-        self.model_config = model_config
-        self.solve_config = solve_config
-        self.results_config = results_config
+        self.load_time = load_time
         self.quality_assurance_processing = quality_assurance_processing
+        self.generator_config = generator_config
+        self.executor_config = executor_config
+        self.result_processor_config = result_processor_config
 
 
 class WorkPackageProgress:

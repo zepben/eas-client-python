@@ -1,7 +1,7 @@
 ## [0.7.0]
 
 ##### Breaking Changes
-
+* Updated work package data classes to account for latest changes to hosting capacity work package configuration.
 * Updated the WorkPackageConfig to include ResultsConfig
 * The ModelConfig in a WorkPackageConfig is not optional anymore
 * The ModelConfig now includes load time information
