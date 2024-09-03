@@ -16,7 +16,7 @@ from zepben.auth import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study
 from zepben.eas.client.study import Result
-from zepben.eas.client.work_package import WorkPackageConfig, ModelConfig, TimePeriod
+from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod
 
 mock_host = ''.join(random.choices(string.ascii_lowercase, k=10))
 mock_port = random.randrange(1024)
@@ -139,11 +139,9 @@ def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPSer
             ["feeder"],
             [1],
             ["scenario"],
-            model_config=ModelConfig(
-                load_time=TimePeriod(
-                    datetime(2022, 1, 1),
-                    datetime(2022, 1, 2))
-            )
+            TimePeriod(
+                datetime(2022, 1, 1),
+                datetime(2022, 1, 2))
         )
     )
     httpserver.check_assertions()
@@ -167,11 +165,9 @@ def test_run_hosting_capacity_work_package_invalid_certificate_failure(ca: trust
                     ["feeder"],
                     [1],
                     ["scenario"],
-                    model_config=ModelConfig(
-                        load_time=TimePeriod(
-                            datetime(2022, 1, 1),
-                            datetime(2022, 1, 2))
-                    )
+                    TimePeriod(
+                        datetime(2022, 1, 1),
+                        datetime(2022, 1, 2))
                 )
             )
 
@@ -192,11 +188,9 @@ def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme
                 ["feeder"],
                 [1],
                 ["scenario"],
-                model_config=ModelConfig(
-                    load_time=TimePeriod(
-                        datetime(2022, 1, 1),
-                        datetime(2022, 1, 2))
-                )
+                TimePeriod(
+                    datetime(2022, 1, 1),
+                    datetime(2022, 1, 2))
             )
         )
         httpserver.check_assertions()
