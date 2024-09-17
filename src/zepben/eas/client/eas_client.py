@@ -13,7 +13,7 @@ from typing import Optional
 import aiohttp
 from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
-from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher
+from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, create_token_fetcher_managed_identity
 
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
@@ -102,48 +102,47 @@ class EasClient:
             )
 
         if client_id:
-            if not client_secret:
-                # will try managed identity
-                url = "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01"
-                self._token_fetcher = create_token_fetcher_managed_identity(
-                    identity_url=f"{url}&resource={client_id}",
-                    verify_auth=self._verify_certificate
-                )
-            else:
-                self._token_fetcher = create_token_fetcher(
-                    conf_address=f"{self._protocol}://{self._host}:{self._port}/api/config/auth",
-                    verify_conf=self._verify_certificate,
-                )
-                if self._token_fetcher:
+            self._token_fetcher = create_token_fetcher(
+                conf_address=f"{self._protocol}://{self._host}:{self._port}/api/config/auth",
+                verify_conf=self._verify_certificate,
+            )
+            if self._token_fetcher:
+                self._token_fetcher.token_request_data.update({
+                    'client_id': client_id,
+                    'scope':
+                        'trusted' if self._token_fetcher.auth_method is AuthMethod.SELF
+                        else 'offline_access openid profile email0'
+                })
+                self._token_fetcher.refresh_request_data.update({
+                    "grant_type": "refresh_token",
+                    'client_id': client_id,
+                    'scope':
+                        'trusted' if self._token_fetcher.auth_method is AuthMethod.SELF
+                        else 'offline_access openid profile email0'
+                })
+                if username and password:
                     self._token_fetcher.token_request_data.update({
-                        'client_id': client_id,
-                        'scope':
-                            'trusted' if self._token_fetcher.auth_method is AuthMethod.SELF
-                            else 'offline_access openid profile email0'
+                        'grant_type': 'password',
+                        'username': username,
+                        'password':
+                            sha256(password.encode('utf-8')).hexdigest()
+                            if self._token_fetcher.auth_method is AuthMethod.SELF
+                            else password
                     })
-                    self._token_fetcher.refresh_request_data.update({
-                        "grant_type": "refresh_token",
-                        'client_id': client_id,
-                        'scope':
-                            'trusted' if self._token_fetcher.auth_method is AuthMethod.SELF
-                            else 'offline_access openid profile email0'
+                    if client_secret:
+                        self._token_fetcher.token_request_data.update({'client_secret': client_secret})
+                elif client_secret:
+                    self._token_fetcher.token_request_data.update({
+                        'grant_type': 'client_credentials',
+                        'client_secret': client_secret
                     })
-                    if username and password:
-                        self._token_fetcher.token_request_data.update({
-                            'grant_type': 'password',
-                            'username': username,
-                            'password':
-                                sha256(password.encode('utf-8')).hexdigest()
-                                if self._token_fetcher.auth_method is AuthMethod.SELF
-                                else password
-                        })
-                        if client_secret:
-                            self._token_fetcher.token_request_data.update({'client_secret': client_secret})
-                    elif client_secret:
-                        self._token_fetcher.token_request_data.update({
-                            'grant_type': 'client_credentials',
-                            'client_secret': client_secret
-                        })
+                else:
+                    # Attempt azure managed identity (what a hack)
+                    url = "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01"
+                    self._token_fetcher = create_token_fetcher_managed_identity(
+                        identity_url=f"{url}&resource={client_id}",
+                        verify_auth=self._verify_certificate
+                    )
         elif token_fetcher:
             self._token_fetcher = token_fetcher
         else:
