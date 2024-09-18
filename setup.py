@@ -16,7 +16,7 @@ setup(
     description="Python SDK for interacting with the Evolve App Server",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://bitbucket.org/zepben/eas-python-client",
+    url="https://github.com/zepben/eas-python-client",
     author="Ramon Bouckaert",
     author_email="ramon.bouckaert@zepben.com",
     package_dir={"": "src"},
@@ -26,7 +26,7 @@ setup(
         "geojson==2.5.0",
         "requests==2.26.0",
         "urllib3==1.26.6",
-        "zepben.auth>=0.12.0b1",
+        "zepben.auth==0.12.0b2",
         "aiohttp[speedups]==3.9.0",
     ],
     extras_require={
