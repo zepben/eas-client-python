@@ -62,7 +62,7 @@ def test_create_eas_client_success():
 
 
 @mock.patch("zepben.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
-    {"configType": "AUTH0", "audience": mock_audience, "issuerDomain": "test_issuer"}, 200))
+    {"authType": "AUTH0", "audience": mock_audience, "issuer": "test_issuer"}, 200))
 def test_create_eas_client_with_password_success(_):
     eas_client = EasClient(
         mock_host,
@@ -85,7 +85,7 @@ def test_create_eas_client_with_password_success(_):
 
 
 @mock.patch("zepben.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
-    {"configType": "AUTH0", "audience": mock_audience, "issuerDomain": "test_issuer"}, 200))
+    {"authType": "AUTH0", "audience": mock_audience, "issuer": "test_issuer"}, 200))
 def test_create_eas_client_with_client_secret_success(_):
     eas_client = EasClient(
         mock_host,
@@ -352,7 +352,7 @@ def test_raises_error_if_token_fetcher_and_creds_configured(httpserver: HTTPServ
             client_id=mock_client_id,
             username=mock_username,
             password=mock_password,
-            token_fetcher=ZepbenTokenFetcher(audience="test", issuer_domain="test", auth_method="test")
+            token_fetcher=ZepbenTokenFetcher(audience="test", auth_method="test", token_endpoint="some-endpoint")
         )
 
     with pytest.raises(ValueError, match="You cannot provide both a token_fetcher and credentials"):
@@ -362,7 +362,7 @@ def test_raises_error_if_token_fetcher_and_creds_configured(httpserver: HTTPServ
             protocol="https",
             client_id=mock_client_id,
             client_secret=mock_client_secret,
-            token_fetcher=ZepbenTokenFetcher(audience="test", issuer_domain="test", auth_method="test")
+            token_fetcher=ZepbenTokenFetcher(audience="test", auth_method="test", token_endpoint="test")
         )
 
 
