@@ -191,11 +191,12 @@ class EasClient:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             json = {
                 "query": """
-                    mutation runWorkPackage($input: WorkPackageInput!) {
-                        runWorkPackage(input: $input)
+                    mutation runWorkPackage($input: WorkPackageInput!, $workPackageName: String!) {
+                        runWorkPackage(input: $input, workPackageName: $workPackageName)
                     }
                 """,
                 "variables": {
+                    "workPackageName": "test",
                     "input": {
                         "feeders": work_package.feeders,
                         "years": work_package.years,
