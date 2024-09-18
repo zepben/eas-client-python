@@ -13,7 +13,7 @@ from typing import Optional
 import aiohttp
 from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
-from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher
+from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, create_token_fetcher_managed_identity
 
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
@@ -91,7 +91,7 @@ class EasClient:
             raise ValueError(
                 "Incompatible arguments passed to connect to secured Evolve App Server. "
                 "You cannot provide both a token_fetcher and credentials, "
-                "please provide either client_id + client_secret, username + password, or token_fetcher."
+                "please provide either client_id, client_id + client_secret, username + password, or token_fetcher."
             )
 
         if client_secret and (username or password):
@@ -105,9 +105,6 @@ class EasClient:
             self._token_fetcher = create_token_fetcher(
                 conf_address=f"{self._protocol}://{self._host}:{self._port}/api/config/auth",
                 verify_conf=self._verify_certificate,
-                auth_type_field="configType",
-                audience_field="audience",
-                issuer_domain_field="issuerDomain"
             )
             if self._token_fetcher:
                 self._token_fetcher.token_request_data.update({
@@ -140,10 +137,12 @@ class EasClient:
                         'client_secret': client_secret
                     })
                 else:
-                    raise ValueError(
-                        "Incompatible arguments passed to connect to secured Evolve App Server. "
-                        "You must specify at least (username, password) or (client_secret) for a secure connection "
-                        "with token based auth.")
+                    # Attempt azure managed identity (what a hack)
+                    url = "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01"
+                    self._token_fetcher = create_token_fetcher_managed_identity(
+                        identity_url=f"{url}&resource={client_id}",
+                        verify_auth=self._verify_certificate
+                    )
         elif token_fetcher:
             self._token_fetcher = token_fetcher
         else:
@@ -192,11 +191,12 @@ class EasClient:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             json = {
                 "query": """
-                    mutation runWorkPackage($input: WorkPackageInput!) {
-                        runWorkPackage(input: $input)
+                    mutation runWorkPackage($input: WorkPackageInput!, $workPackageName: String!) {
+                        runWorkPackage(input: $input, workPackageName: $workPackageName)
                     }
                 """,
                 "variables": {
+                    "workPackageName": work_package.name,
                     "input": {
                         "feeders": work_package.feeders,
                         "years": work_package.years,
