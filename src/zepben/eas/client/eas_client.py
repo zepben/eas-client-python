@@ -196,7 +196,7 @@ class EasClient:
                     }
                 """,
                 "variables": {
-                    "workPackageName": "test",
+                    "workPackageName": work_package.name,
                     "input": {
                         "feeders": work_package.feeders,
                         "years": work_package.years,
