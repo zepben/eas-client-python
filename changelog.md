@@ -1,4 +1,20 @@
 # EAS Python client
+## [0.16.0b1] - UNRELEASED
+### Breaking Changes
+* None.
+
+### New Features
+* None.
+
+### Enhancements
+* None.
+
+### Fixes
+* None.
+
+### Notes
+* None.
+
 ## [0.7.0]
 ### Breaking Changes
 * Updated work package data classes to account for latest changes to hosting capacity work package configuration.
