@@ -24,7 +24,7 @@ setup(
     packages=find_namespace_packages(where="src"),
     install_requires=[
         "geojson==2.5.0",
-        "requests==2.26.0",
+        "requests<3.0.0,>=2.26.0",
         "urllib3==1.26.6",
         "zepben.auth==0.12.0b2",
         "aiohttp[speedups]==3.9.0",

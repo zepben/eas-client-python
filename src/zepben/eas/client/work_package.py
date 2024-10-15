@@ -134,6 +134,7 @@ class ModelConfig:
     load_placement: Optional[LoadPlacement] = None
     load_interval_length_hours: Optional[float] = None
     meter_placement_config: Optional[MeterPlacementConfig] = None
+    seed: Optional[int] = None
 
 
 class SolveMode(Enum):

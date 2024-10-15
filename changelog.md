@@ -1,13 +1,13 @@
 # EAS Python client
-## [0.16.0b1] - UNRELEASED
+## [0.16.0] - UNRELEASED
 ### Breaking Changes
 * None.
 
 ### New Features
-* None.
+* Support specifying a `seed` in `ModelConfig` to allow reproducible scenarios
 
 ### Enhancements
-* None.
+* Update requests restrictions to support all version 2 minor versions.
 
 ### Fixes
 * None.
