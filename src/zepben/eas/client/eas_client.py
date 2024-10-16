@@ -252,7 +252,8 @@ class EasClient:
                                     } for spc in
                                         work_package.generator_config.model.meter_placement_config.switch_meter_placement_configs] if work_package.generator_config.model.meter_placement_config.switch_meter_placement_configs is not None else None,
                                     "energyConsumerMeterGroup": work_package.generator_config.model.meter_placement_config.energy_consumer_meter_group
-                                } if work_package.generator_config.model.meter_placement_config is not None else None
+                                } if work_package.generator_config.model.meter_placement_config is not None else None,
+                                "seed": work_package.generator_config.model.seed,
                             } if work_package.generator_config.model is not None else None,
                             "solve": {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
