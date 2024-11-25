@@ -4,6 +4,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import random
+import re
 import ssl
 import string
 from datetime import datetime
@@ -25,6 +26,7 @@ mock_client_secret = ''.join(random.choices(string.ascii_lowercase, k=10))
 mock_username = ''.join(random.choices(string.ascii_lowercase, k=10))
 mock_password = ''.join(random.choices(string.ascii_lowercase, k=10))
 mock_protocol = ''.join(random.choices(string.ascii_lowercase, k=10))
+mock_access_token = ''.join(random.choices(string.ascii_lowercase, k=10))
 mock_verify_certificate = bool(random.getrandbits(1))
 
 mock_audience = ''.join(random.choices(string.ascii_lowercase, k=10))
@@ -59,6 +61,30 @@ def test_create_eas_client_success():
     assert eas_client._port == mock_port
     assert eas_client._protocol == mock_protocol
     assert eas_client._verify_certificate == mock_verify_certificate
+
+
+def test_create_eas_client_with_access_token_success():
+    eas_client = EasClient(
+        mock_host,
+        mock_port,
+        access_token=mock_access_token,
+    )
+
+    assert eas_client is not None
+    assert eas_client._host == mock_host
+    assert eas_client._port == mock_port
+    assert eas_client._access_token == mock_access_token
+
+
+def test_get_request_headers_adds_access_token_in_auth_header():
+    eas_client = EasClient(
+        mock_host,
+        mock_port,
+        access_token=mock_access_token,
+    )
+
+    headers = eas_client._get_request_headers()
+    assert headers["authorization"] == f"Bearer {mock_access_token}"
 
 
 @mock.patch("zepben.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
@@ -387,3 +413,61 @@ def test_raises_error_if_secret_and_creds_configured(httpserver: HTTPServer):
             client_secret=mock_client_secret,
             password=mock_password,
         )
+
+
+def test_raises_error_if_access_token_and_creds_configured(httpserver: HTTPServer):
+    with pytest.raises(ValueError) as error_message_for_username:
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            access_token=mock_access_token,
+            username=mock_username,
+        )
+    assert "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher." in str(error_message_for_username.value)
+
+    with pytest.raises(ValueError) as error_message_for_password:
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            access_token=mock_access_token,
+            password=mock_password,
+        )
+    assert "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher." in str(error_message_for_password.value)
+
+
+def test_raises_error_if_access_token_and_token_fetcher_configured(httpserver: HTTPServer):
+    with pytest.raises(ValueError) as error_message_for_username:
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            access_token=mock_access_token,
+            token_fetcher=ZepbenTokenFetcher(audience="test", auth_method="test", token_endpoint="test")
+        )
+    assert "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher." in str(error_message_for_username.value)
+
+
+def test_raises_error_if_access_token_and_client_id_configured(httpserver: HTTPServer):
+    with pytest.raises(ValueError) as error_message_for_username:
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            access_token=mock_access_token,
+            client_id=mock_client_id
+        )
+    assert "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher." in str(error_message_for_username.value)
+
+
+def test_raises_error_if_access_token_and_client_secret_configured(httpserver: HTTPServer):
+    with pytest.raises(ValueError) as error_message_for_username:
+        EasClient(
+            LOCALHOST,
+            httpserver.port,
+            protocol="https",
+            access_token=mock_access_token,
+            client_secret=mock_client_secret
+        )
+    assert "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher." in str(error_message_for_username.value)

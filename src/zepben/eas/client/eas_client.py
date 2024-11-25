@@ -91,6 +91,13 @@ class EasClient:
                 "Authentication tokens must be sent via https. "
                 "To resolve this issue, exclude the \"protocol\" argument when initialising the EasClient.")
 
+        if access_token and (client_id or client_secret or username or password or token_fetcher):
+            raise ValueError(
+                "Incompatible arguments passed to connect to secured Evolve App Server. "
+                "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher. "
+                "Please provide either access_token or client_id + client_secret, client_id + username + password, or token_fetcher."
+            )
+
         if token_fetcher and (client_id or client_secret or username or password, access_token):
             raise ValueError(
                 "Incompatible arguments passed to connect to secured Evolve App Server. "
@@ -103,12 +110,6 @@ class EasClient:
                 "Incompatible arguments passed to connect to secured Evolve App Server. "
                 "You cannot provide both a client_secret and username/password, "
                 "please provide either client_id + client_secret or client_id + username + password."
-            )
-
-        if access_token and (client_id or client_secret or username or password or token_fetcher):
-            raise ValueError(
-                "Incompatible arguments passed to connect to secured Evolve App Server. "
-                "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher."
             )
 
         if client_id:
