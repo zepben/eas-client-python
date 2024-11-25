@@ -12,6 +12,7 @@ from zepben.eas import EasClient, Study, Result, Section, GeoJsonOverlay
 eas_client = EasClient(
     host="<host>",
     port=1234,
+    access_token="<access_token>",
     client_id="<client_id>",
     username="<username>",
     password="<password>",
@@ -71,6 +72,7 @@ async def upload():
     eas_client = EasClient(
         host="<host>",
         port=1234,
+        access_token="<access_token>",
         client_id="<client_id>",
         username="<username>",
         password="<password>",
