@@ -408,27 +408,28 @@ def test_raises_error_if_token_fetcher_and_creds_configured(httpserver: HTTPServ
         )
 
 
-def test_raises_error_if_secret_and_creds_configured(httpserver: HTTPServer):
-    with pytest.raises(ValueError, match="You cannot provide both a client_secret and username/password"):
-        EasClient(
-            LOCALHOST,
-            httpserver.port,
-            protocol="https",
-            client_id=mock_client_id,
-            client_secret=mock_client_secret,
-            username=mock_username,
-        )
-
-    with pytest.raises(ValueError,
-                       match="You cannot provide both a client_secret and username/password"):
-        EasClient(
-            LOCALHOST,
-            httpserver.port,
-            protocol="https",
-            client_id=mock_client_id,
-            client_secret=mock_client_secret,
-            password=mock_password,
-        )
+@mock.patch("zepben.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
+    {"authType": "AUTH0", "audience": mock_audience, "issuer": "test_issuer"}, 200))
+def test_allows_secret_and_creds_configured(httpserver: HTTPServer):
+    eas_client = EasClient(
+        mock_host,
+        mock_port,
+        protocol="https",
+        client_id=mock_client_id,
+        client_secret=mock_client_secret,
+        username=mock_username,
+        password=mock_password
+    )
+    assert eas_client is not None
+    assert eas_client._token_fetcher is not None
+    assert eas_client._token_fetcher.token_request_data["grant_type"] == "password"
+    assert eas_client._token_fetcher.token_request_data["client_id"] == mock_client_id
+    assert eas_client._token_fetcher.token_request_data["username"] == mock_username
+    assert eas_client._token_fetcher.token_request_data["password"] == mock_password
+    assert eas_client._token_fetcher.token_request_data["client_secret"] == mock_client_secret
+    assert eas_client._host == mock_host
+    assert eas_client._port == mock_port
+    assert eas_client._verify_certificate == mock_verify_certificate
 
 
 def test_raises_error_if_access_token_and_creds_configured(httpserver: HTTPServer):

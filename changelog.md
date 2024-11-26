@@ -9,6 +9,7 @@
 
 ### Enhancements
 * Update requests restrictions to support all version 2 minor versions.
+* Removed check that prevented passing a `client_secret` for "password" grant_type.
 
 ### Fixes
 * None.
