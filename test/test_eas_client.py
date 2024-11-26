@@ -4,7 +4,6 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import random
-import re
 import ssl
 import string
 from datetime import datetime
@@ -87,6 +86,20 @@ def test_get_request_headers_adds_access_token_in_auth_header():
     assert headers["authorization"] == f"Bearer {mock_access_token}"
 
 
+@mock.patch("zepben.auth.client.zepben_token_fetcher.ZepbenTokenFetcher.fetch_token", return_value="test_token3")
+def test_get_request_headers_adds_token_from_token_fetcher_in_auth_header(_):
+    eas_client = EasClient(
+        mock_host,
+        mock_port,
+        token_fetcher=ZepbenTokenFetcher(audience="fake", token_endpoint="unused")
+    )
+
+    assert eas_client is not None
+    assert eas_client._token_fetcher is not None
+    headers = eas_client._get_request_headers()
+    assert headers["authorization"] == "test_token3"
+
+
 @mock.patch("zepben.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
     {"authType": "AUTH0", "audience": mock_audience, "issuer": "test_issuer"}, 200))
 def test_create_eas_client_with_password_success(_):
@@ -162,6 +175,7 @@ def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPSer
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runWorkPackage": "workPackageId"}})
     res = eas_client.run_hosting_capacity_work_package(
         WorkPackageConfig(
+            "wp_name",
             ["feeder"],
             [1],
             ["scenario"],
@@ -188,6 +202,7 @@ def test_run_hosting_capacity_work_package_invalid_certificate_failure(ca: trust
         with pytest.raises(ssl.SSLError):
             eas_client.run_hosting_capacity_work_package(
                 WorkPackageConfig(
+                    "wp_name",
                     ["feeder"],
                     [1],
                     ["scenario"],
@@ -211,6 +226,7 @@ def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme
             {"data": {"runWorkPackage": "workPackageId"}})
         res = eas_client.run_hosting_capacity_work_package(
             WorkPackageConfig(
+                "wp_name",
                 ["feeder"],
                 [1],
                 ["scenario"],
@@ -424,7 +440,8 @@ def test_raises_error_if_access_token_and_creds_configured(httpserver: HTTPServe
             access_token=mock_access_token,
             username=mock_username,
         )
-    assert "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher." in str(error_message_for_username.value)
+    assert "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide multiple types of authentication. When using an access_token, do not provide client_id, client_secret, username, password, or token_fetcher." in str(
+        error_message_for_username.value)
 
     with pytest.raises(ValueError) as error_message_for_password:
         EasClient(
@@ -434,7 +451,8 @@ def test_raises_error_if_access_token_and_creds_configured(httpserver: HTTPServe
             access_token=mock_access_token,
             password=mock_password,
         )
-    assert "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher." in str(error_message_for_password.value)
+    assert "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide multiple types of authentication. When using an access_token, do not provide client_id, client_secret, username, password, or token_fetcher." in str(
+        error_message_for_password.value)
 
 
 def test_raises_error_if_access_token_and_token_fetcher_configured(httpserver: HTTPServer):
@@ -446,7 +464,8 @@ def test_raises_error_if_access_token_and_token_fetcher_configured(httpserver: H
             access_token=mock_access_token,
             token_fetcher=ZepbenTokenFetcher(audience="test", auth_method="test", token_endpoint="test")
         )
-    assert "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher." in str(error_message_for_username.value)
+    assert "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide multiple types of authentication. When using an access_token, do not provide client_id, client_secret, username, password, or token_fetcher." in str(
+        error_message_for_username.value)
 
 
 def test_raises_error_if_access_token_and_client_id_configured(httpserver: HTTPServer):
@@ -458,7 +477,8 @@ def test_raises_error_if_access_token_and_client_id_configured(httpserver: HTTPS
             access_token=mock_access_token,
             client_id=mock_client_id
         )
-    assert "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher." in str(error_message_for_username.value)
+    assert "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide multiple types of authentication. When using an access_token, do not provide client_id, client_secret, username, password, or token_fetcher." in str(
+        error_message_for_username.value)
 
 
 def test_raises_error_if_access_token_and_client_secret_configured(httpserver: HTTPServer):
@@ -470,4 +490,5 @@ def test_raises_error_if_access_token_and_client_secret_configured(httpserver: H
             access_token=mock_access_token,
             client_secret=mock_client_secret
         )
-    assert "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher." in str(error_message_for_username.value)
+    assert "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide multiple types of authentication. When using an access_token, do not provide client_id, client_secret, username, password, or token_fetcher." in str(
+        error_message_for_username.value)

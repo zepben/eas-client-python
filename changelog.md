@@ -1,7 +1,7 @@
 # EAS Python client
 ## [0.16.0] - UNRELEASED
 ### Breaking Changes
-* None.
+* Updated `WorkPackageConfig` constructor to reorder the parameters and no longer provide a default value for `name`. A `name` must now be provided by the user.
 
 ### New Features
 * Support specifying a `seed` in `ModelConfig` to allow reproducible scenarios
