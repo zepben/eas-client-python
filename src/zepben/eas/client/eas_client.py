@@ -35,6 +35,7 @@ class EasClient:
             client_id: Optional[str] = None,
             username: Optional[str] = None,
             password: Optional[str] = None,
+            access_token: Optional[str] = None,
             client_secret: Optional[str] = None,
             token_fetcher: Optional[ZepbenTokenFetcher] = None,
             verify_certificate: bool = True,
@@ -44,7 +45,8 @@ class EasClient:
     ):
         """
         Construct a client for the Evolve App Server. If the server is HTTPS, authentication may be configured.
-        Authentication may be configured in one of two ways:
+        Authentication may be configured in one of three ways:
+            - Providing an access token via the access_token parameter
             - Specifying the client ID of the Auth0 application via the client_id parameter, plus one of the following:
                 - A username and password pair via the username and password parameters (account authentication)
                 - The client secret via the client_secret parameter (M2M authentication)
@@ -63,12 +65,13 @@ class EasClient:
                           for. (Optional)
         :param username: The username used for account authentication. (Optional)
         :param password: The password used for account authentication. (Optional)
+        :param access_token: The access token used for M2M authentication generate from Evolve App Server or Web Client. (Optional)
         :param client_secret: The Auth0 client secret used for M2M authentication. (Optional)
         :param token_fetcher: A ZepbenTokenFetcher used to fetch auth tokens for access to the Evolve App Server.
                               (Optional)
 
         HTTP/HTTPS parameters:
-        :param verify_certificate: Set this to False to disable certificate verification. This will also apply to the
+        :param verify_certificate: Set this to "False" to disable certificate verification. This will also apply to the
                                    auth provider if auth is initialised via client id + username + password or
                                    client_id + client_secret. (Defaults to True)
         :param ca_filename: Path to CA file to use for verification. (Optional)
@@ -81,17 +84,25 @@ class EasClient:
         self._port = port
         self._verify_certificate = verify_certificate
         self._ca_filename = ca_filename
-        if protocol != "https" and (token_fetcher or client_id):
+        self._access_token = access_token
+        if protocol != "https" and (token_fetcher or client_id or access_token or username or password or client_secret):
             raise ValueError(
                 "Incompatible arguments passed to connect to secured Evolve App Server. "
                 "Authentication tokens must be sent via https. "
                 "To resolve this issue, exclude the \"protocol\" argument when initialising the EasClient.")
 
-        if token_fetcher and (client_id or client_secret or username or password):
+        if access_token and (client_id or client_secret or username or password or token_fetcher):
+            raise ValueError(
+                "Incompatible arguments passed to connect to secured Evolve App Server. "
+                "You cannot provide both an access_token and client_id, client_id + client_secret, username + password, or token_fetcher. "
+                "Please provide either access_token or client_id + client_secret, client_id + username + password, or token_fetcher."
+            )
+
+        if token_fetcher and (client_id or client_secret or username or password, access_token):
             raise ValueError(
                 "Incompatible arguments passed to connect to secured Evolve App Server. "
                 "You cannot provide both a token_fetcher and credentials, "
-                "please provide either client_id, client_id + client_secret, username + password, or token_fetcher."
+                "please provide either client_id, client_id + client_secret, username + password, access_token or token_fetcher."
             )
 
         if client_secret and (username or password):
@@ -164,10 +175,11 @@ class EasClient:
 
     def _get_request_headers(self, content_type: str = "application/json") -> dict:
         headers = {"content-type": content_type}
-        if self._token_fetcher is None:
-            return headers
-        else:
+        if self._access_token:
+            headers["authorization"] = f"Bearer {self._access_token}"
+        elif  self._token_fetcher:
             headers["authorization"] = self._token_fetcher.fetch_token()
+
         return headers
 
     def run_hosting_capacity_work_package(self, work_package: WorkPackageConfig):
