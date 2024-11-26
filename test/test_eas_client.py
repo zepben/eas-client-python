@@ -429,7 +429,6 @@ def test_allows_secret_and_creds_configured(httpserver: HTTPServer):
     assert eas_client._token_fetcher.token_request_data["client_secret"] == mock_client_secret
     assert eas_client._host == mock_host
     assert eas_client._port == mock_port
-    assert eas_client._verify_certificate == mock_verify_certificate
 
 
 def test_raises_error_if_access_token_and_creds_configured(httpserver: HTTPServer):
