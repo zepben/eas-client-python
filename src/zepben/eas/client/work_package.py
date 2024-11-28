@@ -225,6 +225,7 @@ class ResultProcessorConfig:
 @dataclass
 class WorkPackageConfig:
     """ A data class representing the configuration for a hosting capacity work package """
+    name: str
     feeders: List[str]
     years: List[int]
     scenarios: List[str]
@@ -233,7 +234,6 @@ class WorkPackageConfig:
     generator_config: Optional[GeneratorConfig] = None
     executor_config: Optional[object] = None
     result_processor_config: Optional[ResultProcessorConfig] = None
-    name: str = ""
 
 
 @dataclass
