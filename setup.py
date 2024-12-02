@@ -12,7 +12,7 @@ with open("README.md", "r") as fh:
 test_deps = ["pytest", "pytest-cov", "pytest-httpserver==1.0.8", "trustme==0.9.0"]
 setup(
     name="zepben.eas",
-    version="0.16.0b4",
+    version="0.16.0b5",
     description="Python SDK for interacting with the Evolve App Server",
     long_description=long_description,
     long_description_content_type="text/markdown",
