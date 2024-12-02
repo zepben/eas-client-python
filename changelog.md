@@ -5,14 +5,14 @@
 
 ### New Features
 * Support specifying a `seed` in `ModelConfig` to allow reproducible scenarios
-* Support for using access tokens for authentication that takes advantage of the new EAS personal access token authentication system.
+* Support for using access tokens for authentication that takes advantage of the new EAS personal access token authentication system. You can now pass an access_token to `EasClient` which is an EAS provisioned JWT.
 
 ### Enhancements
 * Update requests restrictions to support all version 2 minor versions.
 * Removed check that prevented passing a `client_secret` for "password" grant_type.
 
 ### Fixes
-* None.
+* Update to released version of zepben.auth (0.12.1) to support up to requests v3.0.0.
 
 ### Notes
 * None.
