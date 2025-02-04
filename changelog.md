@@ -4,7 +4,11 @@
 * None.
 
 ### New Features
-* None.
+* Update `ModelConfig` to contain four optional list of values which makes up the default load profile for hosting capacity model generation.
+  * `default_load_watts` Note: expects same size list of values as `default_load_var` 
+  * `default_gen_watts` Note: expects same size list of values as `default_gen_var`
+  * `default_load_var`
+  * `default_gen_var`
 
 ### Enhancements
 * None.

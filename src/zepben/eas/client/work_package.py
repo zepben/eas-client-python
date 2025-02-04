@@ -135,6 +135,10 @@ class ModelConfig:
     load_interval_length_hours: Optional[float] = None
     meter_placement_config: Optional[MeterPlacementConfig] = None
     seed: Optional[int] = None
+    default_load_watts: Optional[float] = None
+    default_gen_watts: Optional[float] = None
+    default_load_var: Optional[float] = None
+    default_gen_var: Optional[float] = None
 
 
 class SolveMode(Enum):
