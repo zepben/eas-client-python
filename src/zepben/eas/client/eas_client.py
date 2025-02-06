@@ -258,6 +258,10 @@ class EasClient:
                                     "energyConsumerMeterGroup": work_package.generator_config.model.meter_placement_config.energy_consumer_meter_group
                                 } if work_package.generator_config.model.meter_placement_config is not None else None,
                                 "seed": work_package.generator_config.model.seed,
+                                "defaultLoadWatts" : work_package.generator_config.model.default_load_watts,
+                                "defaultGenWatts" : work_package.generator_config.model.default_gen_watts,
+                                "defaultLoadVar" : work_package.generator_config.model.default_load_var,
+                                "defaultGenVar" : work_package.generator_config.model.default_gen_var
                             } if work_package.generator_config.model is not None else None,
                             "solve": {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
