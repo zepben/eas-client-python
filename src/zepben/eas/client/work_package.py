@@ -516,6 +516,60 @@ class ResultProcessorConfig:
 
 
 @dataclass
+class YearRange:
+    min_year: int
+    max_year: int
+
+
+@dataclass
+class InterventionClass(Enum):
+    TARIFF_REFORM = "TARIFF_REFORM",
+    CONTROLLED_LOAD_HOT_WATER = "CONTROLLED_LOAD_HOT_WATER",
+    COMMUNITY_BESS = "COMMUNITY_BESS",
+    DISTRIBUTION_TX_OLTC = "DISTRIBUTION_TX_OLTC",
+    LV_STATCOMS = "LV_STATCOMS",
+    DVMS = "DVMS",
+    PHASE_REBALANCING = "PHASE_REBALANCING",
+    DISTRIBUTION_TAP_OPTIMIZATION = "DISTRIBUTION_TAP_OPTIMIZATION",
+    UNKNOWN = "UNKNOWN"
+
+
+class CandidateGenerationType(Enum):
+    CRITERIA = "CRITERIA",
+    TAP_OPTIMIZATION = "TAP_OPTIMIZATION"
+
+
+@dataclass
+class CandidateGenerationConfig:
+    type: CandidateGenerationType
+    intervention_criteria_name: Optional[str] = None
+    voltage_delta_avg_threshold: Optional[float] = None
+    voltage_under_limit_hours_threshold: Optional[int] = None
+    voltage_over_limit_hours_threshold: Optional[int] = None
+    tap_weighting_factor_lower_threshold: Optional[float] = None
+    tap_weighting_factor_upper_threshold: Optional[float] = None
+
+
+@dataclass
+class PhaseRebalanceProportions:
+    a: float
+    b: float
+    c: float
+
+
+@dataclass
+class InterventionConfig:
+    base_work_package_id: str
+    year_range: YearRange
+    allocation_limit_per_year: int
+    intervention_type: InterventionClass
+    candidate_generation: Optional[CandidateGenerationConfig] = None
+    allocation_criteria: Optional[str] = None
+    specific_allocation_instance: Optional[str] = None
+    phase_rebalance_proportions: Optional[PhaseRebalanceProportions] = None
+
+
+@dataclass
 class WorkPackageConfig:
     """ A data class representing the configuration for a hosting capacity work package """
     name: str
@@ -551,6 +605,8 @@ class WorkPackageConfig:
 
     result_processor_config: Optional[ResultProcessorConfig] = None
     """Configuration for processing and storing results"""
+
+    intervention: Optional[InterventionConfig] = None
 
 
 @dataclass
