@@ -321,7 +321,7 @@ class EasClient:
                             "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year,
                             "interventionType": work_package.intervention.intervention_type.name,
                             "candidateGeneration": work_package.intervention.candidate_generation and {
-                                "type": work_package.intervention.candidate_generation.type,
+                                "type": work_package.intervention.candidate_generation.type.name,
                                 "interventionCriteriaName": work_package.intervention.candidate_generation.intervention_criteria_name,
                                 "voltageDeltaAvgThreshold": work_package.intervention.candidate_generation.voltage_delta_avg_threshold,
                                 "voltageUnderLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_under_limit_hours_threshold,
