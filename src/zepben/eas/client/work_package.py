@@ -11,8 +11,12 @@ from typing import List, Optional, Union
 __all__ = [
     "SwitchClass",
     "SwitchMeterPlacementConfig",
+    "CandidateGenerationConfig",
+    "CandidateGenerationType",
     "FixedTime",
     "TimePeriod",
+    "InterventionClass",
+    "InterventionConfig",
     "LoadPlacement",
     "FeederScenarioAllocationStrategy",
     "MeterPlacementConfig",
@@ -30,7 +34,8 @@ __all__ = [
     "EnhancedMetricsConfig",
     "WriterType",
     "WriterOutputConfig",
-    "WriterConfig"
+    "WriterConfig",
+    "YearRange",
 ]
 
 
