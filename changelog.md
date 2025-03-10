@@ -1,5 +1,5 @@
 # EAS Python client
-## [0.17.1] - UNRELEASED
+## [0.17.1] - 2025-03-10
 ### Enhancements
 * Added work package config documentation.
 
