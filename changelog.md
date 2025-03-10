@@ -1,5 +1,5 @@
 # EAS Python client
-## [0.17.0] - UNRELEASED
+## [0.17.0] - 2025-03-10
 ### Breaking Changes
 * None.
 
