@@ -7,7 +7,7 @@
 * None.
 
 ### Enhancements
-* None.
+* Added work package config documentation.
 
 ### Fixes
 * None.
