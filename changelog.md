@@ -1,19 +1,7 @@
 # EAS Python client
 ## [0.17.1] - UNRELEASED
-### Breaking Changes
-* None.
-
-### New Features
-* None.
-
 ### Enhancements
 * Added work package config documentation.
-
-### Fixes
-* None.
-
-### Notes
-* None.
 
 ## [0.17.0] - 2025-03-10
 ### Breaking Changes
