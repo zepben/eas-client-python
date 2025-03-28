@@ -563,6 +563,24 @@ class PhaseRebalanceProportions:
 
 
 @dataclass
+class RegulatorConfig:
+    pu_target: float
+    pu_deadband_percent: float
+    max_tap_change_per_step: int
+    allow_push_to_limit: bool
+
+
+@dataclass
+class DvmsConfig:
+    lower_limit: float
+    upper_limit: float
+    lower_percentile: float
+    upper_percentile: float
+    max_iterations: int
+    regulator_config: RegulatorConfig
+
+
+@dataclass
 class InterventionConfig:
     base_work_package_id: str
     year_range: YearRange
@@ -572,6 +590,7 @@ class InterventionConfig:
     allocation_criteria: Optional[str] = None
     specific_allocation_instance: Optional[str] = None
     phase_rebalance_proportions: Optional[PhaseRebalanceProportions] = None
+    dvms: Optional[DvmsConfig] = None
 
 
 @dataclass

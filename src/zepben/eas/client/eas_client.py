@@ -335,6 +335,19 @@ class EasClient:
                                 "a": work_package.intervention.phase_rebalance_proportions.a,
                                 "b": work_package.intervention.phase_rebalance_proportions.b,
                                 "c": work_package.intervention.phase_rebalance_proportions.c
+                            },
+                            "dvms": work_package.intervention.dvms and {
+                                "lowerLimit": work_package.intervention.dvms.lower_limit,
+                                "upperLimit": work_package.intervention.dvms.upper_limit,
+                                "lowerPercentile": work_package.intervention.dvms.lower_percentile,
+                                "upperPercentile": work_package.intervention.dvms.upper_percentile,
+                                "maxIterations": work_package.intervention.dvms.max_iterations,
+                                "regulatorConfig": {
+                                    "puTarget": work_package.intervention.dvms.regulator_config.pu_target,
+                                    "puDeadbandPercent": work_package.intervention.dvms.regulator_config.pu_deadband_percent,
+                                    "maxTapChangePerStep": work_package.intervention.dvms.regulator_config.max_tap_change_per_step,
+                                    "allowPushToLimit": work_package.intervention.dvms.regulator_config.allow_push_to_limit
+                                }
                             }
                         }
                     }
