@@ -261,7 +261,8 @@ class EasClient:
                                 "defaultLoadWatts": work_package.generator_config.model.default_load_watts,
                                 "defaultGenWatts": work_package.generator_config.model.default_gen_watts,
                                 "defaultLoadVar": work_package.generator_config.model.default_load_var,
-                                "defaultGenVar": work_package.generator_config.model.default_gen_var
+                                "defaultGenVar": work_package.generator_config.model.default_gen_var,
+                                "calibrationSet": work_package.generator_config.model.calibration_set
                             } if work_package.generator_config.model is not None else None,
                             "solve": {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,

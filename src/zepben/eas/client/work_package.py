@@ -353,6 +353,7 @@ class ModelConfig:
         1.0: 24 entries for daily and 8760 for yearly
     """
 
+    calibration_set: Optional[str] = None
 
 class SolveMode(Enum):
     YEARLY = "YEARLY"
