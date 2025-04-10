@@ -612,7 +612,7 @@ class RegulatorConfig:
     allow_push_to_limit: bool
     """
     If this is true, we allow the regulator to push some number of customers outside the specified limits for DVMS,
-    with the limit of customers given by lowerPercentile and upperPercentile in DvmsConfig.
+    with the limit of customers given by lower_percentile and upper_percentile in DvmsConfig.
     """
 
 
