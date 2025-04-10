@@ -212,8 +212,8 @@ class EasClient:
                             "endTime": work_package.load_time.end_time.isoformat(),
                         } if isinstance(work_package.load_time, TimePeriod) else None,
                         "qualityAssuranceProcessing": work_package.quality_assurance_processing,
-                        "generatorConfig": {
-                            "model": {
+                        "generatorConfig": work_package.generator_config and {
+                            "model": work_package.generator_config.model and {
                                 "vmPu": work_package.generator_config.model.vm_pu,
                                 "vMinPu": work_package.generator_config.model.vmin_pu,
                                 "vMaxPu": work_package.generator_config.model.vmax_pu,
@@ -232,7 +232,7 @@ class EasClient:
                                 "maxLoadServiceLineRatio": work_package.generator_config.model.max_load_service_line_ratio,
                                 "maxLoadLvLineRatio": work_package.generator_config.model.max_load_lv_line_ratio,
                                 "collapseLvNetworks": work_package.generator_config.model.collapse_lv_networks,
-                                "feederScenarioAllocationStrategy": work_package.generator_config.model.feeder_scenario_allocation_strategy.name if work_package.generator_config.model.feeder_scenario_allocation_strategy is not None else None,
+                                "feederScenarioAllocationStrategy": work_package.generator_config.model.feeder_scenario_allocation_strategy and work_package.generator_config.model.feeder_scenario_allocation_strategy.name,
                                 "closedLoopVRegEnabled": work_package.generator_config.model.closed_loop_v_reg_enabled,
                                 "closedLoopVRegReplaceAll": work_package.generator_config.model.closed_loop_v_reg_replace_all,
                                 "closedLoopVRegSetPoint": work_package.generator_config.model.closed_loop_v_reg_set_point,
@@ -245,25 +245,26 @@ class EasClient:
                                 "splitPhaseDefaultLoadLossPercentage": work_package.generator_config.model.split_phase_default_load_loss_percentage,
                                 "splitPhaseLVKV": work_package.generator_config.model.split_phase_lv_kv,
                                 "swerVoltageToLineVoltage": work_package.generator_config.model.swer_voltage_to_line_voltage,
-                                "loadPlacement": work_package.generator_config.model.load_placement.name if work_package.generator_config.model.load_placement is not None else None,
+                                "loadPlacement": work_package.generator_config.model.load_placement and work_package.generator_config.model.load_placement.name,
                                 "loadIntervalLengthHours": work_package.generator_config.model.load_interval_length_hours,
-                                "meterPlacementConfig": {
+                                "meterPlacementConfig": work_package.generator_config.model.meter_placement_config and {
                                     "feederHead": work_package.generator_config.model.meter_placement_config.feeder_head,
                                     "distTransformers": work_package.generator_config.model.meter_placement_config.dist_transformers,
-                                    "switchMeterPlacementConfigs": [{
-                                        "meterSwitchClass": spc.meter_switch_class.name if spc.meter_switch_class is not None else None,
-                                        "namePattern": spc.name_pattern
-                                    } for spc in
-                                        work_package.generator_config.model.meter_placement_config.switch_meter_placement_configs] if work_package.generator_config.model.meter_placement_config.switch_meter_placement_configs is not None else None,
+                                    "switchMeterPlacementConfigs": work_package.generator_config.model.meter_placement_config.switch_meter_placement_configs and [
+                                        {
+                                            "meterSwitchClass": spc.meter_switch_class and spc.meter_switch_class.name,
+                                            "namePattern": spc.name_pattern
+                                        } for spc in work_package.generator_config.model.meter_placement_config.switch_meter_placement_configs
+                                    ],
                                     "energyConsumerMeterGroup": work_package.generator_config.model.meter_placement_config.energy_consumer_meter_group
-                                } if work_package.generator_config.model.meter_placement_config is not None else None,
+                                },
                                 "seed": work_package.generator_config.model.seed,
                                 "defaultLoadWatts": work_package.generator_config.model.default_load_watts,
                                 "defaultGenWatts": work_package.generator_config.model.default_gen_watts,
                                 "defaultLoadVar": work_package.generator_config.model.default_load_var,
                                 "defaultGenVar": work_package.generator_config.model.default_gen_var
-                            } if work_package.generator_config.model is not None else None,
-                            "solve": {
+                            },
+                            "solve": work_package.generator_config.solve and {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
                                 "normVMaxPu": work_package.generator_config.solve.norm_vmax_pu,
                                 "emergVMinPu": work_package.generator_config.solve.emerg_vmin_pu,
@@ -272,32 +273,32 @@ class EasClient:
                                 "voltageBases": work_package.generator_config.solve.voltage_bases,
                                 "maxIter": work_package.generator_config.solve.max_iter,
                                 "maxControlIter": work_package.generator_config.solve.max_control_iter,
-                                "mode": work_package.generator_config.solve.mode.name if work_package.generator_config.solve.mode is not None else None,
+                                "mode": work_package.generator_config.solve.mode and work_package.generator_config.solve.mode.name,
                                 "stepSizeMinutes": work_package.generator_config.solve.step_size_minutes
-                            } if work_package.generator_config.solve is not None else None,
-                            "rawResults": {
+                            },
+                            "rawResults": work_package.generator_config.raw_results and {
                                 "energyMeterVoltagesRaw": work_package.generator_config.raw_results.energy_meter_voltages_raw,
                                 "energyMetersRaw": work_package.generator_config.raw_results.energy_meters_raw,
                                 "resultsPerMeter": work_package.generator_config.raw_results.results_per_meter,
                                 "overloadsRaw": work_package.generator_config.raw_results.overloads_raw,
                                 "voltageExceptionsRaw": work_package.generator_config.raw_results.voltage_exceptions_raw
-                            } if work_package.generator_config.raw_results is not None else None
-                        } if work_package.generator_config is not None else None,
+                            }
+                        },
                         "executorConfig": {},
-                        "resultProcessorConfig": {
-                            "storedResults": {
+                        "resultProcessorConfig": work_package.result_processor_config and {
+                            "storedResults": work_package.result_processor_config.stored_results and {
                                 "energyMeterVoltagesRaw": work_package.result_processor_config.stored_results.energy_meter_voltages_raw,
                                 "energyMetersRaw": work_package.result_processor_config.stored_results.energy_meters_raw,
                                 "overloadsRaw": work_package.result_processor_config.stored_results.overloads_raw,
                                 "voltageExceptionsRaw": work_package.result_processor_config.stored_results.voltage_exceptions_raw,
-                            } if work_package.result_processor_config.stored_results is not None else None,
-                            "metrics": {
+                            },
+                            "metrics": work_package.result_processor_config.metrics and {
                                 "calculatePerformanceMetrics": work_package.result_processor_config.metrics.calculate_performance_metrics
-                            } if work_package.result_processor_config.metrics is not None else None,
-                            "writerConfig": {
-                                "writerType": work_package.result_processor_config.writer_config.writer_type.name if work_package.result_processor_config.writer_config.writer_type is not None else None,
-                                "outputWriterConfig": {
-                                    "enhancedMetricsConfig": {
+                            },
+                            "writerConfig": work_package.result_processor_config.writer_config and {
+                                "writerType": work_package.result_processor_config.writer_config.writer_type and work_package.result_processor_config.writer_config.writer_type.name,
+                                "outputWriterConfig": work_package.result_processor_config.writer_config.output_writer_config and {
+                                    "enhancedMetricsConfig": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config and {
                                         "populateEnhancedMetrics": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_enhanced_metrics,
                                         "populateEnhancedMetricsProfile": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_enhanced_metrics_profile,
                                         "populateDurationCurves": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_duration_curves,
@@ -308,10 +309,10 @@ class EasClient:
                                         "calculateNormalForGenThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_normal_for_gen_thermal,
                                         "calculateEmergForGenThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_emerg_for_gen_thermal,
                                         "calculateCO2": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_co2
-                                    } if work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config is not None else None
-                                } if work_package.result_processor_config.writer_config.output_writer_config is not None else None
-                            } if work_package.result_processor_config.writer_config is not None else None
-                        } if work_package.result_processor_config is not None else None,
+                                    }
+                                }
+                            }
+                        },
                         "intervention": work_package.intervention and {
                             "baseWorkPackageId": work_package.intervention.base_work_package_id,
                             "yearRange": {
@@ -492,15 +493,15 @@ class EasClient:
                         "styles": study.styles,
                         "results": [{
                             "name": result.name,
-                            "geoJsonOverlay": {
+                            "geoJsonOverlay": result.geo_json_overlay and {
                                 "data": result.geo_json_overlay.data,
                                 "sourceProperties": result.geo_json_overlay.source_properties,
                                 "styles": result.geo_json_overlay.styles
-                            } if result.geo_json_overlay else None,
-                            "stateOverlay": {
+                            },
+                            "stateOverlay": result.state_overlay and {
                                 "data": result.state_overlay.data,
                                 "styles": result.state_overlay.styles
-                            } if result.state_overlay else None,
+                            },
                             "sections": [{
                                 "type": section.type,
                                 "name": section.name,
