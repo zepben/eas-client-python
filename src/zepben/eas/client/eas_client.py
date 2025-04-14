@@ -528,3 +528,95 @@ class EasClient:
                 else:
                     response = await response.text()
                 return response
+
+    def run_hosting_capacity_calibration(self, name: str):
+        """
+        Send request to run hosting capacity calibration
+        :param name: A string representation of the calibration name
+        :return: The HTTP response received from the Evolve App Server after attempting to upload the study
+        """
+        return get_event_loop().run_until_complete(self.async_run_hosting_capacity_calibration(name))
+
+    async def async_run_hosting_capacity_calibration(self, name: str):
+        """
+        Send asynchronous request to run hosting capacity calibration
+        :param name: A string representation of the calibration name
+        :return: The HTTP response received from the Evolve App Server after attempting to upload the study
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    mutation runCalibration(name: String!) {
+                        runCalibration(name: $name)
+                    }
+                """,
+                "variables": {
+                    "name": name
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def get_hosting_capacity_calibration_run(self, id: str):
+        """
+        Send request to run hosting capacity calibration
+        :param id: A string representation of the calibration run
+        :return: The HTTP response received from the Evolve App Server after attempting to upload the study
+        """
+        return get_event_loop().run_until_complete(self.async_get_hosting_capacity_calibration_run(id))
+
+    async def async_get_hosting_capacity_calibration_run(self, id: str):
+        """
+        Send asynchronous request to run hosting capacity calibration
+        :param name: A string representation of the calibration run
+        :return: The HTTP response received from the Evolve App Server after attempting to upload the study
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    query getCalibrationRun(id: String!) {
+                        getCalibrationRun(id: $id) {
+                            id
+                            name
+                            workflowId
+                            runId
+                            startAt
+                            completedAt
+                            status
+                        }
+                    }
+                """,
+                "variables": {
+                    "id": id
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response

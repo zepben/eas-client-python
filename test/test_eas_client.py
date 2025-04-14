@@ -3,6 +3,7 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+import json
 import random
 import ssl
 import string
@@ -12,6 +13,7 @@ from unittest import mock
 import pytest
 import trustme
 from pytest_httpserver import HTTPServer
+from werkzeug import Response
 from zepben.auth import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study
@@ -492,3 +494,103 @@ def test_raises_error_if_access_token_and_client_secret_configured(httpserver: H
         )
     assert "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide multiple types of authentication. When using an access_token, do not provide client_id, client_secret, username, password, or token_fetcher." in str(
         error_message_for_username.value)
+
+def hosting_capacity_run_calibration_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert  query == "mutation runCalibration(name: String!) { runCalibration(name: $name) }"
+    assert actual_body['variables'] == {"name": "TEST CALIBRATION"}
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(hosting_capacity_run_calibration_request_handler)
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION")
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
+def test_run_hosting_capacity_calibration_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+        with pytest.raises(ssl.SSLError):
+            eas_client.run_hosting_capacity_calibration("TEST CALIBRATION")
+
+
+def test_run_hosting_capacity_calibration_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(hosting_capacity_run_calibration_request_handler)
+        res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION")
+        httpserver.check_assertions()
+        assert res == {"result": "success"}
+
+def get_hosting_capacity_run_calibration_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert  query == "query getCalibrationRun(id: String!) { getCalibrationRun(id: $id) { id name workflowId runId startAt completedAt status } }"
+    assert actual_body['variables'] == {"id": "calibration-id"}
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+def test_get_hosting_capacity_calibration_run_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_hosting_capacity_run_calibration_request_handler)
+    res = eas_client.get_hosting_capacity_calibration_run("calibration-id")
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
+def test_get_hosting_capacity_calibration_run_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+        with pytest.raises(ssl.SSLError):
+            eas_client.get_hosting_capacity_calibration_run("calibration-id")
+
+
+def test_get_hosting_capacity_calibration_run_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_hosting_capacity_run_calibration_request_handler)
+        res = eas_client.get_hosting_capacity_calibration_run("calibration-id")
+        httpserver.check_assertions()
+        assert res == {"result": "success"}
