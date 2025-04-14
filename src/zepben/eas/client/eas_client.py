@@ -548,7 +548,7 @@ class EasClient:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             json = {
                 "query": """
-                    mutation runCalibration(name: String!) {
+                    mutation runCalibration($name: String!) {
                         runCalibration(name: $name)
                     }
                 """,
@@ -574,7 +574,7 @@ class EasClient:
     def get_hosting_capacity_calibration_run(self, id: str):
         """
         Send request to run hosting capacity calibration
-        :param id: A string representation of the calibration run
+        :param id: The calibration run ID
         :return: The HTTP response received from the Evolve App Server after attempting to upload the study
         """
         return get_event_loop().run_until_complete(self.async_get_hosting_capacity_calibration_run(id))
@@ -582,7 +582,7 @@ class EasClient:
     async def async_get_hosting_capacity_calibration_run(self, id: str):
         """
         Send asynchronous request to run hosting capacity calibration
-        :param name: A string representation of the calibration run
+        :param id: The calibration run ID
         :return: The HTTP response received from the Evolve App Server after attempting to upload the study
         """
         with warnings.catch_warnings():
@@ -590,7 +590,7 @@ class EasClient:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             json = {
                 "query": """
-                    query getCalibrationRun(id: String!) {
+                    query getCalibrationRun($id: ID!) {
                         getCalibrationRun(id: $id) {
                             id
                             name

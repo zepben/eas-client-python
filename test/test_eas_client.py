@@ -499,7 +499,7 @@ def hosting_capacity_run_calibration_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert  query == "mutation runCalibration(name: String!) { runCalibration(name: $name) }"
+    assert  query == "mutation runCalibration($name: String!) { runCalibration(name: $name) }"
     assert actual_body['variables'] == {"name": "TEST CALIBRATION"}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
@@ -549,7 +549,7 @@ def get_hosting_capacity_run_calibration_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert  query == "query getCalibrationRun(id: String!) { getCalibrationRun(id: $id) { id name workflowId runId startAt completedAt status } }"
+    assert  query == "query getCalibrationRun($id: ID!) { getCalibrationRun(id: $id) { id name workflowId runId startAt completedAt status } }"
     assert actual_body['variables'] == {"id": "calibration-id"}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
