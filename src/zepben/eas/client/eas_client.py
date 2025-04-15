@@ -537,10 +537,10 @@ class EasClient:
         """
         return get_event_loop().run_until_complete(self.async_run_hosting_capacity_calibration(name))
 
-    async def async_run_hosting_capacity_calibration(self, name: str):
+    async def async_run_hosting_capacity_calibration(self, calibrationSet: str):
         """
         Send asynchronous request to run hosting capacity calibration
-        :param name: A string representation of the calibration name
+        :param calibrationSet: A string representation of the calibration name
         :return: The HTTP response received from the Evolve App Server after attempting to upload the study
         """
         with warnings.catch_warnings():
@@ -548,12 +548,12 @@ class EasClient:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             json = {
                 "query": """
-                    mutation runCalibration($name: String!) {
-                        runCalibration(name: $name)
+                    mutation runCalibration($calibrationSet: String!) {
+                        runCalibration(calibrationSet: $calibrationSet)
                     }
                 """,
                 "variables": {
-                    "name": name
+                    "calibrationSet": calibrationSet
                 }
             }
             if self._verify_certificate:
@@ -591,7 +591,7 @@ class EasClient:
             json = {
                 "query": """
                     query getCalibrationRun($id: ID!) {
-                        getCalibrationRun(id: $id) {
+                        getCalibrationRun(calibrationRunId: $id) {
                             id
                             name
                             workflowId
