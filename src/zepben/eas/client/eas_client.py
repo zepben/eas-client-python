@@ -529,19 +529,19 @@ class EasClient:
                     response = await response.text()
                 return response
 
-    def run_hosting_capacity_calibration(self, name: str):
+    def run_hosting_capacity_calibration(self, calibration_set: str):
         """
         Send request to run hosting capacity calibration
-        :param name: A string representation of the calibration name
-        :return: The HTTP response received from the Evolve App Server after attempting to upload the study
+        :param calibration_set: A string representation of the calibration name
+        :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
-        return get_event_loop().run_until_complete(self.async_run_hosting_capacity_calibration(name))
+        return get_event_loop().run_until_complete(self.async_run_hosting_capacity_calibration(calibration_set))
 
     async def async_run_hosting_capacity_calibration(self, calibrationSet: str):
         """
         Send asynchronous request to run hosting capacity calibration
         :param calibrationSet: A string representation of the calibration name
-        :return: The HTTP response received from the Evolve App Server after attempting to upload the study
+        :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
         with warnings.catch_warnings():
             if not self._verify_certificate:
@@ -573,17 +573,17 @@ class EasClient:
 
     def get_hosting_capacity_calibration_run(self, id: str):
         """
-        Send request to run hosting capacity calibration
+        Retrieve information of a hosting capacity calibration run
         :param id: The calibration run ID
-        :return: The HTTP response received from the Evolve App Server after attempting to upload the study
+        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
         return get_event_loop().run_until_complete(self.async_get_hosting_capacity_calibration_run(id))
 
     async def async_get_hosting_capacity_calibration_run(self, id: str):
         """
-        Send asynchronous request to run hosting capacity calibration
+        Retrieve information of a hosting capacity calibration run
         :param id: The calibration run ID
-        :return: The HTTP response received from the Evolve App Server after attempting to upload the study
+        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
         with warnings.catch_warnings():
             if not self._verify_certificate:
