@@ -353,8 +353,10 @@ class ModelConfig:
         1.0: 24 entries for daily and 8760 for yearly
     """
 
-    calibration_set: Optional[str] = None
-
+    transformer_tap_settings: Optional[str] = None
+    """
+    The name of the set of tap settings to be applied to the model from an external source.
+    """
 class SolveMode(Enum):
     YEARLY = "YEARLY"
     DAILY = "DAILY"
