@@ -11,8 +11,13 @@ from typing import List, Optional, Union
 __all__ = [
     "SwitchClass",
     "SwitchMeterPlacementConfig",
+    "CandidateGenerationConfig",
+    "CandidateGenerationType",
+    "DvmsConfig",
     "FixedTime",
     "TimePeriod",
+    "InterventionClass",
+    "InterventionConfig",
     "LoadPlacement",
     "FeederScenarioAllocationStrategy",
     "MeterPlacementConfig",
@@ -23,6 +28,7 @@ __all__ = [
     "MetricsResultsConfig",
     "StoredResultsConfig",
     "GeneratorConfig",
+    "RegulatorConfig",
     "ResultProcessorConfig",
     "WorkPackageConfig",
     "WorkPackageProgress",
@@ -30,7 +36,8 @@ __all__ = [
     "EnhancedMetricsConfig",
     "WriterType",
     "WriterOutputConfig",
-    "WriterConfig"
+    "WriterConfig",
+    "YearRange",
 ]
 
 
@@ -516,6 +523,166 @@ class ResultProcessorConfig:
 
 
 @dataclass
+class YearRange:
+    min_year: int
+    max_year: int
+
+
+@dataclass
+class InterventionClass(Enum):
+    TARIFF_REFORM = "TARIFF_REFORM",
+    CONTROLLED_LOAD_HOT_WATER = "CONTROLLED_LOAD_HOT_WATER",
+    COMMUNITY_BESS = "COMMUNITY_BESS",
+    DISTRIBUTION_TX_OLTC = "DISTRIBUTION_TX_OLTC",
+    LV_STATCOMS = "LV_STATCOMS",
+    DVMS = "DVMS",
+    PHASE_REBALANCING = "PHASE_REBALANCING",
+    DISTRIBUTION_TAP_OPTIMIZATION = "DISTRIBUTION_TAP_OPTIMIZATION",
+    UNKNOWN = "UNKNOWN"
+
+
+class CandidateGenerationType(Enum):
+    CRITERIA = "CRITERIA",
+    TAP_OPTIMIZATION = "TAP_OPTIMIZATION"
+
+
+@dataclass
+class CandidateGenerationConfig:
+    type: CandidateGenerationType
+    """The type of method for generating the intervention candidates."""
+
+    intervention_criteria_name: Optional[str] = None
+    """
+    The ID of the set of criteria used to select intervention candidates from enhanced metrics of the
+    base work package run. Only used when type is CRITERIA.
+    """
+
+    voltage_delta_avg_threshold: Optional[float] = None
+    """
+    The threshold for average deviation in voltage p.u. across the transformer. Only used when type is TAP_OPTIMIZATION.
+    """
+
+    voltage_under_limit_hours_threshold: Optional[int] = None
+    """
+    The threshold for number of hours a transformer is below the nominal voltage range.
+    Only used when type is TAP_OPTIMIZATION.
+    """
+
+    voltage_over_limit_hours_threshold: Optional[int] = None
+    """
+    The threshold for number of hours a transformer is above the nominal voltage range.
+    Only used when type is TAP_OPTIMIZATION.
+    """
+
+    tap_weighting_factor_lower_threshold: Optional[float] = None
+    """
+    The minimum threshold for the tap weighting factor, used to determine when a positive tap adjustment
+    (increasing voltage) is prioritized. If the tap weighting factor falls below this threshold, it indicates that
+    the voltage is significantly under the desired range and requires corrective action. This setting is usually
+    negative. Only used when type is TAP_OPTIMIZATION.
+    """
+
+    tap_weighting_factor_upper_threshold: Optional[float] = None
+    """
+    The maximum threshold for the tap weighting factor, used to determine when a negative tap adjustment
+    (decreasing voltage) is prioritized. If the tap weighting factor exceeds this threshold, it indicates that
+    the voltage is significantly over the desired range and requires corrective action. This setting is usually
+    positive. Only used when type is TAP_OPTIMIZATION.
+    """
+
+
+@dataclass
+class PhaseRebalanceProportions:
+    a: float
+    b: float
+    c: float
+
+
+@dataclass
+class RegulatorConfig:
+    pu_target: float
+    """Voltage p.u. to move the average customer voltage towards."""
+
+    pu_deadband_percent: float
+    """Width of window of voltages considered acceptable for the average customer voltage, in %p.u."""
+
+    max_tap_change_per_step: int
+    """The maximum number of tap steps to move (in either direction) for each timestep."""
+
+    allow_push_to_limit: bool
+    """
+    If this is true, we allow the regulator to push some number of customers outside the specified limits for DVMS,
+    with the limit of customers given by lower_percentile and upper_percentile in DvmsConfig.
+    """
+
+
+@dataclass
+class DvmsConfig:
+    lower_limit: float
+    """The lower limit of voltage (p.u.) considered acceptable for the purposes of DVMS."""
+
+    upper_limit: float
+    """The lower limit of voltage (p.u.) considered acceptable for the purposes of DVMS."""
+
+    lower_percentile: float
+    """The lowest percentile of customers' voltages to consider when applying DVMS."""
+
+    upper_percentile: float
+    """The highest percentile of customers' voltages to consider when applying DVMS."""
+
+    max_iterations: int
+    """The number of iterations to attempt DVMS for each timestep before moving on."""
+
+    regulator_config: RegulatorConfig
+    """Configures the voltage regulator to apply if the zone is already satisfactory according to the above limits."""
+
+
+@dataclass
+class InterventionConfig:
+    base_work_package_id: str
+    """
+    ID of the work package that this intervention is based on.
+    The new work package should process a subset of its feeders, scenarios, and years.
+    """
+
+    year_range: YearRange
+    """
+    The range of years to search for and apply interventions.
+    All years within this range should be included in the work package.
+    """
+
+    allocation_limit_per_year: int
+    """The maximum number of interventions that can be applied per year."""
+
+    intervention_type: InterventionClass
+    """The class of intervention to apply."""
+
+    candidate_generation: Optional[CandidateGenerationConfig] = None
+    """
+    The method of generating candidates for the intervention.
+    This does not need to be specified for certain interventions, e.g. PHASE_REBALANCING.
+    """
+
+    allocation_criteria: Optional[str] = None
+    """The ID of the set of criteria used to select an intervention instance for each candidate."""
+
+    specific_allocation_instance: Optional[str] = None
+    """
+    The specific instance of intervention to use for every allocation. If this is unspecified,
+    all instances of the intervention class will be considered when choosing one for each candidate.
+    """
+
+    phase_rebalance_proportions: Optional[PhaseRebalanceProportions] = None
+    """
+    The proportions to use for phase rebalancing.
+    If this is unspecified and intervention_type = PHASE_REBALANCING, phases will be rebalanced to equal proportions.
+    """
+
+    dvms: Optional[DvmsConfig] = None
+    """The config for DVMS. This must be specified if intervention_type = DVMS."""
+
+
+@dataclass
 class WorkPackageConfig:
     """ A data class representing the configuration for a hosting capacity work package """
     name: str
@@ -551,6 +718,9 @@ class WorkPackageConfig:
 
     result_processor_config: Optional[ResultProcessorConfig] = None
     """Configuration for processing and storing results"""
+
+    intervention: Optional[InterventionConfig] = None
+    """Configuration for applying an intervention"""
 
 
 @dataclass
