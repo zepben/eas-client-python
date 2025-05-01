@@ -5,6 +5,7 @@
 
 ### New Features
 * Update `ModelConfig` to contain an optional `transformer_tap_settings` field to specify a set of distribution transformer tap settings to be applied by the model-processor.
+* Added basic client method to run a hosting capacity calibration and method to query its status.
 
 ### Enhancements
 * Added work package config documentation.

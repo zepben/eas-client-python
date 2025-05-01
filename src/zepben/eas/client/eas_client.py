@@ -528,3 +528,95 @@ class EasClient:
                 else:
                     response = await response.text()
                 return response
+
+    def run_hosting_capacity_calibration(self, calibration_name: str):
+        """
+        Send request to run hosting capacity calibration
+        :param calibration_name: A string representation of the calibration name
+        :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
+        """
+        return get_event_loop().run_until_complete(self.async_run_hosting_capacity_calibration(calibration_name))
+
+    async def async_run_hosting_capacity_calibration(self, calibration_name: str):
+        """
+        Send asynchronous request to run hosting capacity calibration
+        :param calibration_name: A string representation of the calibration name
+        :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    mutation runCalibration($calibrationName: String!) {
+                        runCalibration(calibrationName: $calibrationName)
+                    }
+                """,
+                "variables": {
+                    "calibrationName": calibration_name
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def get_hosting_capacity_calibration_run(self, id: str):
+        """
+        Retrieve information of a hosting capacity calibration run
+        :param id: The calibration run ID
+        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
+        """
+        return get_event_loop().run_until_complete(self.async_get_hosting_capacity_calibration_run(id))
+
+    async def async_get_hosting_capacity_calibration_run(self, id: str):
+        """
+        Retrieve information of a hosting capacity calibration run
+        :param id: The calibration run ID
+        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    query getCalibrationRun($id: ID!) {
+                        getCalibrationRun(calibrationRunId: $id) {
+                            id
+                            name
+                            workflowId
+                            runId
+                            startAt
+                            completedAt
+                            status
+                        }
+                    }
+                """,
+                "variables": {
+                    "id": id
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
