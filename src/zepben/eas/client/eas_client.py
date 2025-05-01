@@ -262,7 +262,8 @@ class EasClient:
                                 "defaultLoadWatts": work_package.generator_config.model.default_load_watts,
                                 "defaultGenWatts": work_package.generator_config.model.default_gen_watts,
                                 "defaultLoadVar": work_package.generator_config.model.default_load_var,
-                                "defaultGenVar": work_package.generator_config.model.default_gen_var
+                                "defaultGenVar": work_package.generator_config.model.default_gen_var,
+                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings
                             },
                             "solve": work_package.generator_config.solve and {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,

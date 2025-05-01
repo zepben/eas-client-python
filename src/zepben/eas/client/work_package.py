@@ -353,6 +353,11 @@ class ModelConfig:
         1.0: 24 entries for daily and 8760 for yearly
     """
 
+    transformer_tap_settings: Optional[str] = None
+    """
+    The name of the set of distribution transformer tap settings to be applied to the model from an external source.
+    """
+
 
 class SolveMode(Enum):
     YEARLY = "YEARLY"
