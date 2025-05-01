@@ -529,18 +529,18 @@ class EasClient:
                     response = await response.text()
                 return response
 
-    def run_hosting_capacity_calibration(self, calibration_set: str):
+    def run_hosting_capacity_calibration(self, calibration_name: str):
         """
         Send request to run hosting capacity calibration
-        :param calibration_set: A string representation of the calibration name
+        :param calibration_name: A string representation of the calibration name
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
-        return get_event_loop().run_until_complete(self.async_run_hosting_capacity_calibration(calibration_set))
+        return get_event_loop().run_until_complete(self.async_run_hosting_capacity_calibration(calibration_name))
 
-    async def async_run_hosting_capacity_calibration(self, calibrationSet: str):
+    async def async_run_hosting_capacity_calibration(self, calibration_name: str):
         """
         Send asynchronous request to run hosting capacity calibration
-        :param calibrationSet: A string representation of the calibration name
+        :param calibration_name: A string representation of the calibration name
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
         with warnings.catch_warnings():
@@ -548,12 +548,12 @@ class EasClient:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             json = {
                 "query": """
-                    mutation runCalibration($calibrationSet: String!) {
-                        runCalibration(calibrationSet: $calibrationSet)
+                    mutation runCalibration($calibrationName: String!) {
+                        runCalibration(calibrationName: $calibrationName)
                     }
                 """,
                 "variables": {
-                    "calibrationSet": calibrationSet
+                    "calibrationName": calibration_name
                 }
             }
             if self._verify_certificate:
