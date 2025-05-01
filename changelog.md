@@ -4,7 +4,7 @@
 * None.
 
 ### New Features
-* None.
+* Update `ModelConfig` to contain an optional `transformer_tap_settings` field to specify a set of distribution transformer tap settings to be applied by the model-processor.
 
 ### Enhancements
 * Added work package config documentation.
