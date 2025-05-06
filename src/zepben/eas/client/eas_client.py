@@ -183,6 +183,203 @@ class EasClient:
         """
         return get_event_loop().run_until_complete(self.async_run_hosting_capacity_work_package(work_package))
 
+    def get_work_package_cost_estimation(self, work_package: WorkPackageConfig):
+        """
+        Send request to hosting capacity service to get an estimate cost of supplied work package
+
+        :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
+        :return: The HTTP response received from the Evolve App Server after attempting to run work package
+        """
+        return get_event_loop().run_until_complete(self.async_get_work_package_cost_estimation(work_package))
+
+    async def async_get_work_package_cost_estimation(self, work_package: WorkPackageConfig):
+        """
+        Send asynchronous request to hosting capacity service to get an estimate cost of supplied work package
+
+        :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
+        :return: The HTTP response received from the Evolve App Server after attempting to run work package
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    query getWorkPackageCostEstimation($input: WorkPackageInput!) {
+                        getWorkPackageCostEstimation(input: $input)
+                    }
+                """,
+                "variables": {
+                    "workPackageName": work_package.name,
+                    "input": {
+                        "feeders": work_package.feeders,
+                        "years": work_package.years,
+                        "scenarios": work_package.scenarios,
+                        "fixedTime": work_package.load_time.time.isoformat()
+                        if isinstance(work_package.load_time, FixedTime) else None,
+                        "timePeriod": {
+                            "startTime": work_package.load_time.start_time.isoformat(),
+                            "endTime": work_package.load_time.end_time.isoformat(),
+                        } if isinstance(work_package.load_time, TimePeriod) else None,
+                        "qualityAssuranceProcessing": work_package.quality_assurance_processing,
+                        "generatorConfig": work_package.generator_config and {
+                            "model": work_package.generator_config.model and {
+                                "vmPu": work_package.generator_config.model.vm_pu,
+                                "vMinPu": work_package.generator_config.model.vmin_pu,
+                                "vMaxPu": work_package.generator_config.model.vmax_pu,
+                                "loadModel": work_package.generator_config.model.load_model,
+                                "collapseSWER": work_package.generator_config.model.collapse_swer,
+                                "calibration": work_package.generator_config.model.calibration,
+                                "pFactorBaseExports": work_package.generator_config.model.p_factor_base_exports,
+                                "pFactorForecastPv": work_package.generator_config.model.p_factor_forecast_pv,
+                                "pFactorBaseImports": work_package.generator_config.model.p_factor_base_imports,
+                                "fixSinglePhaseLoads": work_package.generator_config.model.fix_single_phase_loads,
+                                "maxSinglePhaseLoad": work_package.generator_config.model.max_single_phase_load,
+                                "fixOverloadingConsumers": work_package.generator_config.model.fix_overloading_consumers,
+                                "maxLoadTxRatio": work_package.generator_config.model.max_load_tx_ratio,
+                                "maxGenTxRatio": work_package.generator_config.model.max_gen_tx_ratio,
+                                "fixUndersizedServiceLines": work_package.generator_config.model.fix_undersized_service_lines,
+                                "maxLoadServiceLineRatio": work_package.generator_config.model.max_load_service_line_ratio,
+                                "maxLoadLvLineRatio": work_package.generator_config.model.max_load_lv_line_ratio,
+                                "collapseLvNetworks": work_package.generator_config.model.collapse_lv_networks,
+                                "feederScenarioAllocationStrategy": work_package.generator_config.model.feeder_scenario_allocation_strategy and work_package.generator_config.model.feeder_scenario_allocation_strategy.name,
+                                "closedLoopVRegEnabled": work_package.generator_config.model.closed_loop_v_reg_enabled,
+                                "closedLoopVRegReplaceAll": work_package.generator_config.model.closed_loop_v_reg_replace_all,
+                                "closedLoopVRegSetPoint": work_package.generator_config.model.closed_loop_v_reg_set_point,
+                                "closedLoopVBand": work_package.generator_config.model.closed_loop_v_band,
+                                "closedLoopTimeDelay": work_package.generator_config.model.closed_loop_time_delay,
+                                "closedLoopVLimit": work_package.generator_config.model.closed_loop_v_limit,
+                                "defaultTapChangerTimeDelay": work_package.generator_config.model.default_tap_changer_time_delay,
+                                "defaultTapChangerSetPointPu": work_package.generator_config.model.default_tap_changer_set_point_pu,
+                                "defaultTapChangerBand": work_package.generator_config.model.default_tap_changer_band,
+                                "splitPhaseDefaultLoadLossPercentage": work_package.generator_config.model.split_phase_default_load_loss_percentage,
+                                "splitPhaseLVKV": work_package.generator_config.model.split_phase_lv_kv,
+                                "swerVoltageToLineVoltage": work_package.generator_config.model.swer_voltage_to_line_voltage,
+                                "loadPlacement": work_package.generator_config.model.load_placement and work_package.generator_config.model.load_placement.name,
+                                "loadIntervalLengthHours": work_package.generator_config.model.load_interval_length_hours,
+                                "meterPlacementConfig": work_package.generator_config.model.meter_placement_config and {
+                                    "feederHead": work_package.generator_config.model.meter_placement_config.feeder_head,
+                                    "distTransformers": work_package.generator_config.model.meter_placement_config.dist_transformers,
+                                    "switchMeterPlacementConfigs": work_package.generator_config.model.meter_placement_config.switch_meter_placement_configs and [
+                                        {
+                                            "meterSwitchClass": spc.meter_switch_class and spc.meter_switch_class.name,
+                                            "namePattern": spc.name_pattern
+                                        } for spc in
+                                        work_package.generator_config.model.meter_placement_config.switch_meter_placement_configs
+                                    ],
+                                    "energyConsumerMeterGroup": work_package.generator_config.model.meter_placement_config.energy_consumer_meter_group
+                                },
+                                "seed": work_package.generator_config.model.seed,
+                                "defaultLoadWatts": work_package.generator_config.model.default_load_watts,
+                                "defaultGenWatts": work_package.generator_config.model.default_gen_watts,
+                                "defaultLoadVar": work_package.generator_config.model.default_load_var,
+                                "defaultGenVar": work_package.generator_config.model.default_gen_var,
+                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings
+                            },
+                            "solve": work_package.generator_config.solve and {
+                                "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
+                                "normVMaxPu": work_package.generator_config.solve.norm_vmax_pu,
+                                "emergVMinPu": work_package.generator_config.solve.emerg_vmin_pu,
+                                "emergVMaxPu": work_package.generator_config.solve.emerg_vmax_pu,
+                                "baseFrequency": work_package.generator_config.solve.base_frequency,
+                                "voltageBases": work_package.generator_config.solve.voltage_bases,
+                                "maxIter": work_package.generator_config.solve.max_iter,
+                                "maxControlIter": work_package.generator_config.solve.max_control_iter,
+                                "mode": work_package.generator_config.solve.mode and work_package.generator_config.solve.mode.name,
+                                "stepSizeMinutes": work_package.generator_config.solve.step_size_minutes
+                            },
+                            "rawResults": work_package.generator_config.raw_results and {
+                                "energyMeterVoltagesRaw": work_package.generator_config.raw_results.energy_meter_voltages_raw,
+                                "energyMetersRaw": work_package.generator_config.raw_results.energy_meters_raw,
+                                "resultsPerMeter": work_package.generator_config.raw_results.results_per_meter,
+                                "overloadsRaw": work_package.generator_config.raw_results.overloads_raw,
+                                "voltageExceptionsRaw": work_package.generator_config.raw_results.voltage_exceptions_raw
+                            }
+                        },
+                        "executorConfig": {},
+                        "resultProcessorConfig": work_package.result_processor_config and {
+                            "storedResults": work_package.result_processor_config.stored_results and {
+                                "energyMeterVoltagesRaw": work_package.result_processor_config.stored_results.energy_meter_voltages_raw,
+                                "energyMetersRaw": work_package.result_processor_config.stored_results.energy_meters_raw,
+                                "overloadsRaw": work_package.result_processor_config.stored_results.overloads_raw,
+                                "voltageExceptionsRaw": work_package.result_processor_config.stored_results.voltage_exceptions_raw,
+                            },
+                            "metrics": work_package.result_processor_config.metrics and {
+                                "calculatePerformanceMetrics": work_package.result_processor_config.metrics.calculate_performance_metrics
+                            },
+                            "writerConfig": work_package.result_processor_config.writer_config and {
+                                "writerType": work_package.result_processor_config.writer_config.writer_type and work_package.result_processor_config.writer_config.writer_type.name,
+                                "outputWriterConfig": work_package.result_processor_config.writer_config.output_writer_config and {
+                                    "enhancedMetricsConfig": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config and {
+                                        "populateEnhancedMetrics": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_enhanced_metrics,
+                                        "populateEnhancedMetricsProfile": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_enhanced_metrics_profile,
+                                        "populateDurationCurves": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_duration_curves,
+                                        "populateConstraints": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_constraints,
+                                        "populateWeeklyReports": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_weekly_reports,
+                                        "calculateNormalForLoadThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_normal_for_load_thermal,
+                                        "calculateEmergForLoadThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_emerg_for_load_thermal,
+                                        "calculateNormalForGenThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_normal_for_gen_thermal,
+                                        "calculateEmergForGenThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_emerg_for_gen_thermal,
+                                        "calculateCO2": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_co2
+                                    }
+                                }
+                            }
+                        },
+                        "intervention": work_package.intervention and {
+                            "baseWorkPackageId": work_package.intervention.base_work_package_id,
+                            "yearRange": {
+                                "maxYear": work_package.intervention.year_range.max_year,
+                                "minYear": work_package.intervention.year_range.min_year
+                            },
+                            "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year,
+                            "interventionType": work_package.intervention.intervention_type.name,
+                            "candidateGeneration": work_package.intervention.candidate_generation and {
+                                "type": work_package.intervention.candidate_generation.type.name,
+                                "interventionCriteriaName": work_package.intervention.candidate_generation.intervention_criteria_name,
+                                "voltageDeltaAvgThreshold": work_package.intervention.candidate_generation.voltage_delta_avg_threshold,
+                                "voltageUnderLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_under_limit_hours_threshold,
+                                "voltageOverLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_over_limit_hours_threshold,
+                                "tapWeightingFactorLowerThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_lower_threshold,
+                                "tapWeightingFactorUpperThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_upper_threshold,
+                            },
+                            "allocationCriteria": work_package.intervention.allocation_criteria,
+                            "specificAllocationInstance": work_package.intervention.specific_allocation_instance,
+                            "phaseRebalanceProportions": work_package.intervention.phase_rebalance_proportions and {
+                                "a": work_package.intervention.phase_rebalance_proportions.a,
+                                "b": work_package.intervention.phase_rebalance_proportions.b,
+                                "c": work_package.intervention.phase_rebalance_proportions.c
+                            },
+                            "dvms": work_package.intervention.dvms and {
+                                "lowerLimit": work_package.intervention.dvms.lower_limit,
+                                "upperLimit": work_package.intervention.dvms.upper_limit,
+                                "lowerPercentile": work_package.intervention.dvms.lower_percentile,
+                                "upperPercentile": work_package.intervention.dvms.upper_percentile,
+                                "maxIterations": work_package.intervention.dvms.max_iterations,
+                                "regulatorConfig": {
+                                    "puTarget": work_package.intervention.dvms.regulator_config.pu_target,
+                                    "puDeadbandPercent": work_package.intervention.dvms.regulator_config.pu_deadband_percent,
+                                    "maxTapChangePerStep": work_package.intervention.dvms.regulator_config.max_tap_change_per_step,
+                                    "allowPushToLimit": work_package.intervention.dvms.regulator_config.allow_push_to_limit
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
     async def async_run_hosting_capacity_work_package(self, work_package: WorkPackageConfig):
         """
         Send asynchronous request to hosting capacity service to run work package
@@ -254,7 +451,8 @@ class EasClient:
                                         {
                                             "meterSwitchClass": spc.meter_switch_class and spc.meter_switch_class.name,
                                             "namePattern": spc.name_pattern
-                                        } for spc in work_package.generator_config.model.meter_placement_config.switch_meter_placement_configs
+                                        } for spc in
+                                        work_package.generator_config.model.meter_placement_config.switch_meter_placement_configs
                                     ],
                                     "energyConsumerMeterGroup": work_package.generator_config.model.meter_placement_config.energy_consumer_meter_group
                                 },
