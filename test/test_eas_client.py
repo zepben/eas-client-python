@@ -167,6 +167,80 @@ def httpserver_ssl_context(localhost_cert):
     return context
 
 
+def test_get_work_package_cost_estimation_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"getWorkPackageCostEstimation": "123.45"}})
+    res = eas_client.get_work_package_cost_estimation(
+        WorkPackageConfig(
+            "wp_name",
+            ["feeder"],
+            [1],
+            ["scenario"],
+            TimePeriod(
+                datetime(2022, 1, 1),
+                datetime(2022, 1, 2))
+        )
+    )
+    httpserver.check_assertions()
+    assert res == {"data": {"getWorkPackageCostEstimation": "123.45"}}
+
+
+def test_get_work_package_cost_estimation_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+            {"data": {"getWorkPackageCostEstimation": "123.45"}})
+        with pytest.raises(ssl.SSLError):
+            eas_client.get_work_package_cost_estimation(
+                WorkPackageConfig(
+                    "wp_name",
+                    ["feeder"],
+                    [1],
+                    ["scenario"],
+                    TimePeriod(
+                        datetime(2022, 1, 1),
+                        datetime(2022, 1, 2))
+                )
+            )
+
+
+def test_get_work_package_cost_estimation_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+            {"data": {"getWorkPackageCostEstimation": "123.45"}})
+        res = eas_client.get_work_package_cost_estimation(
+            WorkPackageConfig(
+                "wp_name",
+                ["feeder"],
+                [1],
+                ["scenario"],
+                TimePeriod(
+                    datetime(2022, 1, 1),
+                    datetime(2022, 1, 2))
+            )
+        )
+        httpserver.check_assertions()
+        assert res == {"data": {"getWorkPackageCostEstimation": "123.45"}}
+
+
 def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
         LOCALHOST,
