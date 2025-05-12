@@ -748,29 +748,17 @@ class EasClient:
         with warnings.catch_warnings():
             if not self._verify_certificate:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            if calibration_time_local is not None:
-                json = {
-                    "query": """
-                        mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime) {
-                            runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal)
-                        }
-                    """,
-                    "variables": {
-                        "calibrationName": calibration_name,
-                        "calibrationTimeLocal": calibration_time_local
+            json = {
+                "query": """
+                    mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime) {
+                        runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal)
                     }
+                """,
+                "variables": {
+                    "calibrationName": calibration_name,
+                    "calibrationTimeLocal": calibration_time_local
                 }
-            else:
-                json = {
-                    "query": """
-                        mutation runCalibration($calibrationName: String!) {
-                            runCalibration(calibrationName: $calibrationName)
-                        }
-                    """,
-                    "variables": {
-                        "calibrationName": calibration_name
-                    }
-                }
+            }
 
             if self._verify_certificate:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)

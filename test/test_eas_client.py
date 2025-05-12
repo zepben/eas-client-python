@@ -575,8 +575,8 @@ def hosting_capacity_run_calibration_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == "mutation runCalibration($calibrationName: String!) { runCalibration(calibrationName: $calibrationName) }"
-    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION"}
+    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal) }"
+    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION", "calibrationTimeLocal": None}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
