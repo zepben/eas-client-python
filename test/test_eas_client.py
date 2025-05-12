@@ -629,7 +629,7 @@ def get_hosting_capacity_run_calibration_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == "query getCalibrationRun($id: ID!) { getCalibrationRun(id: $id) { id name workflowId runId localCalibrationTime startAt completedAt status } }"
+    assert query == "query getCalibrationRun($id: ID!) { getCalibrationRun(id: $id) { id name workflowId runId calibrationTimeLocal startAt completedAt status } }"
     assert actual_body['variables'] == {"id": "calibration-id"}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")

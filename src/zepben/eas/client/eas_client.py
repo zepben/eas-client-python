@@ -738,27 +738,40 @@ class EasClient:
             self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time))
 
     async def async_run_hosting_capacity_calibration(self, calibration_name: str,
-                                                     calibration_time: Optional[str] = None):
+                                                     calibration_time_local: Optional[str] = None):
         """
         Send asynchronous request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
-        :param calibration_time: A string representation of the calibration time, in model time.
+        :param calibration_time_local: A string representation of the calibration time, in model time.
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
         with warnings.catch_warnings():
             if not self._verify_certificate:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    mutation runCalibration($calibrationName: String!, $calibrationTime: LocalDateTime) {
-                        runCalibration(calibrationName: $calibrationName, calibrationTime: $calibrationTime)
+            if calibration_time_local is not None:
+                json = {
+                    "query": """
+                        mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime) {
+                            runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal)
+                        }
+                    """,
+                    "variables": {
+                        "calibrationName": calibration_name,
+                        "calibrationTimeLocal": calibration_time_local
                     }
-                """,
-                "variables": {
-                    "calibrationName": calibration_name,
-                    "calibrationTime": calibration_time
                 }
-            }
+            else:
+                json = {
+                    "query": """
+                        mutation runCalibration($calibrationName: String!) {
+                            runCalibration(calibrationName: $calibrationName)
+                        }
+                    """,
+                    "variables": {
+                        "calibrationName": calibration_name
+                    }
+                }
+
             if self._verify_certificate:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
@@ -799,7 +812,7 @@ class EasClient:
                             name
                             workflowId
                             runId
-                            localCalibrationTime
+                            calibrationTimeLocal
                             startAt
                             completedAt
                             status
