@@ -679,6 +679,30 @@ def test_get_hosting_capacity_calibration_run_valid_certificate_success(ca: trus
         assert res == {"result": "success"}
 
 
+def hosting_capacity_run_calibration_with_calibration_time_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal) }"
+    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION", "calibrationTimeLocal": "1992-01-28T00:00:20"}
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+
+def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        hosting_capacity_run_calibration_with_calibration_time_request_handler)
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", "1992-01-28T00:00:20")
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
 def get_hosting_capacity_calibration_sets_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
