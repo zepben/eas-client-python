@@ -7,6 +7,9 @@
 * Update `ModelConfig` to contain an optional `transformer_tap_settings` field to specify a set of distribution transformer tap settings to be applied by the model-processor.
 * Added basic client method to run a hosting capacity calibration and method to query its status.
 * Added basic client method to run a hosting capacity work package cost estimation.
+* Update `ModelConfig` to contain 2 optional list for load override
+  * `fixed_time_load_override` - for fixed time models
+  * `time_period_load_override` - for models with start and end time points.
 
 ### Enhancements
 * Added work package config documentation.

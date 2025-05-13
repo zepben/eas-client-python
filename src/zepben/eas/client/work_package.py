@@ -38,6 +38,8 @@ __all__ = [
     "WriterOutputConfig",
     "WriterConfig",
     "YearRange",
+    "FixedTimeLoadOverride",
+    "TimePeriodLoadOverride",
 ]
 
 
@@ -125,6 +127,82 @@ class MeterPlacementConfig:
 
     energy_consumer_meter_group: Optional[str] = None
     """The ID of the meter group to use for populating EnergyMeters at EnergyConsumers."""
+
+
+@dataclass
+class FixedTimeLoadOverride:
+    load_id: str
+    """Id of the meter to replace the load data for."""
+
+    load_watts_override: Optional[float]
+    """
+    The reading to be used to override load watts
+    """
+
+    gen_watts_override: Optional[float]
+    """
+    The reading to be used to override gen watts
+    """
+
+    load_var_override: Optional[float]
+    """
+    The reading to be used to override load var
+    """
+
+    gen_var_override: Optional[float]
+    """
+    The reading to be used to override gen var
+    """
+
+
+@dataclass
+class TimePeriodLoadOverride:
+    load_id: str
+    """Id of the meter to replace the load data for."""
+
+    load_watts_override: Optional[List[float]]
+    """
+    A list of readings to be used to override load watts.
+    Can be either a yearly or daily profile.
+    The number of entries must match the number of entries in load_var_override, and the expected number for the configured load_interval_length_hours.
+    For load_interval_length_hours:
+        0.25: 96 entries for daily and 35040 for yearly
+        0.5: 48 entries for daily and 17520 for yearly
+        1.0: 24 entries for daily and 8760 for yearly
+    """
+
+    gen_watts_override: Optional[List[float]]
+    """
+    A list of readings to be used to override gen watts.
+    Can be either a yearly or daily profile.
+    The number of entries must match the number of entries in gen_var_override, and the expected number for the configured load_interval_length_hours.
+    For load_interval_length_hours:
+        0.25: 96 entries for daily and 35040 for yearly
+        0.5: 48 entries for daily and 17520 for yearly
+        1.0: 24 entries for daily and 8760 for yearly
+    """
+
+    load_var_override: Optional[List[float]]
+    """
+    A list of readings to be used to override load var.
+    Can be either a yearly or daily profile.
+    The number of entries must match the number of entries in load_watts_override, and the expected number for the configured load_interval_length_hours.
+    For load_interval_length_hours:
+        0.25: 96 entries for daily and 35040 for yearly
+        0.5: 48 entries for daily and 17520 for yearly
+        1.0: 24 entries for daily and 8760 for yearly
+    """
+
+    gen_var_override: Optional[List[float]]
+    """
+    A list of readings to be used to override gen var.
+    Can be either a yearly or daily profile.
+    The number of entries must match the number of entries in gen_watts_override, and the expected number for the configured load_interval_length_hours.
+    For load_interval_length_hours:
+        0.25: 96 entries for daily and 35040 for yearly
+        0.5: 48 entries for daily and 17520 for yearly
+        1.0: 24 entries for daily and 8760 for yearly
+    """
 
 
 @dataclass
@@ -356,6 +434,16 @@ class ModelConfig:
     transformer_tap_settings: Optional[str] = None
     """
     The name of the set of distribution transformer tap settings to be applied to the model from an external source.
+    """
+
+    fixed_time_load_override: Optional[List[FixedTimeLoadOverride]] = None
+    """
+    The list of meters and load profiles replacement to be applied to the work package model (Fixed time point).
+    """
+
+    time_period_load_override: Optional[List[TimePeriodLoadOverride]] = None
+    """
+    The list of meters and load profiles replacement to be applied to the work package model (Time period).
     """
 
 

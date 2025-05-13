@@ -273,7 +273,25 @@ class EasClient:
                                 "defaultGenWatts": work_package.generator_config.model.default_gen_watts,
                                 "defaultLoadVar": work_package.generator_config.model.default_load_var,
                                 "defaultGenVar": work_package.generator_config.model.default_gen_var,
-                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings
+                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings,
+                                "fixedTimeLoadOverride": work_package.generator_config.model.fixed_time_load_override and [
+                                    {
+                                        "loadId": spc.load_id,
+                                        "loadWattsOverride": spc.load_watts_override,
+                                        "genWattsOverride": spc.gen_watts_override,
+                                        "loadVarOverride": spc.load_var_override,
+                                        "genVarOverride": spc.gen_var_override,
+                                    } for spc in work_package.generator_config.model.fixed_time_load_override
+                                ],
+                                "TimePeriodLoadOverride": work_package.generator_config.model.time_period_load_override and [
+                                    {
+                                        "loadId": spc.load_id,
+                                        "loadWattsOverride": spc.load_watts_override,
+                                        "genWattsOverride": spc.gen_watts_override,
+                                        "loadVarOverride": spc.load_var_override,
+                                        "genVarOverride": spc.gen_var_override,
+                                    } for spc in work_package.generator_config.model.time_period_load_override
+                                ],
                             },
                             "solve": work_package.generator_config.solve and {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
@@ -461,7 +479,25 @@ class EasClient:
                                 "defaultGenWatts": work_package.generator_config.model.default_gen_watts,
                                 "defaultLoadVar": work_package.generator_config.model.default_load_var,
                                 "defaultGenVar": work_package.generator_config.model.default_gen_var,
-                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings
+                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings,
+                                "fixedTimeLoadOverride": work_package.generator_config.model.fixed_time_load_override and [
+                                    {
+                                        "loadId": lo.load_id,
+                                        "loadWattsOverride": lo.load_watts_override,
+                                        "genWattsOverride": lo.gen_watts_override,
+                                        "loadVarOverride": lo.load_var_override,
+                                        "genVarOverride": lo.gen_var_override,
+                                    } for lo in work_package.generator_config.model.fixed_time_load_override
+                                ],
+                                "TimePeriodLoadOverride": work_package.generator_config.model.time_period_load_override and [
+                                    {
+                                        "loadId": lo.load_id,
+                                        "loadWattsOverride": lo.load_watts_override,
+                                        "genWattsOverride": lo.gen_watts_override,
+                                        "loadVarOverride": lo.load_var_override,
+                                        "genVarOverride": lo.gen_var_override,
+                                    } for lo in work_package.generator_config.model.time_period_load_override
+                                ],
                             },
                             "solve": work_package.generator_config.solve and {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
