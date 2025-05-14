@@ -6,7 +6,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 __all__ = [
     "SwitchClass",
@@ -131,8 +131,6 @@ class MeterPlacementConfig:
 
 @dataclass
 class FixedTimeLoadOverride:
-    load_id: str
-    """Id of the meter to replace the load data for."""
 
     load_watts_override: Optional[float]
     """
@@ -157,8 +155,6 @@ class FixedTimeLoadOverride:
 
 @dataclass
 class TimePeriodLoadOverride:
-    load_id: str
-    """Id of the meter to replace the load data for."""
 
     load_watts_override: Optional[List[float]]
     """
@@ -436,12 +432,12 @@ class ModelConfig:
     The name of the set of distribution transformer tap settings to be applied to the model from an external source.
     """
 
-    fixed_time_load_override: Optional[List[FixedTimeLoadOverride]] = None
+    fixed_time_load_override: Optional[Dict[str, FixedTimeLoadOverride]] = None
     """
     The list of meters and load profiles replacement to be applied to the work package model (Fixed time point).
     """
 
-    time_period_load_override: Optional[List[TimePeriodLoadOverride]] = None
+    time_period_load_override: Optional[Dict[str, TimePeriodLoadOverride]] = None
     """
     The list of meters and load profiles replacement to be applied to the work package model (Time period).
     """
