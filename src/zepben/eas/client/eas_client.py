@@ -727,18 +727,22 @@ class EasClient:
                     response = await response.text()
                 return response
 
-    def run_hosting_capacity_calibration(self, calibration_name: str):
+    def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: Optional[str] = None):
         """
         Send request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
+        :param local_calibration_time: A string representation of the calibration time, in model time.
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
-        return get_event_loop().run_until_complete(self.async_run_hosting_capacity_calibration(calibration_name))
+        return get_event_loop().run_until_complete(
+            self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time))
 
-    async def async_run_hosting_capacity_calibration(self, calibration_name: str):
+    async def async_run_hosting_capacity_calibration(self, calibration_name: str,
+                                                     calibration_time_local: Optional[str] = None):
         """
         Send asynchronous request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
+        :param calibration_time_local: A string representation of the calibration time, in model time.
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
         with warnings.catch_warnings():
@@ -746,14 +750,16 @@ class EasClient:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             json = {
                 "query": """
-                    mutation runCalibration($calibrationName: String!) {
-                        runCalibration(calibrationName: $calibrationName)
+                    mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime) {
+                        runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal)
                     }
                 """,
                 "variables": {
-                    "calibrationName": calibration_name
+                    "calibrationName": calibration_name,
+                    "calibrationTimeLocal": calibration_time_local
                 }
             }
+
             if self._verify_certificate:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
@@ -772,7 +778,7 @@ class EasClient:
     def get_hosting_capacity_calibration_run(self, id: str):
         """
         Retrieve information of a hosting capacity calibration run
-        :param id: The calibration run ID
+        :param id: The calibration ID
         :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
         return get_event_loop().run_until_complete(self.async_get_hosting_capacity_calibration_run(id))
@@ -780,7 +786,7 @@ class EasClient:
     async def async_get_hosting_capacity_calibration_run(self, id: str):
         """
         Retrieve information of a hosting capacity calibration run
-        :param id: The calibration run ID
+        :param id: The calibration ID
         :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
         with warnings.catch_warnings():
@@ -789,11 +795,12 @@ class EasClient:
             json = {
                 "query": """
                     query getCalibrationRun($id: ID!) {
-                        getCalibrationRun(calibrationRunId: $id) {
+                        getCalibrationRun(id: $id) {
                             id
                             name
                             workflowId
                             runId
+                            calibrationTimeLocal
                             startAt
                             completedAt
                             status
@@ -803,6 +810,43 @@ class EasClient:
                 "variables": {
                     "id": id
                 }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def get_hosting_capacity_calibration_sets(self):
+        """
+        Retrieve a list of all completed calibration runs initiated through Evolve App Server
+        :return: The HTTP response received from the Evolve App Server after requesting completed calibration runs
+        """
+        return get_event_loop().run_until_complete(self.async_get_hosting_capacity_calibration_sets())
+
+    async def async_get_hosting_capacity_calibration_sets(self):
+        """
+        Retrieve a list of all completed calibration runs initiated through Evolve App Server
+        :return: The HTTP response received from the Evolve App Server after requesting completed calibration runs
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    query { 
+                    getCalibrationSets
+                     }
+                """
             }
             if self._verify_certificate:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
