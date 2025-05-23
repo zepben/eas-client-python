@@ -1,12 +1,17 @@
 # EAS Python client
 ## [0.18.0] - UNRELEASED
 ### Breaking Changes
-* None.
+* Added `load_overrides` to both `FixedTime` and `TimePeriod` which consist of a list of `FixedTimeLoadOverride` and `TimePeriodLoadOverride`
+* `WorkPackageConfig` has some of its variables moved into the new classes `ForecastConfig` and `FeederConfig`.
+  * Moved `feeders`, `years`, `scenarios` and `load_time`.
+  * `WorkPackageConfig` now has a new variable `syf_config` consist of a Union of `ForecastConfig`, and list of `FeederConfig`.
+  * This is to support feeder specific load override events
 
 ### New Features
 * Update `ModelConfig` to contain an optional `transformer_tap_settings` field to specify a set of distribution transformer tap settings to be applied by the model-processor.
 * Added basic client method to run a hosting capacity calibration and method to query its status.
 * Added basic client method to run a hosting capacity work package cost estimation.
+* Added `FixedTimeLoadOverride` and `TimePeriodLoadOverride` class
 
 ### Enhancements
 * Added work package config documentation.
