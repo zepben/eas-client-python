@@ -40,6 +40,8 @@ __all__ = [
     "YearRange",
     "FixedTimeLoadOverride",
     "TimePeriodLoadOverride",
+    "ForecastConfig",
+    "FeederConfig",
 ]
 
 
@@ -62,71 +64,6 @@ class SwitchMeterPlacementConfig:
     A Regex pattern to match on for Switch names. 
     The IdentifiedObject.name field will be used when matching against switches of the corresponding Switch class.
     """
-
-
-class FixedTime:
-    """
-    A single point in time to model. Should be precise to the minute, and load data must be
-    present for the provided time in the load database for accurate results.
-    """
-
-    def __init__(self, time: datetime):
-        self.time = time.replace(tzinfo=None)
-
-
-class TimePeriod:
-    """
-    A time period to model, from a start time to an end time. Maximum of 1 year.
-
-    Load data must be available in the load database between the provided start and end time for accurate results.
-    """
-
-    def __init__(
-            self,
-            start_time: datetime,
-            end_time: datetime
-    ):
-        self._validate(start_time, end_time)
-        self.start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
-        self.end_time = end_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
-
-    @staticmethod
-    def _validate(start_time: datetime, end_time: datetime):
-        ddelta = (end_time - start_time).days
-
-        if ddelta > 365:
-            raise ValueError("The difference between 'start_time' and 'end_time' cannot be greater than a year.")
-
-        if ddelta < 1:
-            raise ValueError("The difference between 'start_time' and 'end_time' cannot be less than a day.")
-
-        if ddelta < 0:
-            raise ValueError("The 'start_time' must be before 'end_time'.")
-
-
-class LoadPlacement(Enum):
-    PER_ENERGY_CONSUMER = "PER_ENERGY_CONSUMER"
-    PER_USAGE_POINT = "PER_USAGE_POINT"
-
-
-class FeederScenarioAllocationStrategy(Enum):
-    RANDOM = "RANDOM"
-    ADDITIVE = "ADDITIVE"
-
-
-@dataclass
-class MeterPlacementConfig:
-    feeder_head: Optional[bool] = None
-    """Whether to place a meter at the voltage source at the feeder head."""
-
-    dist_transformers: Optional[bool] = None
-    """Whether to place a meter at the secondary winding of each distribution transformer."""
-
-    switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]] = None
-    """Specifies which switch classes to place meters at, and the regex pattern to match for in the switch names."""
-
-    energy_consumer_meter_group: Optional[str] = None
-    """The ID of the meter group to use for populating EnergyMeters at EnergyConsumers."""
 
 
 @dataclass
@@ -199,6 +136,74 @@ class TimePeriodLoadOverride:
         0.5: 48 entries for daily and 17520 for yearly
         1.0: 24 entries for daily and 8760 for yearly
     """
+
+
+class FixedTime:
+    """
+    A single point in time to model. Should be precise to the minute, and load data must be
+    present for the provided time in the load database for accurate results.
+    """
+
+    def __init__(self, time: datetime, load_overrides: List[FixedTimeLoadOverride]):
+        self.time = time.replace(tzinfo=None)
+        self.load_overrides = load_overrides
+
+
+class TimePeriod:
+    """
+    A time period to model, from a start time to an end time. Maximum of 1 year.
+
+    Load data must be available in the load database between the provided start and end time for accurate results.
+    """
+
+    def __init__(
+            self,
+            start_time: datetime,
+            end_time: datetime,
+            load_overrides: List[TimePeriodLoadOverride]
+    ):
+        self._validate(start_time, end_time)
+        self.start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+        self.end_time = end_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+        self.load_override = load_overrides
+
+    @staticmethod
+    def _validate(start_time: datetime, end_time: datetime):
+        ddelta = (end_time - start_time).days
+
+        if ddelta > 365:
+            raise ValueError("The difference between 'start_time' and 'end_time' cannot be greater than a year.")
+
+        if ddelta < 1:
+            raise ValueError("The difference between 'start_time' and 'end_time' cannot be less than a day.")
+
+        if ddelta < 0:
+            raise ValueError("The 'start_time' must be before 'end_time'.")
+
+
+class LoadPlacement(Enum):
+    PER_ENERGY_CONSUMER = "PER_ENERGY_CONSUMER"
+    PER_USAGE_POINT = "PER_USAGE_POINT"
+
+
+class FeederScenarioAllocationStrategy(Enum):
+    RANDOM = "RANDOM"
+    ADDITIVE = "ADDITIVE"
+
+
+@dataclass
+class MeterPlacementConfig:
+    feeder_head: Optional[bool] = None
+    """Whether to place a meter at the voltage source at the feeder head."""
+
+    dist_transformers: Optional[bool] = None
+    """Whether to place a meter at the secondary winding of each distribution transformer."""
+
+    switch_meter_placement_configs: Optional[List[SwitchMeterPlacementConfig]] = None
+    """Specifies which switch classes to place meters at, and the regex pattern to match for in the switch names."""
+
+    energy_consumer_meter_group: Optional[str] = None
+    """The ID of the meter group to use for populating EnergyMeters at EnergyConsumers."""
 
 
 @dataclass
@@ -430,16 +435,6 @@ class ModelConfig:
     transformer_tap_settings: Optional[str] = None
     """
     The name of the set of distribution transformer tap settings to be applied to the model from an external source.
-    """
-
-    fixed_time_load_override: Optional[Dict[str, FixedTimeLoadOverride]] = None
-    """
-    The list of meters and load profiles replacement to be applied to the work package model (Fixed time point).
-    """
-
-    time_period_load_override: Optional[Dict[str, TimePeriodLoadOverride]] = None
-    """
-    The list of meters and load profiles replacement to be applied to the work package model (Time period).
     """
 
 
@@ -772,9 +767,7 @@ class InterventionConfig:
 
 
 @dataclass
-class WorkPackageConfig:
-    """ A data class representing the configuration for a hosting capacity work package """
-    name: str
+class ForecastConfig(object):
     feeders: List[str]
     """The feeders to process in this work package"""
 
@@ -794,6 +787,41 @@ class WorkPackageConfig:
     The time to use for the base load data. The provided time[s] must be available in the
     load database for accurate results. Specifying an invalid time (i.e one with no load data) will
     result in inaccurate results.
+    """
+
+@dataclass
+class FeederConfig(object):
+    feeder: str
+    """The feeder to process in this work package"""
+
+    years: List[int]
+    """
+    The years to process for the specified feeders in this work package.
+    The years should be configured in the input database forecasts for all supplied scenarios.
+    """
+
+    scenarios: List[str]
+    """
+    The scenarios to model. These should be configured in the input.scenario_configuration table.
+    """
+
+    load_time: Union[TimePeriod, FixedTime]
+    """
+    The time to use for the base load data. The provided time[s] must be available in the
+    load database for accurate results. Specifying an invalid time (i.e one with no load data) will
+    result in inaccurate results.
+    """
+
+
+@dataclass
+class WorkPackageConfig:
+    """ A data class representing the configuration for a hosting capacity work package """
+    name: str
+    syf_config: Union[ForecastConfig, List[FeederConfig]]
+    """
+    The configuration of the scenario, years, and feeders to run. Use ForecastConfig
+    for the same scenarios and years applied across all feeders, and the more in depth FeederConfig
+    if configuration varies per feeder.
     """
 
     quality_assurance_processing: Optional[bool] = None
