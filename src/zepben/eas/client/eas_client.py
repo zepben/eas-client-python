@@ -15,7 +15,7 @@ from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
 from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, create_token_fetcher_managed_identity
 
-from zepben.eas.client.opendss import OpenDssConfig
+from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
 from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod, ForecastConfig, FeederConfigs
@@ -798,7 +798,7 @@ class EasClient:
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
         return get_event_loop().run_until_complete(
-            self.async_run_opendss_export(calibration_name, local_calibration_time))
+            self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time))
 
     async def async_run_hosting_capacity_calibration(self, calibration_name: str,
                                                      calibration_time_local: Optional[str] = None):
@@ -962,7 +962,7 @@ class EasClient:
                             "modulesConfiguration": {
                                 "common": {
                                     **({"fixedTime": config.load_time.time.isoformat()}
-                                    if isinstance(config.load_time, FixedTime) else {}),
+                                       if isinstance(config.load_time, FixedTime) else {}),
                                     **({"timePeriod": {
                                         "start": config.load_time.start_time.isoformat(),
                                         "end": config.load_time.end_time.isoformat(),
@@ -1062,18 +1062,28 @@ class EasClient:
                     response = await response.text()
                 return response
 
-    def get_hosting_capacity_calibration_run(self, id: str):
+    def get_paged_opendss_models(self, limit: Optional[int] = None, offset: Optional[int] = None,
+                                 query_filter: Optional[GetOpenDssModelsFilterInput] = None,
+                                 query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
         """
-        Retrieve information of a hosting capacity calibration run
-        :param id: The calibration run ID
+        Retrieve a paginated opendss export run information
+        :param limit: The number of opendss export runs to retrieve
+        :param offset: The number of opendss export runs to skip
+        :param query_filter: The filter to apply to the query
+        :param query_sort: The sorting to apply to the query
         :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
-        return get_event_loop().run_until_complete(self.async_get_hosting_capacity_calibration_run(id))
+        return get_event_loop().run_until_complete(self.async_get_paged_opendss_models(limit, offset, query_filter, query_sort))
 
-    async def async_get_hosting_capacity_calibration_run(self, id: str):
+    async def async_get_paged_opendss_models(self, limit: Optional[int] = None, offset: Optional[int] = None,
+                                             query_filter: Optional[GetOpenDssModelsFilterInput] = None,
+                                             query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
         """
         Retrieve information of a hosting capacity calibration run
-        :param id: The calibration run ID
+        :param limit: The number of opendss export runs to retrieve
+        :param offset: The number of opendss export runs to skip
+        :param query_filter: The filter to apply to the query
+        :param query_sort: The sorting to apply to the query
         :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
         with warnings.catch_warnings():
@@ -1081,20 +1091,123 @@ class EasClient:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             json = {
                 "query": """
-                    query getCalibrationRun($id: ID!) {
-                        getCalibrationRun(calibrationRunId: $id) {
+                    query pagedOpenDssModels($limit: Int, $offset: Long, $filter: GetOpenDssModelsFilterInput, $sort: GetOpenDssModelsSortCriteriaInput) {
+                    pagedOpenDssModels(limit: $limit, offset: $offset, filter: $filter,sort: $sort) {
+                        totalCount
+                        offset,
+                        models {
                             id
                             name
-                            workflowId
-                            runId
-                            startAt
-                            completedAt
-                            status
+                            createdAt
+                            createdBy
+                            state
+                            downloadUrl
+                            isPublic
+                            errors
+                            generationSpec {
+                                modelOptions{
+                                    scenario
+                                    year
+                                    feeder
+                                }
+                                modulesConfiguration {
+                                    common {
+                                        timePeriod {
+                                            start
+                                            end
+                                        }
+                                    }
+                                    generator {
+                                        model {
+                                            vmPu
+                                            vMinPu
+                                            vMaxPu
+                                            loadModel
+                                            collapseSWER
+                                            calibration
+                                            pFactorBaseExports
+                                            pFactorForecastPv
+                                            pFactorBaseImports
+                                            fixSinglePhaseLoads
+                                            maxSinglePhaseLoad
+                                            fixOverloadingConsumers
+                                            maxLoadTxRatio
+                                            maxGenTxRatio
+                                            fixUndersizedServiceLines
+                                            maxLoadServiceLineRatio
+                                            maxLoadLvLineRatio
+                                            collapseLvNetworks
+                                            feederScenarioAllocationStrategy
+                                            closedLoopVRegEnabled
+                                            closedLoopVRegReplaceAll
+                                            closedLoopVRegSetPoint
+                                            closedLoopVBand
+                                            closedLoopTimeDelay
+                                            closedLoopVLimit
+                                            defaultTapChangerTimeDelay
+                                            defaultTapChangerSetPointPu
+                                            defaultTapChangerBand
+                                            splitPhaseDefaultLoadLossPercentage
+                                            splitPhaseLVKV
+                                            swerVoltageToLineVoltage
+                                            loadPlacement
+                                            loadIntervalLengthHours
+                                            meterPlacementConfig {
+                                                feederHead
+                                                distTransformers
+                                                switchMeterPlacementConfigs {
+                                                  meterSwitchClass
+                                                  namePattern
+                                                }
+                                                energyConsumerMeterGroup
+                                            }
+                                            seed
+                                            defaultLoadWatts
+                                            defaultGenWatts
+                                            defaultLoadVar
+                                            defaultGenVar
+                                            transformerTapSettings
+                                        }
+                                        solve {
+                                            normVMinPu
+                                            normVMaxPu
+                                            emergVMinPu
+                                            emergVMaxPu
+                                            baseFrequency
+                                            voltageBases
+                                            maxIter
+                                            maxControlIter
+                                            mode
+                                            stepSizeMinutes
+                                        }
+                                        rawResults {
+                                            energyMeterVoltagesRaw
+                                            energyMetersRaw
+                                            resultsPerMeter
+                                            overloadsRaw
+                                            voltageExceptionsRaw
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
+                }
                 """,
                 "variables": {
-                    "id": id
+                    **({"limit": limit} if limit is not None else {}),
+                    **({"offset": offset} if offset is not None else {}),
+                    **({"filter": {
+                        "name": query_filter.name,
+                        "isPublic": query_filter.is_public,
+                        "state": query_filter.state and [state.name for state in query_filter.state]
+                    }} if query_filter else {}),
+                    **({"sort": {
+                        "name": query_sort.name and query_sort.name.name,
+                        "createdAt": query_sort.created_at and query_sort.created_at.name,
+                        "state": query_sort.state and query_sort.state.name,
+                        "isPublic": query_sort.is_public and query_sort.is_public.name
+                    }} if query_sort else {})
                 }
             }
             if self._verify_certificate:

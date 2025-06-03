@@ -18,7 +18,8 @@ from zepben.auth import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study, FeederConfig, ForecastConfig, FixedTimeLoadOverride
 from zepben.eas import EasClient, Study, SolveConfig
-from zepben.eas.client.opendss import OpenDssConfig
+from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, OpenDssModelState, GetOpenDssModelsSortCriteriaInput, \
+    Order
 from zepben.eas.client.study import Result
 from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, FeederConfigs, TimePeriodLoadOverride, \
     FixedTime
@@ -994,5 +995,291 @@ def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver
         httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
             run_opendss_export_request_handler)
         res = eas_client.run_opendss_export(OPENDSS_CONFIG)
+        httpserver.check_assertions()
+        assert res == {"result": "success"}
+
+def get_paged_opendss_models_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    expected_query = """
+        query pagedOpenDssModels($limit: Int, $offset: Long, $filter: GetOpenDssModelsFilterInput, $sort: GetOpenDssModelsSortCriteriaInput) {
+            pagedOpenDssModels(limit: $limit, offset: $offset, filter: $filter,sort: $sort) {
+                totalCount
+                offset,
+                models {
+                    id
+                    name
+                    createdAt
+                    createdBy
+                    state
+                    downloadUrl
+                    isPublic
+                    errors
+                    generationSpec {
+                        modelOptions{
+                            scenario
+                            year
+                            feeder
+                        }
+                        modulesConfiguration {
+                            common {
+                                timePeriod {
+                                    start
+                                    end
+                                }
+                            }
+                            generator {
+                                model {
+                                    vmPu
+                                    vMinPu
+                                    vMaxPu
+                                    loadModel
+                                    collapseSWER
+                                    calibration
+                                    pFactorBaseExports
+                                    pFactorForecastPv
+                                    pFactorBaseImports
+                                    fixSinglePhaseLoads
+                                    maxSinglePhaseLoad
+                                    fixOverloadingConsumers
+                                    maxLoadTxRatio
+                                    maxGenTxRatio
+                                    fixUndersizedServiceLines
+                                    maxLoadServiceLineRatio
+                                    maxLoadLvLineRatio
+                                    collapseLvNetworks
+                                    feederScenarioAllocationStrategy
+                                    closedLoopVRegEnabled
+                                    closedLoopVRegReplaceAll
+                                    closedLoopVRegSetPoint
+                                    closedLoopVBand
+                                    closedLoopTimeDelay
+                                    closedLoopVLimit
+                                    defaultTapChangerTimeDelay
+                                    defaultTapChangerSetPointPu
+                                    defaultTapChangerBand
+                                    splitPhaseDefaultLoadLossPercentage
+                                    splitPhaseLVKV
+                                    swerVoltageToLineVoltage
+                                    loadPlacement
+                                    loadIntervalLengthHours
+                                    meterPlacementConfig {
+                                        feederHead
+                                        distTransformers
+                                        switchMeterPlacementConfigs {
+                                          meterSwitchClass
+                                          namePattern
+                                        }
+                                        energyConsumerMeterGroup
+                                    }
+                                    seed
+                                    defaultLoadWatts
+                                    defaultGenWatts
+                                    defaultLoadVar
+                                    defaultGenVar
+                                    transformerTapSettings
+                                }
+                                solve {
+                                    normVMinPu
+                                    normVMaxPu
+                                    emergVMinPu
+                                    emergVMaxPu
+                                    baseFrequency
+                                    voltageBases
+                                    maxIter
+                                    maxControlIter
+                                    mode
+                                    stepSizeMinutes
+                                }
+                                rawResults {
+                                    energyMeterVoltagesRaw
+                                    energyMetersRaw
+                                    resultsPerMeter
+                                    overloadsRaw
+                                    voltageExceptionsRaw
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    """
+    assert query == " ".join(line.strip() for line in expected_query.strip().splitlines())
+    assert actual_body['variables'] == {
+        "limit": 5,
+        "offset": 0,
+        "filter": {
+            "name": "TEST OPENDSS MODEL 1",
+            "isPublic": True,
+            "state": ["COMPLETED"],
+        },
+        "sort": {
+            "state": "ASC",
+            "createdAt": None,
+            "name": None,
+            "isPublic": None
+        }
+    }
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+
+def test_get_paged_opendss_models_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        get_paged_opendss_models_request_handler)
+    res = eas_client.get_paged_opendss_models(
+        5, 0, GetOpenDssModelsFilterInput("TEST OPENDSS MODEL 1", True, [OpenDssModelState.COMPLETED]),
+        GetOpenDssModelsSortCriteriaInput(state=Order.ASC))
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
+def test_get_paged_opendss_models_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+        with pytest.raises(ssl.SSLError):
+            eas_client.get_paged_opendss_models()
+
+
+def get_paged_opendss_models_no_param_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    expected_query = """
+        query pagedOpenDssModels($limit: Int, $offset: Long, $filter: GetOpenDssModelsFilterInput, $sort: GetOpenDssModelsSortCriteriaInput) {
+            pagedOpenDssModels(limit: $limit, offset: $offset, filter: $filter,sort: $sort) {
+                totalCount
+                offset,
+                models {
+                    id
+                    name
+                    createdAt
+                    createdBy
+                    state
+                    downloadUrl
+                    isPublic
+                    errors
+                    generationSpec {
+                        modelOptions{
+                            scenario
+                            year
+                            feeder
+                        }
+                        modulesConfiguration {
+                            common {
+                                timePeriod {
+                                    start
+                                    end
+                                }
+                            }
+                            generator {
+                                model {
+                                    vmPu
+                                    vMinPu
+                                    vMaxPu
+                                    loadModel
+                                    collapseSWER
+                                    calibration
+                                    pFactorBaseExports
+                                    pFactorForecastPv
+                                    pFactorBaseImports
+                                    fixSinglePhaseLoads
+                                    maxSinglePhaseLoad
+                                    fixOverloadingConsumers
+                                    maxLoadTxRatio
+                                    maxGenTxRatio
+                                    fixUndersizedServiceLines
+                                    maxLoadServiceLineRatio
+                                    maxLoadLvLineRatio
+                                    collapseLvNetworks
+                                    feederScenarioAllocationStrategy
+                                    closedLoopVRegEnabled
+                                    closedLoopVRegReplaceAll
+                                    closedLoopVRegSetPoint
+                                    closedLoopVBand
+                                    closedLoopTimeDelay
+                                    closedLoopVLimit
+                                    defaultTapChangerTimeDelay
+                                    defaultTapChangerSetPointPu
+                                    defaultTapChangerBand
+                                    splitPhaseDefaultLoadLossPercentage
+                                    splitPhaseLVKV
+                                    swerVoltageToLineVoltage
+                                    loadPlacement
+                                    loadIntervalLengthHours
+                                    meterPlacementConfig {
+                                        feederHead
+                                        distTransformers
+                                        switchMeterPlacementConfigs {
+                                          meterSwitchClass
+                                          namePattern
+                                        }
+                                        energyConsumerMeterGroup
+                                    }
+                                    seed
+                                    defaultLoadWatts
+                                    defaultGenWatts
+                                    defaultLoadVar
+                                    defaultGenVar
+                                    transformerTapSettings
+                                }
+                                solve {
+                                    normVMinPu
+                                    normVMaxPu
+                                    emergVMinPu
+                                    emergVMaxPu
+                                    baseFrequency
+                                    voltageBases
+                                    maxIter
+                                    maxControlIter
+                                    mode
+                                    stepSizeMinutes
+                                }
+                                rawResults {
+                                    energyMeterVoltagesRaw
+                                    energyMetersRaw
+                                    resultsPerMeter
+                                    overloadsRaw
+                                    voltageExceptionsRaw
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    """
+    assert query == " ".join(line.strip() for line in expected_query.strip().splitlines())
+    assert actual_body['variables'] == { }
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+def test_get_paged_opendss_models_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+            get_paged_opendss_models_no_param_request_handler)
+        res = eas_client.get_paged_opendss_models()
         httpserver.check_assertions()
         assert res == {"result": "success"}
