@@ -15,6 +15,7 @@ from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
 from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, create_token_fetcher_managed_identity
 
+from zepben.eas.client.opendss import OpenDssConfig
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
 from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod, ForecastConfig, FeederConfigs
@@ -797,7 +798,7 @@ class EasClient:
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
         return get_event_loop().run_until_complete(
-            self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time))
+            self.async_run_opendss_export(calibration_name, local_calibration_time))
 
     async def async_run_hosting_capacity_calibration(self, calibration_name: str,
                                                      calibration_time_local: Optional[str] = None):
@@ -909,6 +910,192 @@ class EasClient:
                     getCalibrationSets
                      }
                 """
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def run_opendss_export(self, config: OpenDssConfig):
+        """
+        Send request to run an opendss export
+        :param config: The OpenDssConfig for running the export
+        :return: The HTTP response received from the Evolve App Server after attempting to run the opendss export
+        """
+        return get_event_loop().run_until_complete(self.async_run_opendss_export(config))
+
+    async def async_run_opendss_export(self, config: OpenDssConfig):
+        """
+        Send asynchronous request to run an opendss export
+        :param config: The OpenDssConfig for running the export
+        :return: The HTTP response received from the Evolve App Server after attempting to run the opendss export
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    mutation createOpenDssModel($input: OpenDssModelInput!) {
+                        createOpenDssModel(input: $input)
+                    }
+                """,
+                "variables": {
+                    "input": {
+                        "modelName": config.model_name,
+                        "isPublic": config.is_public,
+                        "generationSpec": {
+                            "modelOptions": {
+                                "feeder": config.feeder,
+                                "scenario": config.scenario,
+                                "year": config.year
+                            },
+                            "modulesConfiguration": {
+                                "common": {
+                                    **({"fixedTime": config.load_time.time.isoformat()}
+                                    if isinstance(config.load_time, FixedTime) else {}),
+                                    **({"timePeriod": {
+                                        "start": config.load_time.start_time.isoformat(),
+                                        "end": config.load_time.end_time.isoformat(),
+                                    }} if isinstance(config.load_time, TimePeriod) else {})
+                                },
+                                **({"generator": {
+                                    **({"model": {
+                                        "vmPu": config.generator_config.model.vm_pu,
+                                        "vMinPu": config.generator_config.model.vmin_pu,
+                                        "vMaxPu": config.generator_config.model.vmax_pu,
+                                        "loadModel": config.generator_config.model.load_model,
+                                        "collapseSWER": config.generator_config.model.collapse_swer,
+                                        "calibration": config.generator_config.model.calibration,
+                                        "pFactorBaseExports": config.generator_config.model.p_factor_base_exports,
+                                        "pFactorForecastPv": config.generator_config.model.p_factor_forecast_pv,
+                                        "pFactorBaseImports": config.generator_config.model.p_factor_base_imports,
+                                        "fixSinglePhaseLoads": config.generator_config.model.fix_single_phase_loads,
+                                        "maxSinglePhaseLoad": config.generator_config.model.max_single_phase_load,
+                                        "fixOverloadingConsumers": config.generator_config.model.fix_overloading_consumers,
+                                        "maxLoadTxRatio": config.generator_config.model.max_load_tx_ratio,
+                                        "maxGenTxRatio": config.generator_config.model.max_gen_tx_ratio,
+                                        "fixUndersizedServiceLines": config.generator_config.model.fix_undersized_service_lines,
+                                        "maxLoadServiceLineRatio": config.generator_config.model.max_load_service_line_ratio,
+                                        "maxLoadLvLineRatio": config.generator_config.model.max_load_lv_line_ratio,
+                                        "collapseLvNetworks": config.generator_config.model.collapse_lv_networks,
+                                        "feederScenarioAllocationStrategy": config.generator_config.model.feeder_scenario_allocation_strategy and config.generator_config.model.feeder_scenario_allocation_strategy.name,
+                                        "closedLoopVRegEnabled": config.generator_config.model.closed_loop_v_reg_enabled,
+                                        "closedLoopVRegReplaceAll": config.generator_config.model.closed_loop_v_reg_replace_all,
+                                        "closedLoopVRegSetPoint": config.generator_config.model.closed_loop_v_reg_set_point,
+                                        "closedLoopVBand": config.generator_config.model.closed_loop_v_band,
+                                        "closedLoopTimeDelay": config.generator_config.model.closed_loop_time_delay,
+                                        "closedLoopVLimit": config.generator_config.model.closed_loop_v_limit,
+                                        "defaultTapChangerTimeDelay": config.generator_config.model.default_tap_changer_time_delay,
+                                        "defaultTapChangerSetPointPu": config.generator_config.model.default_tap_changer_set_point_pu,
+                                        "defaultTapChangerBand": config.generator_config.model.default_tap_changer_band,
+                                        "splitPhaseDefaultLoadLossPercentage": config.generator_config.model.split_phase_default_load_loss_percentage,
+                                        "splitPhaseLVKV": config.generator_config.model.split_phase_lv_kv,
+                                        "swerVoltageToLineVoltage": config.generator_config.model.swer_voltage_to_line_voltage,
+                                        "loadPlacement": config.generator_config.model.load_placement and config.generator_config.model.load_placement.name,
+                                        "loadIntervalLengthHours": config.generator_config.model.load_interval_length_hours,
+                                        "meterPlacementConfig": config.generator_config.model.meter_placement_config and {
+                                            "feederHead": config.generator_config.model.meter_placement_config.feeder_head,
+                                            "distTransformers": config.generator_config.model.meter_placement_config.dist_transformers,
+                                            "switchMeterPlacementConfigs": config.generator_config.model.meter_placement_config.switch_meter_placement_configs and [
+                                                {
+                                                    "meterSwitchClass": spc.meter_switch_class and spc.meter_switch_class.name,
+                                                    "namePattern": spc.name_pattern
+                                                } for spc in
+                                                config.generator_config.model.meter_placement_config.switch_meter_placement_configs
+                                            ],
+                                            "energyConsumerMeterGroup": config.generator_config.model.meter_placement_config.energy_consumer_meter_group
+                                        },
+                                        "seed": config.generator_config.model.seed,
+                                        "defaultLoadWatts": config.generator_config.model.default_load_watts,
+                                        "defaultGenWatts": config.generator_config.model.default_gen_watts,
+                                        "defaultLoadVar": config.generator_config.model.default_load_var,
+                                        "defaultGenVar": config.generator_config.model.default_gen_var,
+                                        "transformerTapSettings": config.generator_config.model.transformer_tap_settings
+                                    }} if config.generator_config.model else {}),
+                                    **({"solve": {
+                                        "normVMinPu": config.generator_config.solve.norm_vmin_pu,
+                                        "normVMaxPu": config.generator_config.solve.norm_vmax_pu,
+                                        "emergVMinPu": config.generator_config.solve.emerg_vmin_pu,
+                                        "emergVMaxPu": config.generator_config.solve.emerg_vmax_pu,
+                                        "baseFrequency": config.generator_config.solve.base_frequency,
+                                        "voltageBases": config.generator_config.solve.voltage_bases,
+                                        "maxIter": config.generator_config.solve.max_iter,
+                                        "maxControlIter": config.generator_config.solve.max_control_iter,
+                                        "mode": config.generator_config.solve.mode and config.generator_config.solve.mode.name,
+                                        "stepSizeMinutes": config.generator_config.solve.step_size_minutes
+                                    }} if config.generator_config.solve else {}),
+                                    **({"rawResults": {
+                                        "energyMeterVoltagesRaw": config.generator_config.raw_results.energy_meter_voltages_raw,
+                                        "energyMetersRaw": config.generator_config.raw_results.energy_meters_raw,
+                                        "resultsPerMeter": config.generator_config.raw_results.results_per_meter,
+                                        "overloadsRaw": config.generator_config.raw_results.overloads_raw,
+                                        "voltageExceptionsRaw": config.generator_config.raw_results.voltage_exceptions_raw
+                                    }} if config.generator_config.raw_results else {})
+                                }} if config.generator_config else {})
+                            }
+                        }
+                    }
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def get_hosting_capacity_calibration_run(self, id: str):
+        """
+        Retrieve information of a hosting capacity calibration run
+        :param id: The calibration run ID
+        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
+        """
+        return get_event_loop().run_until_complete(self.async_get_hosting_capacity_calibration_run(id))
+
+    async def async_get_hosting_capacity_calibration_run(self, id: str):
+        """
+        Retrieve information of a hosting capacity calibration run
+        :param id: The calibration run ID
+        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    query getCalibrationRun($id: ID!) {
+                        getCalibrationRun(calibrationRunId: $id) {
+                            id
+                            name
+                            workflowId
+                            runId
+                            startAt
+                            completedAt
+                            status
+                        }
+                    }
+                """,
+                "variables": {
+                    "id": id
+                }
             }
             if self._verify_certificate:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
