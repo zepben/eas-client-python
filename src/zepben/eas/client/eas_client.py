@@ -7,6 +7,7 @@ import ssl
 import warnings
 from asyncio import get_event_loop
 from hashlib import sha256
+from http import HTTPStatus
 from json import dumps
 from typing import Optional
 
@@ -1221,6 +1222,39 @@ class EasClient:
             ) as response:
                 if response.ok:
                     response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def get_opendss_model_download_url(self, id: int):
+        """
+        Retrieve a download url for the specified opendss export run id
+        :param id: The opendss export run ID
+        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
+        """
+        return get_event_loop().run_until_complete(self.async_get_opendss_model_download_url(id))
+
+    async def async_get_opendss_model_download_url(self, id: int):
+        """
+        Retrieve a download url for the specified opendss export run id
+        :param id: The opendss export run ID
+        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path=f"/api/opendss-model/{id}"),
+                headers=self._get_request_headers(),
+                ssl=sslcontext if self._verify_certificate else False,
+                allow_redirects=False
+            ) as response:
+                if HTTPStatus(response.status).is_redirection:
+                    response = response.headers["Location"]
                 else:
                     response = await response.text()
                 return response

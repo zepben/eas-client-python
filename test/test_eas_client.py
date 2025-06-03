@@ -8,6 +8,7 @@ import random
 import ssl
 import string
 from datetime import datetime
+from http import HTTPStatus
 from unittest import mock
 
 import pytest
@@ -1283,3 +1284,52 @@ def test_get_paged_opendss_models_valid_certificate_success(ca: trustme.CA, http
         res = eas_client.get_paged_opendss_models()
         httpserver.check_assertions()
         assert res == {"result": "success"}
+
+def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/opendss-model/1").respond_with_response(Response(
+        status=HTTPStatus.FOUND,
+        headers={"Location": "https://example.com/download/1"}
+    ))
+    res = eas_client.get_opendss_model_download_url(1)
+    httpserver.check_assertions()
+    assert res == "https://example.com/download/1"
+
+def test_get_opendss_model_download_url_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/opendss-model/1").respond_with_response(Response(
+            status=HTTPStatus.FOUND,
+            headers={"Location": "https://example.com/download/1"}
+        ))
+        with pytest.raises(ssl.SSLError):
+            eas_client.get_opendss_model_download_url(1)
+
+
+def test_get_opendss_model_download_url_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/opendss-model/1").respond_with_response(Response(
+            status=HTTPStatus.FOUND,
+            headers={"Location": "https://example.com/download/1"}
+        ))
+        res = eas_client.get_opendss_model_download_url(1)
+        httpserver.check_assertions()
+        assert res == "https://example.com/download/1"
