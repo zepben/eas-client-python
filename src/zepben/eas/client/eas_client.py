@@ -900,6 +900,7 @@ class EasClient:
                             },
                             "modulesConfiguration": {
                                 "common": {
+                                    "timeZone": config.time_zone.__str__(),
                                     **({"fixedTime": config.load_time.time.isoformat()}
                                        if isinstance(config.load_time, FixedTime) else {}),
                                     **({"timePeriod": {

@@ -4,6 +4,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 from dataclasses import dataclass
+from datetime import tzinfo
 from enum import Enum
 from typing import Union, Optional, List
 from zepben.eas.client.work_package import GeneratorConfig, TimePeriod, FixedTime
@@ -22,6 +23,7 @@ class OpenDssConfig:
     scenario: str
     year: int
     feeder: str
+    time_zone: tzinfo
     load_time: Union[TimePeriod, FixedTime]
     generator_config: Optional[GeneratorConfig] = None
     model_name: Optional[str] = None
