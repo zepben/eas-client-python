@@ -7,6 +7,7 @@
 * Update `ModelConfig` to contain an optional `transformer_tap_settings` field to specify a set of distribution transformer tap settings to be applied by the model-processor.
 * Added basic client method to run a hosting capacity calibration and method to query its status.
 * Added basic client method to run a hosting capacity work package cost estimation.
+* Added basic client method to run a opendss export, query its information and get a download url for the exported model.
 
 ### Enhancements
 * Added work package config documentation.
