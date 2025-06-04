@@ -16,9 +16,10 @@ from pytest_httpserver import HTTPServer
 from werkzeug import Response
 from zepben.auth import ZepbenTokenFetcher
 
-from zepben.eas import EasClient, Study
+from zepben.eas import EasClient, Study, FeederConfig, ForecastConfig, FixedTimeLoadOverride
 from zepben.eas.client.study import Result
-from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod
+from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, FeederConfigs, TimePeriodLoadOverride, \
+    FixedTime
 
 mock_host = ''.join(random.choices(string.ascii_lowercase, k=10))
 mock_port = random.randrange(1024)
@@ -179,12 +180,16 @@ def test_get_work_package_cost_estimation_no_verify_success(httpserver: HTTPServ
     res = eas_client.get_work_package_cost_estimation(
         WorkPackageConfig(
             "wp_name",
-            ["feeder"],
-            [1],
-            ["scenario"],
-            TimePeriod(
-                datetime(2022, 1, 1),
-                datetime(2022, 1, 2))
+            ForecastConfig(
+                ["feeder"],
+                [1],
+                ["scenario"],
+                TimePeriod(
+                    datetime(2022, 1, 1),
+                    datetime(2022, 1, 2),
+                    None
+                )
+            )
         )
     )
     httpserver.check_assertions()
@@ -206,12 +211,16 @@ def test_get_work_package_cost_estimation_invalid_certificate_failure(ca: trustm
             eas_client.get_work_package_cost_estimation(
                 WorkPackageConfig(
                     "wp_name",
-                    ["feeder"],
-                    [1],
-                    ["scenario"],
-                    TimePeriod(
-                        datetime(2022, 1, 1),
-                        datetime(2022, 1, 2))
+                    ForecastConfig(
+                        ["feeder"],
+                        [1],
+                        ["scenario"],
+                        TimePeriod(
+                            datetime(2022, 1, 1),
+                            datetime(2022, 1, 2),
+                            None
+                        )
+                    )
                 )
             )
 
@@ -230,12 +239,17 @@ def test_get_work_package_cost_estimation_valid_certificate_success(ca: trustme.
         res = eas_client.get_work_package_cost_estimation(
             WorkPackageConfig(
                 "wp_name",
-                ["feeder"],
-                [1],
-                ["scenario"],
-                TimePeriod(
-                    datetime(2022, 1, 1),
-                    datetime(2022, 1, 2))
+                FeederConfigs(
+                    [FeederConfig(
+                        "feeder",
+                        [1],
+                        ["scenario"],
+                        FixedTime(
+                            datetime(2022, 1, 1),
+                            {"meter": FixedTimeLoadOverride(1, 2, 3, 4)}
+                        )
+                    )]
+                )
             )
         )
         httpserver.check_assertions()
@@ -253,12 +267,16 @@ def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPSer
     res = eas_client.run_hosting_capacity_work_package(
         WorkPackageConfig(
             "wp_name",
-            ["feeder"],
-            [1],
-            ["scenario"],
-            TimePeriod(
-                datetime(2022, 1, 1),
-                datetime(2022, 1, 2))
+            ForecastConfig(
+                ["feeder"],
+                [1],
+                ["scenario"],
+                TimePeriod(
+                    datetime(2022, 1, 1),
+                    datetime(2022, 1, 2),
+                    None
+                )
+            )
         )
     )
     httpserver.check_assertions()
@@ -280,12 +298,16 @@ def test_run_hosting_capacity_work_package_invalid_certificate_failure(ca: trust
             eas_client.run_hosting_capacity_work_package(
                 WorkPackageConfig(
                     "wp_name",
-                    ["feeder"],
-                    [1],
-                    ["scenario"],
-                    TimePeriod(
-                        datetime(2022, 1, 1),
-                        datetime(2022, 1, 2))
+                    ForecastConfig(
+                        ["feeder"],
+                        [1],
+                        ["scenario"],
+                        TimePeriod(
+                            datetime(2022, 1, 1),
+                            datetime(2022, 1, 2),
+                            None
+                        )
+                    )
                 )
             )
 
@@ -304,12 +326,16 @@ def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme
         res = eas_client.run_hosting_capacity_work_package(
             WorkPackageConfig(
                 "wp_name",
-                ["feeder"],
-                [1],
-                ["scenario"],
-                TimePeriod(
-                    datetime(2022, 1, 1),
-                    datetime(2022, 1, 2))
+                ForecastConfig(
+                    ["feeder"],
+                    [1],
+                    ["scenario"],
+                    TimePeriod(
+                        datetime(2022, 1, 1),
+                        datetime(2022, 1, 2),
+                        {"meter1": TimePeriodLoadOverride([1.0], [2.0], [3.0], [4.0])}
+                    )
+                )
             )
         )
         httpserver.check_assertions()
@@ -684,7 +710,8 @@ def hosting_capacity_run_calibration_with_calibration_time_request_handler(reque
     query = " ".join(actual_body['query'].split())
 
     assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal) }"
-    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION", "calibrationTimeLocal": "1992-01-28T00:00:20"}
+    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION",
+                                        "calibrationTimeLocal": "1992-01-28T00:00:20"}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
