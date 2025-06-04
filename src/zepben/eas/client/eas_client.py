@@ -1253,7 +1253,7 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False,
                 allow_redirects=False
             ) as response:
-                if HTTPStatus(response.status).is_redirection:
+                if response.status == HTTPStatus.FOUND:
                     response = response.headers["Location"]
                 else:
                     response = await response.text()
