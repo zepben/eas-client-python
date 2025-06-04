@@ -12,6 +12,7 @@
 * Added basic client method to run a hosting capacity calibration and method to query its status.
 * Added basic client method to run a hosting capacity work package cost estimation.
 * Added `FixedTimeLoadOverride` and `TimePeriodLoadOverride` class
+* Added basic client method to run a opendss export, query its information and get a download url for the exported model.
 
 ### Enhancements
 * Added work package config documentation.
