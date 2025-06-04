@@ -18,7 +18,7 @@ __all__ = [
 
 @dataclass
 class OpenDssConfig:
-    """ A data class representing the configuration for a opendss export """
+    """ A data class representing the configuration for an opendss export """
     scenario: str
     year: int
     feeder: str
