@@ -38,10 +38,11 @@ __all__ = [
     "WriterOutputConfig",
     "WriterConfig",
     "YearRange",
-    "FixedTimeLoad",
-    "TimePeriodLoad",
+    "FixedTimeLoadOverride",
+    "TimePeriodLoadOverride",
     "ForecastConfig",
     "FeederConfig",
+    "FeederConfigs",
 ]
 
 
@@ -67,70 +68,72 @@ class SwitchMeterPlacementConfig:
 
 
 @dataclass
-class FixedTimeLoad:
+class FixedTimeLoadOverride:
 
-    load_watts_override: Optional[float]
+    load_watts: Optional[float]
     """
     The reading to be used to override load watts
     """
 
-    gen_watts_override: Optional[float]
+    gen_watts: Optional[float]
     """
     The reading to be used to override gen watts
     """
 
-    load_var_override: Optional[float]
+    load_var: Optional[float]
     """
     The reading to be used to override load var
     """
 
-    gen_var_override: Optional[float]
+    gen_var: Optional[float]
     """
     The reading to be used to override gen var
     """
 
+    # def __str__(self):
+
 
 @dataclass
-class TimePeriodLoad:
+class TimePeriodLoadOverride:
 
-    load_watts_override: Optional[List[float]]
+    load_watts: Optional[List[float]]
     """
     A list of readings to be used to override load watts.
     Can be either a yearly or daily profile.
-    The number of entries must match the number of entries in load_var_override, and the expected number for the configured load_interval_length_hours.
+    The number of entries must match the number of entries in load_var, and the expected number for the configured load_interval_length_hours.
     For load_interval_length_hours:
         0.25: 96 entries for daily and 35040 for yearly
         0.5: 48 entries for daily and 17520 for yearly
         1.0: 24 entries for daily and 8760 for yearly
     """
 
-    gen_watts_override: Optional[List[float]]
+    gen_watts: Optional[List[float]]
     """
     A list of readings to be used to override gen watts.
     Can be either a yearly or daily profile.
-    The number of entries must match the number of entries in gen_var_override, and the expected number for the configured load_interval_length_hours.
+    The number of entries must match the number of entries in gen_var, and the expected number for the configured load_interval_length_hours.
     For load_interval_length_hours:
         0.25: 96 entries for daily and 35040 for yearly
         0.5: 48 entries for daily and 17520 for yearly
         1.0: 24 entries for daily and 8760 for yearly
     """
 
-    load_var_override: Optional[List[float]]
+    load_var: Optional[List[float]]
     """
     A list of readings to be used to override load var.
     Can be either a yearly or daily profile.
-    The number of entries must match the number of entries in load_watts_override, and the expected number for the configured load_interval_length_hours.
+    The number of entries must match the number of entries in load_watts, and the expected number for the configured load_interval_length_hours.
     For load_interval_length_hours:
         0.25: 96 entries for daily and 35040 for yearly
         0.5: 48 entries for daily and 17520 for yearly
         1.0: 24 entries for daily and 8760 for yearly
     """
 
-    gen_var_override: Optional[List[float]]
+    gen_var: Optional[List[float]]
     """
     A list of readings to be used to override gen var.
     Can be either a yearly or daily profile.
-    The number of entries must match the number of entries in gen_watts_override, and the expected number for the configured load_interval_length_hours.
+    The number of entries must match the number of entries in gen_watts, and the expected number for the configured load_interval_length_hours.
     For load_interval_length_hours:
         0.25: 96 entries for daily and 35040 for yearly
         0.5: 48 entries for daily and 17520 for yearly
@@ -144,8 +147,8 @@ class FixedTime:
     present for the provided time in the load database for accurate results.
     """
 
-    def __init__(self, time: datetime, load_overrides: List[FixedTimeLoad]):
-        self.time = time.replace(tzinfo=None)
+    def __init__(self, time: datetime, load_overrides: Optional[Dict[str, FixedTimeLoadOverride]]):
+        self.fetch_load_time = time.replace(tzinfo=None)
         self.load_overrides = load_overrides
 
 
@@ -160,12 +163,12 @@ class TimePeriod:
             self,
             start_time: datetime,
             end_time: datetime,
-            load_overrides: List[TimePeriodLoad]
+            load_overrides: Optional[Dict[str, TimePeriodLoadOverride]]
     ):
         self._validate(start_time, end_time)
         self.start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
         self.end_time = end_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
-        self.load_override = load_overrides
+        self.load_overrides = load_overrides
 
     @staticmethod
     def _validate(start_time: datetime, end_time: datetime):
@@ -789,6 +792,7 @@ class ForecastConfig(object):
     result in inaccurate results.
     """
 
+
 @dataclass
 class FeederConfig(object):
     feeder: str
@@ -814,10 +818,16 @@ class FeederConfig(object):
 
 
 @dataclass
+class FeederConfigs(object):
+    configs: list[FeederConfig]
+    """The feeder to process in this work package"""
+
+
+@dataclass
 class WorkPackageConfig:
     """ A data class representing the configuration for a hosting capacity work package """
     name: str
-    syf_config: Union[ForecastConfig, List[FeederConfig]]
+    syf_config: Union[ForecastConfig, FeederConfigs]
     """
     The configuration of the scenario, years, and feeders to run. Use ForecastConfig
     for the same scenarios and years applied across all feeders, and the more in depth FeederConfig

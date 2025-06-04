@@ -17,7 +17,7 @@ from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, cr
 
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
-from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod
+from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod, ForecastConfig, FeederConfigs
 
 __all__ = ["EasClient"]
 
@@ -211,15 +211,45 @@ class EasClient:
                 "variables": {
                     "workPackageName": work_package.name,
                     "input": {
-                        "feeders": work_package.feeders,
-                        "years": work_package.years,
-                        "scenarios": work_package.scenarios,
-                        "fixedTime": work_package.load_time.time.isoformat()
-                        if isinstance(work_package.load_time, FixedTime) else None,
-                        "timePeriod": {
-                            "startTime": work_package.load_time.start_time.isoformat(),
-                            "endTime": work_package.load_time.end_time.isoformat(),
-                        } if isinstance(work_package.load_time, TimePeriod) else None,
+                        "syfConfig": work_package.syf_config and {
+                            "type": "forecastConfig",
+                            "feeders": work_package.syf_config.feeders,
+                            "years" : work_package.syf_config.years,
+                            "scenarios": work_package.syf_config.scenarios,
+                            "loadTime": work_package.syf_config.load_time and {
+                                "fetchLoadTime": work_package.syf_config.load_time.fetch_load_time.isoformat(),
+                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                    key: value.__dict__
+                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
+                            } if isinstance(work_package.syf_config.load_time, FixedTime) else {
+                                "startTime": work_package.syf_config.load_time.start_time.isoformat(),
+                                "endTime": work_package.syf_config.load_time.end_time.isoformat(),
+                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                    key: value.__dict__
+                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
+                            } if isinstance(work_package.syf_config.load_time, TimePeriod) else None
+                        } if isinstance(work_package.syf_config, ForecastConfig) else {
+                            "type": "feederConfigs",
+                            "configs": [
+                                {
+                                    "feeder": config.feeder,
+                                    "years": config.years,
+                                    "scenarios": config.scenarios,
+                                    "loadTime": config.load_time and {
+                                        "fetchLoadTime": config.load_time.fetch_load_time.isoformat(),
+                                        "loadOverrides": config.load_time.load_overrides and {
+                                            key: value.__dict__
+                                            for key, value in config.load_time.load_overrides.items()}
+                                    } if isinstance(config.load_time, FixedTime) else {
+                                        "startTime": config.load_time.start_time.isoformat(),
+                                        "endTime": config.load_time.end_time.isoformat(),
+                                        "loadOverrides": config.load_time.load_overrides and {
+                                            key: value.__dict__
+                                            for key, value in config.load_time.load_overrides.items()}
+                                    } if isinstance(config.load_time, TimePeriod) else None
+                                } for config in work_package.syf_config.configs
+                            ]
+                        } if isinstance(work_package.syf_config, FeederConfigs) else None,
                         "qualityAssuranceProcessing": work_package.quality_assurance_processing,
                         "generatorConfig": work_package.generator_config and {
                             "model": work_package.generator_config.model and {
@@ -274,24 +304,6 @@ class EasClient:
                                 "defaultLoadVar": work_package.generator_config.model.default_load_var,
                                 "defaultGenVar": work_package.generator_config.model.default_gen_var,
                                 "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings,
-                                "fixedTimeLoadOverride": work_package.generator_config.model.fixed_time_load_override and [
-                                    {
-                                        "loadId": spc.load_id,
-                                        "loadWattsOverride": spc.load_watts_override,
-                                        "genWattsOverride": spc.gen_watts_override,
-                                        "loadVarOverride": spc.load_var_override,
-                                        "genVarOverride": spc.gen_var_override,
-                                    } for spc in work_package.generator_config.model.fixed_time_load_override
-                                ],
-                                "TimePeriodLoadOverride": work_package.generator_config.model.time_period_load_override and [
-                                    {
-                                        "loadId": spc.load_id,
-                                        "loadWattsOverride": spc.load_watts_override,
-                                        "genWattsOverride": spc.gen_watts_override,
-                                        "loadVarOverride": spc.load_var_override,
-                                        "genVarOverride": spc.gen_var_override,
-                                    } for spc in work_package.generator_config.model.time_period_load_override
-                                ],
                             },
                             "solve": work_package.generator_config.solve and {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
@@ -417,15 +429,45 @@ class EasClient:
                 "variables": {
                     "workPackageName": work_package.name,
                     "input": {
-                        "feeders": work_package.feeders,
-                        "years": work_package.years,
-                        "scenarios": work_package.scenarios,
-                        "fixedTime": work_package.load_time.time.isoformat()
-                        if isinstance(work_package.load_time, FixedTime) else None,
-                        "timePeriod": {
-                            "startTime": work_package.load_time.start_time.isoformat(),
-                            "endTime": work_package.load_time.end_time.isoformat(),
-                        } if isinstance(work_package.load_time, TimePeriod) else None,
+                        "syfConfig": work_package.syf_config and {
+                            "type": "forecastConfig",
+                            "feeders": work_package.syf_config.feeders,
+                            "years" : work_package.syf_config.years,
+                            "scenarios": work_package.syf_config.scenarios,
+                            "loadTime": work_package.syf_config.load_time and {
+                                "fetchLoadTime": work_package.syf_config.load_time.fetch_load_time.isoformat(),
+                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                    key: value.__dict__
+                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
+                            } if isinstance(work_package.syf_config.load_time, FixedTime) else {
+                                "startTime": work_package.syf_config.load_time.start_time.isoformat(),
+                                "endTime": work_package.syf_config.load_time.end_time.isoformat(),
+                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                    key: value.__dict__
+                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
+                            } if isinstance(work_package.syf_config.load_time, TimePeriod) else None
+                        } if isinstance(work_package.syf_config, ForecastConfig) else {
+                            "type": "feederConfigs",
+                            "configs": [
+                                {
+                                    "feeder": config.feeder,
+                                    "years": config.years,
+                                    "scenarios": config.scenarios,
+                                    "loadTime": config.load_time and {
+                                        "fetchLoadTime": config.load_time.fetch_load_time.isoformat(),
+                                        "loadOverrides": config.load_time.load_overrides and {
+                                            key: value.__dict__
+                                            for key, value in config.load_time.load_overrides.items()}
+                                    } if isinstance(config.load_time, FixedTime) else {
+                                        "startTime": config.load_time.start_time.isoformat(),
+                                        "endTime": config.load_time.end_time.isoformat(),
+                                        "loadOverrides": config.load_time.load_overrides and {
+                                            key: value.__dict__
+                                            for key, value in config.load_time.load_overrides.items()}
+                                    } if isinstance(config.load_time, TimePeriod) else None
+                                } for config in work_package.syf_config.configs
+                            ]
+                        } if isinstance(work_package.syf_config, FeederConfigs) else None,
                         "qualityAssuranceProcessing": work_package.quality_assurance_processing,
                         "generatorConfig": work_package.generator_config and {
                             "model": work_package.generator_config.model and {
@@ -479,23 +521,7 @@ class EasClient:
                                 "defaultGenWatts": work_package.generator_config.model.default_gen_watts,
                                 "defaultLoadVar": work_package.generator_config.model.default_load_var,
                                 "defaultGenVar": work_package.generator_config.model.default_gen_var,
-                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings,
-                                "fixedTimeLoadOverride": work_package.generator_config.model.fixed_time_load_override and {
-                                    lo:{
-                                        "loadWattsOverride": work_package.generator_config.model.fixed_time_load_override[lo].load_watts_override,
-                                        "genWattsOverride": work_package.generator_config.model.fixed_time_load_override[lo].gen_watts_override,
-                                        "loadVarOverride": work_package.generator_config.model.fixed_time_load_override[lo].load_var_override,
-                                        "genVarOverride": work_package.generator_config.model.fixed_time_load_override[lo].gen_var_override,
-                                    } for lo in work_package.generator_config.model.fixed_time_load_override
-                                },
-                                "TimePeriodLoadOverride": work_package.generator_config.model.time_period_load_override and {
-                                    lo:{
-                                        "loadWatts": work_package.generator_config.model.time_period_load_override[lo].load_watts_override,
-                                        "genWatts": work_package.generator_config.model.time_period_load_override[lo].gen_watts_override,
-                                        "loadVar": work_package.generator_config.model.time_period_load_override[lo].load_var_override,
-                                        "genVar": work_package.generator_config.model.time_period_load_override[lo].gen_var_override,
-                                    } for lo in work_package.generator_config.model.time_period_load_override
-                                },
+                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings
                             },
                             "solve": work_package.generator_config.solve and {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
