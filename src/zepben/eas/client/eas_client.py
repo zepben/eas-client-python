@@ -1072,7 +1072,7 @@ class EasClient:
         :param offset: The number of opendss export runs to skip
         :param query_filter: The filter to apply to the query
         :param query_sort: The sorting to apply to the query
-        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
+        :return: The HTTP response received from the Evolve App Server after requesting opendss export run information
         """
         return get_event_loop().run_until_complete(self.async_get_paged_opendss_models(limit, offset, query_filter, query_sort))
 
@@ -1080,12 +1080,12 @@ class EasClient:
                                              query_filter: Optional[GetOpenDssModelsFilterInput] = None,
                                              query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
         """
-        Retrieve information of a hosting capacity calibration run
+        Retrieve a paginated opendss export run information
         :param limit: The number of opendss export runs to retrieve
         :param offset: The number of opendss export runs to skip
         :param query_filter: The filter to apply to the query
         :param query_sort: The sorting to apply to the query
-        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
+        :return: The HTTP response received from the Evolve App Server after requesting opendss export run information
         """
         with warnings.catch_warnings():
             if not self._verify_certificate:
@@ -1230,7 +1230,7 @@ class EasClient:
         """
         Retrieve a download url for the specified opendss export run id
         :param id: The opendss export run ID
-        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
+        :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
         """
         return get_event_loop().run_until_complete(self.async_get_opendss_model_download_url(id))
 
@@ -1238,7 +1238,7 @@ class EasClient:
         """
         Retrieve a download url for the specified opendss export run id
         :param id: The opendss export run ID
-        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
+        :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
         """
         with warnings.catch_warnings():
             if not self._verify_certificate:
