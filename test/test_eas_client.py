@@ -1292,7 +1292,7 @@ def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/opendss-model/1").respond_with_response(Response(
+    httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
         status=HTTPStatus.FOUND,
         headers={"Location": "https://example.com/download/1"}
     ))
@@ -1309,7 +1309,7 @@ def test_get_opendss_model_download_url_invalid_certificate_failure(ca: trustme.
             ca_filename=ca_filename
         )
 
-        httpserver.expect_oneshot_request("/api/opendss-model/1").respond_with_response(Response(
+        httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
             status=HTTPStatus.FOUND,
             headers={"Location": "https://example.com/download/1"}
         ))
@@ -1326,7 +1326,7 @@ def test_get_opendss_model_download_url_valid_certificate_success(ca: trustme.CA
             ca_filename=ca_filename
         )
 
-        httpserver.expect_oneshot_request("/api/opendss-model/1").respond_with_response(Response(
+        httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
             status=HTTPStatus.FOUND,
             headers={"Location": "https://example.com/download/1"}
         ))

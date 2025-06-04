@@ -1247,7 +1247,7 @@ class EasClient:
             if self._verify_certificate:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
-            async with self.session.post(
+            async with self.session.get(
                 construct_url(protocol=self._protocol, host=self._host, port=self._port, path=f"/api/opendss-model/{id}"),
                 headers=self._get_request_headers(),
                 ssl=sslcontext if self._verify_certificate else False,
