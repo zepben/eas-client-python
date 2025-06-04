@@ -7,7 +7,7 @@ import json
 import random
 import ssl
 import string
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from http import HTTPStatus
 from unittest import mock
 
@@ -778,6 +778,7 @@ def run_opendss_export_request_handler(request):
                 },
                 "modulesConfiguration": {
                     "common": {
+                        "timeZone": "UTC+10:00",
                         "timePeriod": {
                             "start": "2022-04-01T00:00:00",
                             "end": "2023-04-01T00:00:00",
@@ -875,6 +876,7 @@ OPENDSS_CONFIG = OpenDssConfig(
             scenario="scenario1",
             year=2024,
             feeder="feeder1",
+            time_zone=timezone(timedelta(hours=10)),
             load_time=TimePeriod(
                         datetime(2022, 4, 1),
                         datetime(2023, 4, 1)
