@@ -147,7 +147,7 @@ class FixedTime:
     present for the provided time in the load database for accurate results.
     """
 
-    def __init__(self, time: datetime, load_overrides: Optional[Dict[str, FixedTimeLoadOverride]]):
+    def __init__(self, time: datetime, load_overrides: Optional[Dict[str, FixedTimeLoadOverride]] = None):
         self.fetch_load_time = time.replace(tzinfo=None)
         self.load_overrides = load_overrides
 
@@ -163,7 +163,7 @@ class TimePeriod:
             self,
             start_time: datetime,
             end_time: datetime,
-            load_overrides: Optional[Dict[str, TimePeriodLoadOverride]]
+            load_overrides: Optional[Dict[str, TimePeriodLoadOverride]] = None
     ):
         self._validate(start_time, end_time)
         self.start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)

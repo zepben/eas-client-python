@@ -211,45 +211,47 @@ class EasClient:
                 "variables": {
                     "workPackageName": work_package.name,
                     "input": {
-                        "syfConfig": work_package.syf_config and {
-                            "type": "forecastConfig",
-                            "feeders": work_package.syf_config.feeders,
-                            "years" : work_package.syf_config.years,
-                            "scenarios": work_package.syf_config.scenarios,
-                            "loadTime": work_package.syf_config.load_time and {
-                                "fetchLoadTime": work_package.syf_config.load_time.fetch_load_time.isoformat(),
-                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
-                                    key: value.__dict__
-                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
-                            } if isinstance(work_package.syf_config.load_time, FixedTime) else {
-                                "startTime": work_package.syf_config.load_time.start_time.isoformat(),
-                                "endTime": work_package.syf_config.load_time.end_time.isoformat(),
-                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
-                                    key: value.__dict__
-                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
-                            } if isinstance(work_package.syf_config.load_time, TimePeriod) else None
-                        } if isinstance(work_package.syf_config, ForecastConfig) else {
+                        "feederConfigs": {
                             "type": "feederConfigs",
                             "configs": [
                                 {
                                     "feeder": config.feeder,
                                     "years": config.years,
                                     "scenarios": config.scenarios,
-                                    "loadTime": config.load_time and {
-                                        "fetchLoadTime": config.load_time.fetch_load_time.isoformat(),
-                                        "loadOverrides": config.load_time.load_overrides and {
-                                            key: value.__dict__
-                                            for key, value in config.load_time.load_overrides.items()}
-                                    } if isinstance(config.load_time, FixedTime) else {
+                                    "timePeriod": {
                                         "startTime": config.load_time.start_time.isoformat(),
                                         "endTime": config.load_time.end_time.isoformat(),
                                         "loadOverrides": config.load_time.load_overrides and {
                                             key: value.__dict__
                                             for key, value in config.load_time.load_overrides.items()}
-                                    } if isinstance(config.load_time, TimePeriod) else None
+                                    } if isinstance(config.load_time, TimePeriod) else None,
+                                    "fixedTime": config.load_time and {
+                                        "fetchLoadTime": config.load_time.fetch_load_time.isoformat(),
+                                        "loadOverrides": config.load_time.load_overrides and {
+                                            key: value.__dict__
+                                            for key, value in config.load_time.load_overrides.items()}
+                                    } if isinstance(config.load_time, FixedTime) else None,
                                 } for config in work_package.syf_config.configs
                             ]
                         } if isinstance(work_package.syf_config, FeederConfigs) else None,
+                        "forecastConfig": {
+                            "feeders": work_package.syf_config.feeders,
+                            "years": work_package.syf_config.years,
+                            "scenarios": work_package.syf_config.scenarios,
+                            "timePeriod": {
+                                "startTime": work_package.syf_config.load_time.start_time.isoformat(),
+                                "endTime": work_package.syf_config.load_time.end_time.isoformat(),
+                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                    key: value.__dict__
+                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
+                            } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
+                            "fixedTime": work_package.syf_config.load_time and {
+                                "fetchLoadTime": work_package.syf_config.load_time.fetch_load_time.isoformat(),
+                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                    key: value.__dict__
+                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
+                            } if isinstance(work_package.syf_config.load_time, FixedTime) else None
+                        } if isinstance(work_package.syf_config, ForecastConfig) else None,
                         "qualityAssuranceProcessing": work_package.quality_assurance_processing,
                         "generatorConfig": work_package.generator_config and {
                             "model": work_package.generator_config.model and {
@@ -429,45 +431,47 @@ class EasClient:
                 "variables": {
                     "workPackageName": work_package.name,
                     "input": {
-                        "syfConfig": work_package.syf_config and {
-                            "type": "forecastConfig",
-                            "feeders": work_package.syf_config.feeders,
-                            "years" : work_package.syf_config.years,
-                            "scenarios": work_package.syf_config.scenarios,
-                            "loadTime": work_package.syf_config.load_time and {
-                                "fetchLoadTime": work_package.syf_config.load_time.fetch_load_time.isoformat(),
-                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
-                                    key: value.__dict__
-                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
-                            } if isinstance(work_package.syf_config.load_time, FixedTime) else {
-                                "startTime": work_package.syf_config.load_time.start_time.isoformat(),
-                                "endTime": work_package.syf_config.load_time.end_time.isoformat(),
-                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
-                                    key: value.__dict__
-                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
-                            } if isinstance(work_package.syf_config.load_time, TimePeriod) else None
-                        } if isinstance(work_package.syf_config, ForecastConfig) else {
+                        "feederConfigs": {
                             "type": "feederConfigs",
                             "configs": [
                                 {
                                     "feeder": config.feeder,
                                     "years": config.years,
                                     "scenarios": config.scenarios,
-                                    "loadTime": config.load_time and {
-                                        "fetchLoadTime": config.load_time.fetch_load_time.isoformat(),
-                                        "loadOverrides": config.load_time.load_overrides and {
-                                            key: value.__dict__
-                                            for key, value in config.load_time.load_overrides.items()}
-                                    } if isinstance(config.load_time, FixedTime) else {
+                                    "timePeriod": {
                                         "startTime": config.load_time.start_time.isoformat(),
                                         "endTime": config.load_time.end_time.isoformat(),
                                         "loadOverrides": config.load_time.load_overrides and {
                                             key: value.__dict__
                                             for key, value in config.load_time.load_overrides.items()}
-                                    } if isinstance(config.load_time, TimePeriod) else None
+                                    } if isinstance(config.load_time, TimePeriod) else None,
+                                    "fixedTime": config.load_time and {
+                                        "fetchLoadTime": config.load_time.fetch_load_time.isoformat(),
+                                        "loadOverrides": config.load_time.load_overrides and {
+                                            key: value.__dict__
+                                            for key, value in config.load_time.load_overrides.items()}
+                                    } if isinstance(config.load_time, FixedTime) else None,
                                 } for config in work_package.syf_config.configs
                             ]
                         } if isinstance(work_package.syf_config, FeederConfigs) else None,
+                        "forecastConfig": {
+                            "feeders": work_package.syf_config.feeders,
+                            "years": work_package.syf_config.years,
+                            "scenarios": work_package.syf_config.scenarios,
+                            "timePeriod": {
+                                "startTime": work_package.syf_config.load_time.start_time.isoformat(),
+                                "endTime": work_package.syf_config.load_time.end_time.isoformat(),
+                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                    key: value.__dict__
+                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
+                            } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
+                            "fixedTime": work_package.syf_config.load_time and {
+                                "fetchLoadTime": work_package.syf_config.load_time.fetch_load_time.isoformat(),
+                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                    key: value.__dict__
+                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
+                            } if isinstance(work_package.syf_config.load_time, FixedTime) else None
+                        } if isinstance(work_package.syf_config, ForecastConfig) else None,
                         "qualityAssuranceProcessing": work_package.quality_assurance_processing,
                         "generatorConfig": work_package.generator_config and {
                             "model": work_package.generator_config.model and {
