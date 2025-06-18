@@ -148,7 +148,7 @@ class FixedTime:
     """
 
     def __init__(self, time: datetime, load_overrides: Optional[Dict[str, FixedTimeLoadOverride]] = None):
-        self.fetch_load_time = time.replace(tzinfo=None)
+        self.time = time.replace(tzinfo=None)
         self.load_overrides = load_overrides
 
 

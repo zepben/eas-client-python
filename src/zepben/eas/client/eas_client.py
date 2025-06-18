@@ -212,7 +212,6 @@ class EasClient:
                     "workPackageName": work_package.name,
                     "input": {
                         "feederConfigs": {
-                            "type": "feederConfigs",
                             "configs": [
                                 {
                                     "feeder": config.feeder,
@@ -221,13 +220,13 @@ class EasClient:
                                     "timePeriod": {
                                         "startTime": config.load_time.start_time.isoformat(),
                                         "endTime": config.load_time.end_time.isoformat(),
-                                        "loadOverrides": config.load_time.load_overrides and {
+                                        "overrides": config.load_time.load_overrides and {
                                             key: value.__dict__
                                             for key, value in config.load_time.load_overrides.items()}
                                     } if isinstance(config.load_time, TimePeriod) else None,
                                     "fixedTime": config.load_time and {
-                                        "fetchLoadTime": config.load_time.fetch_load_time.isoformat(),
-                                        "loadOverrides": config.load_time.load_overrides and {
+                                        "loadTime": config.load_time.time.isoformat(),
+                                        "overrides": config.load_time.load_overrides and {
                                             key: value.__dict__
                                             for key, value in config.load_time.load_overrides.items()}
                                     } if isinstance(config.load_time, FixedTime) else None,
@@ -241,13 +240,13 @@ class EasClient:
                             "timePeriod": {
                                 "startTime": work_package.syf_config.load_time.start_time.isoformat(),
                                 "endTime": work_package.syf_config.load_time.end_time.isoformat(),
-                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                "overrides": work_package.syf_config.load_time.load_overrides and {
                                     key: value.__dict__
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
                             } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
                             "fixedTime": work_package.syf_config.load_time and {
-                                "fetchLoadTime": work_package.syf_config.load_time.fetch_load_time.isoformat(),
-                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                "loadTime": work_package.syf_config.load_time.fetch_load_time.isoformat(),
+                                "overrides": work_package.syf_config.load_time.load_overrides and {
                                     key: value.__dict__
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
                             } if isinstance(work_package.syf_config.load_time, FixedTime) else None
@@ -432,7 +431,6 @@ class EasClient:
                     "workPackageName": work_package.name,
                     "input": {
                         "feederConfigs": {
-                            "type": "feederConfigs",
                             "configs": [
                                 {
                                     "feeder": config.feeder,
@@ -441,13 +439,13 @@ class EasClient:
                                     "timePeriod": {
                                         "startTime": config.load_time.start_time.isoformat(),
                                         "endTime": config.load_time.end_time.isoformat(),
-                                        "loadOverrides": config.load_time.load_overrides and {
+                                        "overrides": config.load_time.load_overrides and {
                                             key: value.__dict__
                                             for key, value in config.load_time.load_overrides.items()}
                                     } if isinstance(config.load_time, TimePeriod) else None,
                                     "fixedTime": config.load_time and {
-                                        "fetchLoadTime": config.load_time.fetch_load_time.isoformat(),
-                                        "loadOverrides": config.load_time.load_overrides and {
+                                        "loadTime": config.load_time.time.isoformat(),
+                                        "overrides": config.load_time.load_overrides and {
                                             key: value.__dict__
                                             for key, value in config.load_time.load_overrides.items()}
                                     } if isinstance(config.load_time, FixedTime) else None,
@@ -461,13 +459,13 @@ class EasClient:
                             "timePeriod": {
                                 "startTime": work_package.syf_config.load_time.start_time.isoformat(),
                                 "endTime": work_package.syf_config.load_time.end_time.isoformat(),
-                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                "overrides": work_package.syf_config.load_time.load_overrides and {
                                     key: value.__dict__
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
                             } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
                             "fixedTime": work_package.syf_config.load_time and {
-                                "fetchLoadTime": work_package.syf_config.load_time.fetch_load_time.isoformat(),
-                                "loadOverrides": work_package.syf_config.load_time.load_overrides and {
+                                "loadTime": work_package.syf_config.load_time.time.isoformat(),
+                                "overrides": work_package.syf_config.load_time.load_overrides and {
                                     key: value.__dict__
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
                             } if isinstance(work_package.syf_config.load_time, FixedTime) else None
