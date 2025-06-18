@@ -1001,11 +1001,7 @@ def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver
         httpserver.check_assertions()
         assert res == {"result": "success"}
 
-def get_paged_opendss_models_request_handler(request):
-    actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
-
-    expected_query = """
+get_paged_opendss_models_query = """
         query pagedOpenDssModels($limit: Int, $offset: Long, $filter: GetOpenDssModelsFilterInput, $sort: GetOpenDssModelsSortCriteriaInput) {
             pagedOpenDssModels(limit: $limit, offset: $offset, filter: $filter,sort: $sort) {
                 totalCount
@@ -1109,7 +1105,12 @@ def get_paged_opendss_models_request_handler(request):
             }
         }
     """
-    assert query == " ".join(line.strip() for line in expected_query.strip().splitlines())
+
+def get_paged_opendss_models_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert query == " ".join(line.strip() for line in get_paged_opendss_models_query.strip().splitlines())
     assert actual_body['variables'] == {
         "limit": 5,
         "offset": 0,
@@ -1163,111 +1164,7 @@ def get_paged_opendss_models_no_param_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    expected_query = """
-        query pagedOpenDssModels($limit: Int, $offset: Long, $filter: GetOpenDssModelsFilterInput, $sort: GetOpenDssModelsSortCriteriaInput) {
-            pagedOpenDssModels(limit: $limit, offset: $offset, filter: $filter,sort: $sort) {
-                totalCount
-                offset,
-                models {
-                    id
-                    name
-                    createdAt
-                    createdBy
-                    state
-                    downloadUrl
-                    isPublic
-                    errors
-                    generationSpec {
-                        modelOptions{
-                            scenario
-                            year
-                            feeder
-                        }
-                        modulesConfiguration {
-                            common {
-                                timePeriod {
-                                    start
-                                    end
-                                }
-                            }
-                            generator {
-                                model {
-                                    vmPu
-                                    vMinPu
-                                    vMaxPu
-                                    loadModel
-                                    collapseSWER
-                                    calibration
-                                    pFactorBaseExports
-                                    pFactorForecastPv
-                                    pFactorBaseImports
-                                    fixSinglePhaseLoads
-                                    maxSinglePhaseLoad
-                                    fixOverloadingConsumers
-                                    maxLoadTxRatio
-                                    maxGenTxRatio
-                                    fixUndersizedServiceLines
-                                    maxLoadServiceLineRatio
-                                    maxLoadLvLineRatio
-                                    collapseLvNetworks
-                                    feederScenarioAllocationStrategy
-                                    closedLoopVRegEnabled
-                                    closedLoopVRegReplaceAll
-                                    closedLoopVRegSetPoint
-                                    closedLoopVBand
-                                    closedLoopTimeDelay
-                                    closedLoopVLimit
-                                    defaultTapChangerTimeDelay
-                                    defaultTapChangerSetPointPu
-                                    defaultTapChangerBand
-                                    splitPhaseDefaultLoadLossPercentage
-                                    splitPhaseLVKV
-                                    swerVoltageToLineVoltage
-                                    loadPlacement
-                                    loadIntervalLengthHours
-                                    meterPlacementConfig {
-                                        feederHead
-                                        distTransformers
-                                        switchMeterPlacementConfigs {
-                                          meterSwitchClass
-                                          namePattern
-                                        }
-                                        energyConsumerMeterGroup
-                                    }
-                                    seed
-                                    defaultLoadWatts
-                                    defaultGenWatts
-                                    defaultLoadVar
-                                    defaultGenVar
-                                    transformerTapSettings
-                                }
-                                solve {
-                                    normVMinPu
-                                    normVMaxPu
-                                    emergVMinPu
-                                    emergVMaxPu
-                                    baseFrequency
-                                    voltageBases
-                                    maxIter
-                                    maxControlIter
-                                    mode
-                                    stepSizeMinutes
-                                }
-                                rawResults {
-                                    energyMeterVoltagesRaw
-                                    energyMetersRaw
-                                    resultsPerMeter
-                                    overloadsRaw
-                                    voltageExceptionsRaw
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    """
-    assert query == " ".join(line.strip() for line in expected_query.strip().splitlines())
+    assert query == " ".join(line.strip() for line in get_paged_opendss_models_query.strip().splitlines())
     assert actual_body['variables'] == { }
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")

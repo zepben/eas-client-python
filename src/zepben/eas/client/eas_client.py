@@ -1064,7 +1064,9 @@ class EasClient:
                     response = await response.text()
                 return response
 
-    def get_paged_opendss_models(self, limit: Optional[int] = None, offset: Optional[int] = None,
+    def get_paged_opendss_models(self,
+                                 limit: Optional[int] = None,
+                                 offset: Optional[int] = None,
                                  query_filter: Optional[GetOpenDssModelsFilterInput] = None,
                                  query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
         """
@@ -1077,7 +1079,9 @@ class EasClient:
         """
         return get_event_loop().run_until_complete(self.async_get_paged_opendss_models(limit, offset, query_filter, query_sort))
 
-    async def async_get_paged_opendss_models(self, limit: Optional[int] = None, offset: Optional[int] = None,
+    async def async_get_paged_opendss_models(self,
+                                             limit: Optional[int] = None,
+                                             offset: Optional[int] = None,
                                              query_filter: Optional[GetOpenDssModelsFilterInput] = None,
                                              query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
         """
