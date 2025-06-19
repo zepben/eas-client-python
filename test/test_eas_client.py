@@ -761,6 +761,7 @@ def test_get_hosting_capacity_calibration_sets_no_verify_success(httpserver: HTT
     httpserver.check_assertions()
     assert res == ["one", "two", "three"]
 
+
 def run_opendss_export_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
@@ -872,6 +873,7 @@ def run_opendss_export_request_handler(request):
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
+
 OPENDSS_CONFIG = OpenDssConfig(
             scenario="scenario1",
             year=2024,
@@ -959,6 +961,7 @@ OPENDSS_CONFIG = OpenDssConfig(
             ),
             is_public=True)
 
+
 def test_run_opendss_export_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
         LOCALHOST,
@@ -1000,6 +1003,7 @@ def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver
         res = eas_client.run_opendss_export(OPENDSS_CONFIG)
         httpserver.check_assertions()
         assert res == {"result": "success"}
+
 
 get_paged_opendss_models_query = """
         query pagedOpenDssModels($limit: Int, $offset: Long, $filter: GetOpenDssModelsFilterInput, $sort: GetOpenDssModelsSortCriteriaInput) {
@@ -1106,6 +1110,7 @@ get_paged_opendss_models_query = """
         }
     """
 
+
 def get_paged_opendss_models_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
@@ -1169,6 +1174,7 @@ def get_paged_opendss_models_no_param_request_handler(request):
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
+
 def test_get_paged_opendss_models_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
     with ca.cert_pem.tempfile() as ca_filename:
         eas_client = EasClient(
@@ -1184,6 +1190,7 @@ def test_get_paged_opendss_models_valid_certificate_success(ca: trustme.CA, http
         httpserver.check_assertions()
         assert res == {"result": "success"}
 
+
 def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
         LOCALHOST,
@@ -1198,6 +1205,7 @@ def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer
     res = eas_client.get_opendss_model_download_url(1)
     httpserver.check_assertions()
     assert res == "https://example.com/download/1"
+
 
 def test_get_opendss_model_download_url_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:

@@ -1064,11 +1064,12 @@ class EasClient:
                     response = await response.text()
                 return response
 
-    def get_paged_opendss_models(self,
-                                 limit: Optional[int] = None,
-                                 offset: Optional[int] = None,
-                                 query_filter: Optional[GetOpenDssModelsFilterInput] = None,
-                                 query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
+    def get_paged_opendss_models(
+            self,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None,
+            query_filter: Optional[GetOpenDssModelsFilterInput] = None,
+            query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
         """
         Retrieve a paginated opendss export run information
         :param limit: The number of opendss export runs to retrieve
@@ -1079,11 +1080,12 @@ class EasClient:
         """
         return get_event_loop().run_until_complete(self.async_get_paged_opendss_models(limit, offset, query_filter, query_sort))
 
-    async def async_get_paged_opendss_models(self,
-                                             limit: Optional[int] = None,
-                                             offset: Optional[int] = None,
-                                             query_filter: Optional[GetOpenDssModelsFilterInput] = None,
-                                             query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
+    async def async_get_paged_opendss_models(
+            self,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None,
+            query_filter: Optional[GetOpenDssModelsFilterInput] = None,
+            query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
         """
         Retrieve a paginated opendss export run information
         :param limit: The number of opendss export runs to retrieve
@@ -1231,18 +1233,18 @@ class EasClient:
                     response = await response.text()
                 return response
 
-    def get_opendss_model_download_url(self, id: int):
+    def get_opendss_model_download_url(self, run_id: int):
         """
         Retrieve a download url for the specified opendss export run id
-        :param id: The opendss export run ID
+        :param run_id: The opendss export run ID
         :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
         """
-        return get_event_loop().run_until_complete(self.async_get_opendss_model_download_url(id))
+        return get_event_loop().run_until_complete(self.async_get_opendss_model_download_url(run_id))
 
-    async def async_get_opendss_model_download_url(self, id: int):
+    async def async_get_opendss_model_download_url(self, run_id: int):
         """
         Retrieve a download url for the specified opendss export run id
-        :param id: The opendss export run ID
+        :param run_id: The opendss export run ID
         :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
         """
         with warnings.catch_warnings():
@@ -1253,7 +1255,7 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.get(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path=f"/api/opendss-model/{id}"),
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path=f"/api/opendss-model/{run_id}"),
                 headers=self._get_request_headers(),
                 ssl=sslcontext if self._verify_certificate else False,
                 allow_redirects=False
