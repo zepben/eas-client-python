@@ -17,6 +17,7 @@ __all__ = [
     "GetOpenDssModelsSortCriteriaInput"
 ]
 
+
 @dataclass
 class OpenDssConfig:
     """ A data class representing the configuration for an opendss export """
@@ -29,11 +30,13 @@ class OpenDssConfig:
     model_name: Optional[str] = None
     is_public: Optional[bool] = None
 
+
 class OpenDssModelState(Enum):
     COULD_NOT_START = "COULD_NOT_START"
     CREATION = "CREATION"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+
 
 @dataclass
 class GetOpenDssModelsFilterInput:
@@ -42,9 +45,11 @@ class GetOpenDssModelsFilterInput:
     is_public: Optional[int] = None
     state: Optional[List[OpenDssModelState]] = None
 
+
 class Order(Enum):
     ASC = "ASC"
     DESC = "DESC"
+
 
 @dataclass
 class GetOpenDssModelsSortCriteriaInput:
