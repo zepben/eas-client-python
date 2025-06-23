@@ -6,7 +6,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 __all__ = [
     "SwitchClass",
@@ -38,6 +38,11 @@ __all__ = [
     "WriterOutputConfig",
     "WriterConfig",
     "YearRange",
+    "FixedTimeLoadOverride",
+    "TimePeriodLoadOverride",
+    "ForecastConfig",
+    "FeederConfig",
+    "FeederConfigs",
 ]
 
 
@@ -62,14 +67,89 @@ class SwitchMeterPlacementConfig:
     """
 
 
+@dataclass
+class FixedTimeLoadOverride:
+
+    load_watts: Optional[float]
+    """
+    The reading to be used to override load watts
+    """
+
+    gen_watts: Optional[float]
+    """
+    The reading to be used to override gen watts
+    """
+
+    load_var: Optional[float]
+    """
+    The reading to be used to override load var
+    """
+
+    gen_var: Optional[float]
+    """
+    The reading to be used to override gen var
+    """
+
+    # def __str__(self):
+
+
+@dataclass
+class TimePeriodLoadOverride:
+
+    load_watts: Optional[List[float]]
+    """
+    A list of readings to be used to override load watts.
+    Can be either a yearly or daily profile.
+    The number of entries must match the number of entries in load_var, and the expected number for the configured load_interval_length_hours.
+    For load_interval_length_hours:
+        0.25: 96 entries for daily and 35040 for yearly
+        0.5: 48 entries for daily and 17520 for yearly
+        1.0: 24 entries for daily and 8760 for yearly
+    """
+
+    gen_watts: Optional[List[float]]
+    """
+    A list of readings to be used to override gen watts.
+    Can be either a yearly or daily profile.
+    The number of entries must match the number of entries in gen_var, and the expected number for the configured load_interval_length_hours.
+    For load_interval_length_hours:
+        0.25: 96 entries for daily and 35040 for yearly
+        0.5: 48 entries for daily and 17520 for yearly
+        1.0: 24 entries for daily and 8760 for yearly
+    """
+
+    load_var: Optional[List[float]]
+    """
+    A list of readings to be used to override load var.
+    Can be either a yearly or daily profile.
+    The number of entries must match the number of entries in load_watts, and the expected number for the configured load_interval_length_hours.
+    For load_interval_length_hours:
+        0.25: 96 entries for daily and 35040 for yearly
+        0.5: 48 entries for daily and 17520 for yearly
+        1.0: 24 entries for daily and 8760 for yearly
+    """
+
+    gen_var: Optional[List[float]]
+    """
+    A list of readings to be used to override gen var.
+    Can be either a yearly or daily profile.
+    The number of entries must match the number of entries in gen_watts, and the expected number for the configured load_interval_length_hours.
+    For load_interval_length_hours:
+        0.25: 96 entries for daily and 35040 for yearly
+        0.5: 48 entries for daily and 17520 for yearly
+        1.0: 24 entries for daily and 8760 for yearly
+    """
+
+
 class FixedTime:
     """
     A single point in time to model. Should be precise to the minute, and load data must be
     present for the provided time in the load database for accurate results.
     """
 
-    def __init__(self, time: datetime):
+    def __init__(self, time: datetime, load_overrides: Optional[Dict[str, FixedTimeLoadOverride]] = None):
         self.time = time.replace(tzinfo=None)
+        self.load_overrides = load_overrides
 
 
 class TimePeriod:
@@ -82,11 +162,13 @@ class TimePeriod:
     def __init__(
             self,
             start_time: datetime,
-            end_time: datetime
+            end_time: datetime,
+            load_overrides: Optional[Dict[str, TimePeriodLoadOverride]] = None
     ):
         self._validate(start_time, end_time)
         self.start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
         self.end_time = end_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+        self.load_overrides = load_overrides
 
     @staticmethod
     def _validate(start_time: datetime, end_time: datetime):
@@ -688,9 +770,7 @@ class InterventionConfig:
 
 
 @dataclass
-class WorkPackageConfig:
-    """ A data class representing the configuration for a hosting capacity work package """
-    name: str
+class ForecastConfig(object):
     feeders: List[str]
     """The feeders to process in this work package"""
 
@@ -710,6 +790,48 @@ class WorkPackageConfig:
     The time to use for the base load data. The provided time[s] must be available in the
     load database for accurate results. Specifying an invalid time (i.e one with no load data) will
     result in inaccurate results.
+    """
+
+
+@dataclass
+class FeederConfig(object):
+    feeder: str
+    """The feeder to process in this work package"""
+
+    years: List[int]
+    """
+    The years to process for the specified feeders in this work package.
+    The years should be configured in the input database forecasts for all supplied scenarios.
+    """
+
+    scenarios: List[str]
+    """
+    The scenarios to model. These should be configured in the input.scenario_configuration table.
+    """
+
+    load_time: Union[TimePeriod, FixedTime]
+    """
+    The time to use for the base load data. The provided time[s] must be available in the
+    load database for accurate results. Specifying an invalid time (i.e one with no load data) will
+    result in inaccurate results.
+    """
+
+
+@dataclass
+class FeederConfigs(object):
+    configs: list[FeederConfig]
+    """The feeder to process in this work package"""
+
+
+@dataclass
+class WorkPackageConfig:
+    """ A data class representing the configuration for a hosting capacity work package """
+    name: str
+    syf_config: Union[ForecastConfig, FeederConfigs]
+    """
+    The configuration of the scenario, years, and feeders to run. Use ForecastConfig
+    for the same scenarios and years applied across all feeders, and the more in depth FeederConfig
+    if configuration varies per feeder.
     """
 
     quality_assurance_processing: Optional[bool] = None
