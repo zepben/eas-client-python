@@ -17,12 +17,13 @@ from pytest_httpserver import HTTPServer
 from werkzeug import Response
 from zepben.auth import ZepbenTokenFetcher
 
-from zepben.eas import EasClient, Study, FeederConfig, ForecastConfig, FixedTimeLoadOverride
 from zepben.eas import EasClient, Study, SolveConfig
-from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, OpenDssModelState, GetOpenDssModelsSortCriteriaInput, \
+from zepben.eas import FeederConfig, ForecastConfig, FixedTimeLoadOverride
+from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, OpenDssModelState, \
+    GetOpenDssModelsSortCriteriaInput, \
     Order
 from zepben.eas.client.study import Result
-from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, FeederConfigs, TimePeriodLoadOverride, \
+from zepben.eas.client.work_package import FeederConfigs, TimePeriodLoadOverride, \
     FixedTime
 from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, GeneratorConfig, ModelConfig, \
     FeederScenarioAllocationStrategy, LoadPlacement, MeterPlacementConfig, SwitchMeterPlacementConfig, SwitchClass, \
@@ -829,15 +830,15 @@ def run_opendss_export_request_handler(request):
                             "loadPlacement": "PER_USAGE_POINT",
                             "loadIntervalLengthHours": 0.5,
                             "meterPlacementConfig": {
-                              "feederHead": True,
-                              "distTransformers": True,
-                              "switchMeterPlacementConfigs": [
-                                {
-                                  "meterSwitchClass": "LOAD_BREAK_SWITCH",
-                                  "namePattern": ".*"
-                                }
-                              ],
-                              "energyConsumerMeterGroup": "meter group 1"
+                                "feederHead": True,
+                                "distTransformers": True,
+                                "switchMeterPlacementConfigs": [
+                                    {
+                                        "meterSwitchClass": "LOAD_BREAK_SWITCH",
+                                        "namePattern": ".*"
+                                    }
+                                ],
+                                "energyConsumerMeterGroup": "meter group 1"
                             },
                             "seed": 42,
                             "defaultLoadWatts": [100.0, 200.0, 300.0],
@@ -875,91 +876,91 @@ def run_opendss_export_request_handler(request):
 
 
 OPENDSS_CONFIG = OpenDssConfig(
-            scenario="scenario1",
-            year=2024,
-            feeder="feeder1",
-            time_zone=timezone(timedelta(hours=10)),
-            load_time=TimePeriod(
-                        datetime(2022, 4, 1),
-                        datetime(2023, 4, 1)
-                    ),
-            model_name="TEST OPENDSS MODEL 1",
-            generator_config=GeneratorConfig(
-                ModelConfig(
-                    vm_pu=1.0,
-                    vmin_pu=0.80,
-                    vmax_pu=1.15,
-                    load_model=1,
-                    collapse_swer=False,
-                    calibration=False,
-                    p_factor_base_exports=0.95,
-                    p_factor_base_imports=0.90,
-                    p_factor_forecast_pv=1.0,
-                    fix_single_phase_loads=True,
-                    max_single_phase_load=30000.0,
-                    fix_overloading_consumers=True,
-                    max_load_tx_ratio=3.0,
-                    max_gen_tx_ratio=10.0,
-                    fix_undersized_service_lines=True,
-                    max_load_service_line_ratio=1.5,
-                    max_load_lv_line_ratio=2.0,
-                    collapse_lv_networks=False,
-                    feeder_scenario_allocation_strategy=FeederScenarioAllocationStrategy.ADDITIVE,
-                    closed_loop_v_reg_enabled=True,
-                    closed_loop_v_reg_replace_all=True,
-                    closed_loop_v_reg_set_point=0.985,
-                    closed_loop_v_band=2.0,
-                    closed_loop_time_delay=100,
-                    closed_loop_v_limit=1.1,
-                    default_tap_changer_time_delay=100,
-                    default_tap_changer_set_point_pu=1.0,
-                    default_tap_changer_band=2.0,
-                    split_phase_default_load_loss_percentage=0.4,
-                    split_phase_lv_kv=0.25,
-                    swer_voltage_to_line_voltage= [
-                        [230, 400],
-                        [240, 415],
-                        [250, 433],
-                        [6350, 11000],
-                        [6400, 11000],
-                        [12700, 22000],
-                        [19100, 33000]
-                    ],
-                    load_placement=LoadPlacement.PER_USAGE_POINT,
-                    load_interval_length_hours=0.5,
-                    meter_placement_config=MeterPlacementConfig(
-                        True,
-                        True,
-                        [SwitchMeterPlacementConfig(SwitchClass.LOAD_BREAK_SWITCH, ".*")],
-                        "meter group 1"),
-                    seed=42,
-                    default_load_watts=[100.0, 200.0, 300.0],
-                    default_gen_watts=[50.0, 150.0, 250.0],
-                    default_load_var=[10.0, 20.0, 30.0],
-                    default_gen_var=[5.0, 15.0, 25.0],
-                    transformer_tap_settings="tap-3"
-                ),
-                SolveConfig(
-                    norm_vmin_pu=0.9,
-                    norm_vmax_pu=1.054,
-                    emerg_vmin_pu=0.8,
-                    emerg_vmax_pu=1.1,
-                    base_frequency=50,
-                    voltage_bases=[0.4, 0.433, 6.6, 11.0, 22.0, 33.0, 66.0, 132.0],
-                    max_iter=25,
-                    max_control_iter=20,
-                    mode=SolveMode.YEARLY,
-                    step_size_minutes=60
-                ),
-                RawResultsConfig(
-                    energy_meter_voltages_raw=True,
-                    energy_meters_raw=True,
-                    results_per_meter=True,
-                    overloads_raw=True,
-                    voltage_exceptions_raw=True
-                )
-            ),
-            is_public=True)
+    scenario="scenario1",
+    year=2024,
+    feeder="feeder1",
+    time_zone=timezone(timedelta(hours=10)),
+    load_time=TimePeriod(
+        datetime(2022, 4, 1),
+        datetime(2023, 4, 1)
+    ),
+    model_name="TEST OPENDSS MODEL 1",
+    generator_config=GeneratorConfig(
+        ModelConfig(
+            vm_pu=1.0,
+            vmin_pu=0.80,
+            vmax_pu=1.15,
+            load_model=1,
+            collapse_swer=False,
+            calibration=False,
+            p_factor_base_exports=0.95,
+            p_factor_base_imports=0.90,
+            p_factor_forecast_pv=1.0,
+            fix_single_phase_loads=True,
+            max_single_phase_load=30000.0,
+            fix_overloading_consumers=True,
+            max_load_tx_ratio=3.0,
+            max_gen_tx_ratio=10.0,
+            fix_undersized_service_lines=True,
+            max_load_service_line_ratio=1.5,
+            max_load_lv_line_ratio=2.0,
+            collapse_lv_networks=False,
+            feeder_scenario_allocation_strategy=FeederScenarioAllocationStrategy.ADDITIVE,
+            closed_loop_v_reg_enabled=True,
+            closed_loop_v_reg_replace_all=True,
+            closed_loop_v_reg_set_point=0.985,
+            closed_loop_v_band=2.0,
+            closed_loop_time_delay=100,
+            closed_loop_v_limit=1.1,
+            default_tap_changer_time_delay=100,
+            default_tap_changer_set_point_pu=1.0,
+            default_tap_changer_band=2.0,
+            split_phase_default_load_loss_percentage=0.4,
+            split_phase_lv_kv=0.25,
+            swer_voltage_to_line_voltage=[
+                [230, 400],
+                [240, 415],
+                [250, 433],
+                [6350, 11000],
+                [6400, 11000],
+                [12700, 22000],
+                [19100, 33000]
+            ],
+            load_placement=LoadPlacement.PER_USAGE_POINT,
+            load_interval_length_hours=0.5,
+            meter_placement_config=MeterPlacementConfig(
+                True,
+                True,
+                [SwitchMeterPlacementConfig(SwitchClass.LOAD_BREAK_SWITCH, ".*")],
+                "meter group 1"),
+            seed=42,
+            default_load_watts=[100.0, 200.0, 300.0],
+            default_gen_watts=[50.0, 150.0, 250.0],
+            default_load_var=[10.0, 20.0, 30.0],
+            default_gen_var=[5.0, 15.0, 25.0],
+            transformer_tap_settings="tap-3"
+        ),
+        SolveConfig(
+            norm_vmin_pu=0.9,
+            norm_vmax_pu=1.054,
+            emerg_vmin_pu=0.8,
+            emerg_vmax_pu=1.1,
+            base_frequency=50,
+            voltage_bases=[0.4, 0.433, 6.6, 11.0, 22.0, 33.0, 66.0, 132.0],
+            max_iter=25,
+            max_control_iter=20,
+            mode=SolveMode.YEARLY,
+            step_size_minutes=60
+        ),
+        RawResultsConfig(
+            energy_meter_voltages_raw=True,
+            energy_meters_raw=True,
+            results_per_meter=True,
+            overloads_raw=True,
+            voltage_exceptions_raw=True
+        )
+    ),
+    is_public=True)
 
 
 def test_run_opendss_export_no_verify_success(httpserver: HTTPServer):
@@ -1170,7 +1171,7 @@ def get_paged_opendss_models_no_param_request_handler(request):
     query = " ".join(actual_body['query'].split())
 
     assert query == " ".join(line.strip() for line in get_paged_opendss_models_query.strip().splitlines())
-    assert actual_body['variables'] == { }
+    assert actual_body['variables'] == {}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 

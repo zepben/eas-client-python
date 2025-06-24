@@ -1078,7 +1078,8 @@ class EasClient:
         :param query_sort: The sorting to apply to the query
         :return: The HTTP response received from the Evolve App Server after requesting opendss export run information
         """
-        return get_event_loop().run_until_complete(self.async_get_paged_opendss_models(limit, offset, query_filter, query_sort))
+        return get_event_loop().run_until_complete(
+            self.async_get_paged_opendss_models(limit, offset, query_filter, query_sort))
 
     async def async_get_paged_opendss_models(
             self,
@@ -1255,10 +1256,11 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.get(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path=f"/api/opendss-model/{run_id}"),
-                headers=self._get_request_headers(),
-                ssl=sslcontext if self._verify_certificate else False,
-                allow_redirects=False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port,
+                                  path=f"/api/opendss-model/{run_id}"),
+                    headers=self._get_request_headers(),
+                    ssl=sslcontext if self._verify_certificate else False,
+                    allow_redirects=False
             ) as response:
                 if response.status == HTTPStatus.FOUND:
                     response = response.headers["Location"]

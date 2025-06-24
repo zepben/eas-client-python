@@ -69,7 +69,6 @@ class SwitchMeterPlacementConfig:
 
 @dataclass
 class FixedTimeLoadOverride:
-
     load_watts: Optional[float]
     """
     The reading to be used to override load watts
@@ -95,7 +94,6 @@ class FixedTimeLoadOverride:
 
 @dataclass
 class TimePeriodLoadOverride:
-
     load_watts: Optional[List[float]]
     """
     A list of readings to be used to override load watts.

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import tzinfo
 from enum import Enum
 from typing import Union, Optional, List
+
 from zepben.eas.client.work_package import GeneratorConfig, TimePeriod, FixedTime
 
 __all__ = [
