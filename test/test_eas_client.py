@@ -7,7 +7,8 @@ import json
 import random
 import ssl
 import string
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+from http import HTTPStatus
 from unittest import mock
 
 import pytest
@@ -16,10 +17,17 @@ from pytest_httpserver import HTTPServer
 from werkzeug import Response
 from zepben.auth import ZepbenTokenFetcher
 
-from zepben.eas import EasClient, Study, FeederConfig, ForecastConfig, FixedTimeLoadOverride
+from zepben.eas import EasClient, Study, SolveConfig
+from zepben.eas import FeederConfig, ForecastConfig, FixedTimeLoadOverride
+from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, OpenDssModelState, \
+    GetOpenDssModelsSortCriteriaInput, \
+    Order
 from zepben.eas.client.study import Result
-from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, FeederConfigs, TimePeriodLoadOverride, \
+from zepben.eas.client.work_package import FeederConfigs, TimePeriodLoadOverride, \
     FixedTime
+from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, GeneratorConfig, ModelConfig, \
+    FeederScenarioAllocationStrategy, LoadPlacement, MeterPlacementConfig, SwitchMeterPlacementConfig, SwitchClass, \
+    SolveMode, RawResultsConfig
 
 mock_host = ''.join(random.choices(string.ascii_lowercase, k=10))
 mock_port = random.randrange(1024)
@@ -753,3 +761,483 @@ def test_get_hosting_capacity_calibration_sets_no_verify_success(httpserver: HTT
     res = eas_client.get_hosting_capacity_calibration_sets()
     httpserver.check_assertions()
     assert res == ["one", "two", "three"]
+
+
+def run_opendss_export_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert query == "mutation createOpenDssModel($input: OpenDssModelInput!) { createOpenDssModel(input: $input) }"
+    assert actual_body['variables'] == {
+        "input": {
+            "modelName": "TEST OPENDSS MODEL 1",
+            "isPublic": True,
+            "generationSpec": {
+                "modelOptions": {
+                    "feeder": "feeder1",
+                    "scenario": "scenario1",
+                    "year": 2024
+                },
+                "modulesConfiguration": {
+                    "common": {
+                        "timeZone": "UTC+10:00",
+                        "timePeriod": {
+                            "start": "2022-04-01T00:00:00",
+                            "end": "2023-04-01T00:00:00",
+                        }
+                    },
+                    "generator": {
+                        "model": {
+                            "vmPu": 1.0,
+                            "vMinPu": 0.80,
+                            "vMaxPu": 1.15,
+                            "loadModel": 1,
+                            "collapseSWER": False,
+                            "calibration": False,
+                            "pFactorBaseExports": 0.95,
+                            "pFactorBaseImports": 0.90,
+                            "pFactorForecastPv": 1.0,
+                            "fixSinglePhaseLoads": True,
+                            "maxSinglePhaseLoad": 30000.0,
+                            "fixOverloadingConsumers": True,
+                            "maxLoadTxRatio": 3.0,
+                            "maxGenTxRatio": 10.0,
+                            "fixUndersizedServiceLines": True,
+                            "maxLoadServiceLineRatio": 1.5,
+                            "maxLoadLvLineRatio": 2.0,
+                            "collapseLvNetworks": False,
+                            "feederScenarioAllocationStrategy": "ADDITIVE",
+                            "closedLoopVRegEnabled": True,
+                            "closedLoopVRegReplaceAll": True,
+                            "closedLoopVRegSetPoint": 0.985,
+                            "closedLoopVBand": 2.0,
+                            "closedLoopTimeDelay": 100,
+                            "closedLoopVLimit": 1.1,
+                            "defaultTapChangerTimeDelay": 100,
+                            "defaultTapChangerSetPointPu": 1.0,
+                            "defaultTapChangerBand": 2.0,
+                            "splitPhaseDefaultLoadLossPercentage": 0.4,
+                            "splitPhaseLVKV": 0.25,
+                            "swerVoltageToLineVoltage": [
+                                [230, 400],
+                                [240, 415],
+                                [250, 433],
+                                [6350, 11000],
+                                [6400, 11000],
+                                [12700, 22000],
+                                [19100, 33000]
+                            ],
+                            "loadPlacement": "PER_USAGE_POINT",
+                            "loadIntervalLengthHours": 0.5,
+                            "meterPlacementConfig": {
+                                "feederHead": True,
+                                "distTransformers": True,
+                                "switchMeterPlacementConfigs": [
+                                    {
+                                        "meterSwitchClass": "LOAD_BREAK_SWITCH",
+                                        "namePattern": ".*"
+                                    }
+                                ],
+                                "energyConsumerMeterGroup": "meter group 1"
+                            },
+                            "seed": 42,
+                            "defaultLoadWatts": [100.0, 200.0, 300.0],
+                            "defaultGenWatts": [50.0, 150.0, 250.0],
+                            "defaultLoadVar": [10.0, 20.0, 30.0],
+                            "defaultGenVar": [5.0, 15.0, 25.0],
+                            "transformerTapSettings": "tap-3"
+                        },
+                        "solve": {
+                            "normVMinPu": 0.9,
+                            "normVMaxPu": 1.054,
+                            "emergVMinPu": 0.8,
+                            "emergVMaxPu": 1.1,
+                            "baseFrequency": 50,
+                            "voltageBases": [0.4, 0.433, 6.6, 11.0, 22.0, 33.0, 66.0, 132.0],
+                            "maxIter": 25,
+                            "maxControlIter": 20,
+                            "mode": "YEARLY",
+                            "stepSizeMinutes": 60
+                        },
+                        "rawResults": {
+                            "energyMeterVoltagesRaw": True,
+                            "energyMetersRaw": True,
+                            "resultsPerMeter": True,
+                            "overloadsRaw": True,
+                            "voltageExceptionsRaw": True
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+
+OPENDSS_CONFIG = OpenDssConfig(
+    scenario="scenario1",
+    year=2024,
+    feeder="feeder1",
+    time_zone=timezone(timedelta(hours=10)),
+    load_time=TimePeriod(
+        datetime(2022, 4, 1),
+        datetime(2023, 4, 1)
+    ),
+    model_name="TEST OPENDSS MODEL 1",
+    generator_config=GeneratorConfig(
+        ModelConfig(
+            vm_pu=1.0,
+            vmin_pu=0.80,
+            vmax_pu=1.15,
+            load_model=1,
+            collapse_swer=False,
+            calibration=False,
+            p_factor_base_exports=0.95,
+            p_factor_base_imports=0.90,
+            p_factor_forecast_pv=1.0,
+            fix_single_phase_loads=True,
+            max_single_phase_load=30000.0,
+            fix_overloading_consumers=True,
+            max_load_tx_ratio=3.0,
+            max_gen_tx_ratio=10.0,
+            fix_undersized_service_lines=True,
+            max_load_service_line_ratio=1.5,
+            max_load_lv_line_ratio=2.0,
+            collapse_lv_networks=False,
+            feeder_scenario_allocation_strategy=FeederScenarioAllocationStrategy.ADDITIVE,
+            closed_loop_v_reg_enabled=True,
+            closed_loop_v_reg_replace_all=True,
+            closed_loop_v_reg_set_point=0.985,
+            closed_loop_v_band=2.0,
+            closed_loop_time_delay=100,
+            closed_loop_v_limit=1.1,
+            default_tap_changer_time_delay=100,
+            default_tap_changer_set_point_pu=1.0,
+            default_tap_changer_band=2.0,
+            split_phase_default_load_loss_percentage=0.4,
+            split_phase_lv_kv=0.25,
+            swer_voltage_to_line_voltage=[
+                [230, 400],
+                [240, 415],
+                [250, 433],
+                [6350, 11000],
+                [6400, 11000],
+                [12700, 22000],
+                [19100, 33000]
+            ],
+            load_placement=LoadPlacement.PER_USAGE_POINT,
+            load_interval_length_hours=0.5,
+            meter_placement_config=MeterPlacementConfig(
+                True,
+                True,
+                [SwitchMeterPlacementConfig(SwitchClass.LOAD_BREAK_SWITCH, ".*")],
+                "meter group 1"),
+            seed=42,
+            default_load_watts=[100.0, 200.0, 300.0],
+            default_gen_watts=[50.0, 150.0, 250.0],
+            default_load_var=[10.0, 20.0, 30.0],
+            default_gen_var=[5.0, 15.0, 25.0],
+            transformer_tap_settings="tap-3"
+        ),
+        SolveConfig(
+            norm_vmin_pu=0.9,
+            norm_vmax_pu=1.054,
+            emerg_vmin_pu=0.8,
+            emerg_vmax_pu=1.1,
+            base_frequency=50,
+            voltage_bases=[0.4, 0.433, 6.6, 11.0, 22.0, 33.0, 66.0, 132.0],
+            max_iter=25,
+            max_control_iter=20,
+            mode=SolveMode.YEARLY,
+            step_size_minutes=60
+        ),
+        RawResultsConfig(
+            energy_meter_voltages_raw=True,
+            energy_meters_raw=True,
+            results_per_meter=True,
+            overloads_raw=True,
+            voltage_exceptions_raw=True
+        )
+    ),
+    is_public=True)
+
+
+def test_run_opendss_export_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(run_opendss_export_request_handler)
+    res = eas_client.run_opendss_export(OPENDSS_CONFIG)
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
+def test_run_opendss_export_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+        with pytest.raises(ssl.SSLError):
+            eas_client.run_opendss_export(OPENDSS_CONFIG)
+
+
+def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+            run_opendss_export_request_handler)
+        res = eas_client.run_opendss_export(OPENDSS_CONFIG)
+        httpserver.check_assertions()
+        assert res == {"result": "success"}
+
+
+get_paged_opendss_models_query = """
+        query pagedOpenDssModels($limit: Int, $offset: Long, $filter: GetOpenDssModelsFilterInput, $sort: GetOpenDssModelsSortCriteriaInput) {
+            pagedOpenDssModels(limit: $limit, offset: $offset, filter: $filter,sort: $sort) {
+                totalCount
+                offset,
+                models {
+                    id
+                    name
+                    createdAt
+                    createdBy
+                    state
+                    downloadUrl
+                    isPublic
+                    errors
+                    generationSpec {
+                        modelOptions{
+                            scenario
+                            year
+                            feeder
+                        }
+                        modulesConfiguration {
+                            common {
+                                timePeriod {
+                                    start
+                                    end
+                                }
+                            }
+                            generator {
+                                model {
+                                    vmPu
+                                    vMinPu
+                                    vMaxPu
+                                    loadModel
+                                    collapseSWER
+                                    calibration
+                                    pFactorBaseExports
+                                    pFactorForecastPv
+                                    pFactorBaseImports
+                                    fixSinglePhaseLoads
+                                    maxSinglePhaseLoad
+                                    fixOverloadingConsumers
+                                    maxLoadTxRatio
+                                    maxGenTxRatio
+                                    fixUndersizedServiceLines
+                                    maxLoadServiceLineRatio
+                                    maxLoadLvLineRatio
+                                    collapseLvNetworks
+                                    feederScenarioAllocationStrategy
+                                    closedLoopVRegEnabled
+                                    closedLoopVRegReplaceAll
+                                    closedLoopVRegSetPoint
+                                    closedLoopVBand
+                                    closedLoopTimeDelay
+                                    closedLoopVLimit
+                                    defaultTapChangerTimeDelay
+                                    defaultTapChangerSetPointPu
+                                    defaultTapChangerBand
+                                    splitPhaseDefaultLoadLossPercentage
+                                    splitPhaseLVKV
+                                    swerVoltageToLineVoltage
+                                    loadPlacement
+                                    loadIntervalLengthHours
+                                    meterPlacementConfig {
+                                        feederHead
+                                        distTransformers
+                                        switchMeterPlacementConfigs {
+                                          meterSwitchClass
+                                          namePattern
+                                        }
+                                        energyConsumerMeterGroup
+                                    }
+                                    seed
+                                    defaultLoadWatts
+                                    defaultGenWatts
+                                    defaultLoadVar
+                                    defaultGenVar
+                                    transformerTapSettings
+                                }
+                                solve {
+                                    normVMinPu
+                                    normVMaxPu
+                                    emergVMinPu
+                                    emergVMaxPu
+                                    baseFrequency
+                                    voltageBases
+                                    maxIter
+                                    maxControlIter
+                                    mode
+                                    stepSizeMinutes
+                                }
+                                rawResults {
+                                    energyMeterVoltagesRaw
+                                    energyMetersRaw
+                                    resultsPerMeter
+                                    overloadsRaw
+                                    voltageExceptionsRaw
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    """
+
+
+def get_paged_opendss_models_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert query == " ".join(line.strip() for line in get_paged_opendss_models_query.strip().splitlines())
+    assert actual_body['variables'] == {
+        "limit": 5,
+        "offset": 0,
+        "filter": {
+            "name": "TEST OPENDSS MODEL 1",
+            "isPublic": True,
+            "state": ["COMPLETED"],
+        },
+        "sort": {
+            "state": "ASC",
+            "createdAt": None,
+            "name": None,
+            "isPublic": None
+        }
+    }
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+
+def test_get_paged_opendss_models_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        get_paged_opendss_models_request_handler)
+    res = eas_client.get_paged_opendss_models(
+        5, 0, GetOpenDssModelsFilterInput("TEST OPENDSS MODEL 1", True, [OpenDssModelState.COMPLETED]),
+        GetOpenDssModelsSortCriteriaInput(state=Order.ASC))
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
+def test_get_paged_opendss_models_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+        with pytest.raises(ssl.SSLError):
+            eas_client.get_paged_opendss_models()
+
+
+def get_paged_opendss_models_no_param_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert query == " ".join(line.strip() for line in get_paged_opendss_models_query.strip().splitlines())
+    assert actual_body['variables'] == {}
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+
+def test_get_paged_opendss_models_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+            get_paged_opendss_models_no_param_request_handler)
+        res = eas_client.get_paged_opendss_models()
+        httpserver.check_assertions()
+        assert res == {"result": "success"}
+
+
+def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
+        status=HTTPStatus.FOUND,
+        headers={"Location": "https://example.com/download/1"}
+    ))
+    res = eas_client.get_opendss_model_download_url(1)
+    httpserver.check_assertions()
+    assert res == "https://example.com/download/1"
+
+
+def test_get_opendss_model_download_url_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
+            status=HTTPStatus.FOUND,
+            headers={"Location": "https://example.com/download/1"}
+        ))
+        with pytest.raises(ssl.SSLError):
+            eas_client.get_opendss_model_download_url(1)
+
+
+def test_get_opendss_model_download_url_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
+    with ca.cert_pem.tempfile() as ca_filename:
+        eas_client = EasClient(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+        httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
+            status=HTTPStatus.FOUND,
+            headers={"Location": "https://example.com/download/1"}
+        ))
+        res = eas_client.get_opendss_model_download_url(1)
+        httpserver.check_assertions()
+        assert res == "https://example.com/download/1"

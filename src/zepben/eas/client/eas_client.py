@@ -7,6 +7,7 @@ import ssl
 import warnings
 from asyncio import get_event_loop
 from hashlib import sha256
+from http import HTTPStatus
 from json import dumps
 from typing import Optional
 
@@ -15,6 +16,7 @@ from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
 from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, create_token_fetcher_managed_identity
 
+from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
 from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod, ForecastConfig, FeederConfigs
@@ -921,6 +923,347 @@ class EasClient:
             ) as response:
                 if response.ok:
                     response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def run_opendss_export(self, config: OpenDssConfig):
+        """
+        Send request to run an opendss export
+        :param config: The OpenDssConfig for running the export
+        :return: The HTTP response received from the Evolve App Server after attempting to run the opendss export
+        """
+        return get_event_loop().run_until_complete(self.async_run_opendss_export(config))
+
+    async def async_run_opendss_export(self, config: OpenDssConfig):
+        """
+        Send asynchronous request to run an opendss export
+        :param config: The OpenDssConfig for running the export
+        :return: The HTTP response received from the Evolve App Server after attempting to run the opendss export
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    mutation createOpenDssModel($input: OpenDssModelInput!) {
+                        createOpenDssModel(input: $input)
+                    }
+                """,
+                "variables": {
+                    "input": {
+                        "modelName": config.model_name,
+                        "isPublic": config.is_public,
+                        "generationSpec": {
+                            "modelOptions": {
+                                "feeder": config.feeder,
+                                "scenario": config.scenario,
+                                "year": config.year
+                            },
+                            "modulesConfiguration": {
+                                "common": {
+                                    "timeZone": config.time_zone.__str__(),
+                                    **({"fixedTime": config.load_time.time.isoformat()}
+                                       if isinstance(config.load_time, FixedTime) else {}),
+                                    **({"timePeriod": {
+                                        "start": config.load_time.start_time.isoformat(),
+                                        "end": config.load_time.end_time.isoformat(),
+                                    }} if isinstance(config.load_time, TimePeriod) else {})
+                                },
+                                **({"generator": {
+                                    **({"model": {
+                                        "vmPu": config.generator_config.model.vm_pu,
+                                        "vMinPu": config.generator_config.model.vmin_pu,
+                                        "vMaxPu": config.generator_config.model.vmax_pu,
+                                        "loadModel": config.generator_config.model.load_model,
+                                        "collapseSWER": config.generator_config.model.collapse_swer,
+                                        "calibration": config.generator_config.model.calibration,
+                                        "pFactorBaseExports": config.generator_config.model.p_factor_base_exports,
+                                        "pFactorForecastPv": config.generator_config.model.p_factor_forecast_pv,
+                                        "pFactorBaseImports": config.generator_config.model.p_factor_base_imports,
+                                        "fixSinglePhaseLoads": config.generator_config.model.fix_single_phase_loads,
+                                        "maxSinglePhaseLoad": config.generator_config.model.max_single_phase_load,
+                                        "fixOverloadingConsumers": config.generator_config.model.fix_overloading_consumers,
+                                        "maxLoadTxRatio": config.generator_config.model.max_load_tx_ratio,
+                                        "maxGenTxRatio": config.generator_config.model.max_gen_tx_ratio,
+                                        "fixUndersizedServiceLines": config.generator_config.model.fix_undersized_service_lines,
+                                        "maxLoadServiceLineRatio": config.generator_config.model.max_load_service_line_ratio,
+                                        "maxLoadLvLineRatio": config.generator_config.model.max_load_lv_line_ratio,
+                                        "collapseLvNetworks": config.generator_config.model.collapse_lv_networks,
+                                        "feederScenarioAllocationStrategy": config.generator_config.model.feeder_scenario_allocation_strategy and config.generator_config.model.feeder_scenario_allocation_strategy.name,
+                                        "closedLoopVRegEnabled": config.generator_config.model.closed_loop_v_reg_enabled,
+                                        "closedLoopVRegReplaceAll": config.generator_config.model.closed_loop_v_reg_replace_all,
+                                        "closedLoopVRegSetPoint": config.generator_config.model.closed_loop_v_reg_set_point,
+                                        "closedLoopVBand": config.generator_config.model.closed_loop_v_band,
+                                        "closedLoopTimeDelay": config.generator_config.model.closed_loop_time_delay,
+                                        "closedLoopVLimit": config.generator_config.model.closed_loop_v_limit,
+                                        "defaultTapChangerTimeDelay": config.generator_config.model.default_tap_changer_time_delay,
+                                        "defaultTapChangerSetPointPu": config.generator_config.model.default_tap_changer_set_point_pu,
+                                        "defaultTapChangerBand": config.generator_config.model.default_tap_changer_band,
+                                        "splitPhaseDefaultLoadLossPercentage": config.generator_config.model.split_phase_default_load_loss_percentage,
+                                        "splitPhaseLVKV": config.generator_config.model.split_phase_lv_kv,
+                                        "swerVoltageToLineVoltage": config.generator_config.model.swer_voltage_to_line_voltage,
+                                        "loadPlacement": config.generator_config.model.load_placement and config.generator_config.model.load_placement.name,
+                                        "loadIntervalLengthHours": config.generator_config.model.load_interval_length_hours,
+                                        "meterPlacementConfig": config.generator_config.model.meter_placement_config and {
+                                            "feederHead": config.generator_config.model.meter_placement_config.feeder_head,
+                                            "distTransformers": config.generator_config.model.meter_placement_config.dist_transformers,
+                                            "switchMeterPlacementConfigs": config.generator_config.model.meter_placement_config.switch_meter_placement_configs and [
+                                                {
+                                                    "meterSwitchClass": spc.meter_switch_class and spc.meter_switch_class.name,
+                                                    "namePattern": spc.name_pattern
+                                                } for spc in
+                                                config.generator_config.model.meter_placement_config.switch_meter_placement_configs
+                                            ],
+                                            "energyConsumerMeterGroup": config.generator_config.model.meter_placement_config.energy_consumer_meter_group
+                                        },
+                                        "seed": config.generator_config.model.seed,
+                                        "defaultLoadWatts": config.generator_config.model.default_load_watts,
+                                        "defaultGenWatts": config.generator_config.model.default_gen_watts,
+                                        "defaultLoadVar": config.generator_config.model.default_load_var,
+                                        "defaultGenVar": config.generator_config.model.default_gen_var,
+                                        "transformerTapSettings": config.generator_config.model.transformer_tap_settings
+                                    }} if config.generator_config.model else {}),
+                                    **({"solve": {
+                                        "normVMinPu": config.generator_config.solve.norm_vmin_pu,
+                                        "normVMaxPu": config.generator_config.solve.norm_vmax_pu,
+                                        "emergVMinPu": config.generator_config.solve.emerg_vmin_pu,
+                                        "emergVMaxPu": config.generator_config.solve.emerg_vmax_pu,
+                                        "baseFrequency": config.generator_config.solve.base_frequency,
+                                        "voltageBases": config.generator_config.solve.voltage_bases,
+                                        "maxIter": config.generator_config.solve.max_iter,
+                                        "maxControlIter": config.generator_config.solve.max_control_iter,
+                                        "mode": config.generator_config.solve.mode and config.generator_config.solve.mode.name,
+                                        "stepSizeMinutes": config.generator_config.solve.step_size_minutes
+                                    }} if config.generator_config.solve else {}),
+                                    **({"rawResults": {
+                                        "energyMeterVoltagesRaw": config.generator_config.raw_results.energy_meter_voltages_raw,
+                                        "energyMetersRaw": config.generator_config.raw_results.energy_meters_raw,
+                                        "resultsPerMeter": config.generator_config.raw_results.results_per_meter,
+                                        "overloadsRaw": config.generator_config.raw_results.overloads_raw,
+                                        "voltageExceptionsRaw": config.generator_config.raw_results.voltage_exceptions_raw
+                                    }} if config.generator_config.raw_results else {})
+                                }} if config.generator_config else {})
+                            }
+                        }
+                    }
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def get_paged_opendss_models(
+            self,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None,
+            query_filter: Optional[GetOpenDssModelsFilterInput] = None,
+            query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
+        """
+        Retrieve a paginated opendss export run information
+        :param limit: The number of opendss export runs to retrieve
+        :param offset: The number of opendss export runs to skip
+        :param query_filter: The filter to apply to the query
+        :param query_sort: The sorting to apply to the query
+        :return: The HTTP response received from the Evolve App Server after requesting opendss export run information
+        """
+        return get_event_loop().run_until_complete(
+            self.async_get_paged_opendss_models(limit, offset, query_filter, query_sort))
+
+    async def async_get_paged_opendss_models(
+            self,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None,
+            query_filter: Optional[GetOpenDssModelsFilterInput] = None,
+            query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
+        """
+        Retrieve a paginated opendss export run information
+        :param limit: The number of opendss export runs to retrieve
+        :param offset: The number of opendss export runs to skip
+        :param query_filter: The filter to apply to the query
+        :param query_sort: The sorting to apply to the query
+        :return: The HTTP response received from the Evolve App Server after requesting opendss export run information
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    query pagedOpenDssModels($limit: Int, $offset: Long, $filter: GetOpenDssModelsFilterInput, $sort: GetOpenDssModelsSortCriteriaInput) {
+                    pagedOpenDssModels(limit: $limit, offset: $offset, filter: $filter,sort: $sort) {
+                        totalCount
+                        offset,
+                        models {
+                            id
+                            name
+                            createdAt
+                            createdBy
+                            state
+                            downloadUrl
+                            isPublic
+                            errors
+                            generationSpec {
+                                modelOptions{
+                                    scenario
+                                    year
+                                    feeder
+                                }
+                                modulesConfiguration {
+                                    common {
+                                        timePeriod {
+                                            start
+                                            end
+                                        }
+                                    }
+                                    generator {
+                                        model {
+                                            vmPu
+                                            vMinPu
+                                            vMaxPu
+                                            loadModel
+                                            collapseSWER
+                                            calibration
+                                            pFactorBaseExports
+                                            pFactorForecastPv
+                                            pFactorBaseImports
+                                            fixSinglePhaseLoads
+                                            maxSinglePhaseLoad
+                                            fixOverloadingConsumers
+                                            maxLoadTxRatio
+                                            maxGenTxRatio
+                                            fixUndersizedServiceLines
+                                            maxLoadServiceLineRatio
+                                            maxLoadLvLineRatio
+                                            collapseLvNetworks
+                                            feederScenarioAllocationStrategy
+                                            closedLoopVRegEnabled
+                                            closedLoopVRegReplaceAll
+                                            closedLoopVRegSetPoint
+                                            closedLoopVBand
+                                            closedLoopTimeDelay
+                                            closedLoopVLimit
+                                            defaultTapChangerTimeDelay
+                                            defaultTapChangerSetPointPu
+                                            defaultTapChangerBand
+                                            splitPhaseDefaultLoadLossPercentage
+                                            splitPhaseLVKV
+                                            swerVoltageToLineVoltage
+                                            loadPlacement
+                                            loadIntervalLengthHours
+                                            meterPlacementConfig {
+                                                feederHead
+                                                distTransformers
+                                                switchMeterPlacementConfigs {
+                                                  meterSwitchClass
+                                                  namePattern
+                                                }
+                                                energyConsumerMeterGroup
+                                            }
+                                            seed
+                                            defaultLoadWatts
+                                            defaultGenWatts
+                                            defaultLoadVar
+                                            defaultGenVar
+                                            transformerTapSettings
+                                        }
+                                        solve {
+                                            normVMinPu
+                                            normVMaxPu
+                                            emergVMinPu
+                                            emergVMaxPu
+                                            baseFrequency
+                                            voltageBases
+                                            maxIter
+                                            maxControlIter
+                                            mode
+                                            stepSizeMinutes
+                                        }
+                                        rawResults {
+                                            energyMeterVoltagesRaw
+                                            energyMetersRaw
+                                            resultsPerMeter
+                                            overloadsRaw
+                                            voltageExceptionsRaw
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                """,
+                "variables": {
+                    **({"limit": limit} if limit is not None else {}),
+                    **({"offset": offset} if offset is not None else {}),
+                    **({"filter": {
+                        "name": query_filter.name,
+                        "isPublic": query_filter.is_public,
+                        "state": query_filter.state and [state.name for state in query_filter.state]
+                    }} if query_filter else {}),
+                    **({"sort": {
+                        "name": query_sort.name and query_sort.name.name,
+                        "createdAt": query_sort.created_at and query_sort.created_at.name,
+                        "state": query_sort.state and query_sort.state.name,
+                        "isPublic": query_sort.is_public and query_sort.is_public.name
+                    }} if query_sort else {})
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def get_opendss_model_download_url(self, run_id: int):
+        """
+        Retrieve a download url for the specified opendss export run id
+        :param run_id: The opendss export run ID
+        :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
+        """
+        return get_event_loop().run_until_complete(self.async_get_opendss_model_download_url(run_id))
+
+    async def async_get_opendss_model_download_url(self, run_id: int):
+        """
+        Retrieve a download url for the specified opendss export run id
+        :param run_id: The opendss export run ID
+        :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.get(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port,
+                                  path=f"/api/opendss-model/{run_id}"),
+                    headers=self._get_request_headers(),
+                    ssl=sslcontext if self._verify_certificate else False,
+                    allow_redirects=False
+            ) as response:
+                if response.status == HTTPStatus.FOUND:
+                    response = response.headers["Location"]
                 else:
                     response = await response.text()
                 return response

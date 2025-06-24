@@ -17,19 +17,20 @@ __all__ = [
     "BASIC_RESULTS_CONFIG",
 ]
 
-from zepben.eas import StoredResultsConfig, RawResultsConfig, MetricsResultsConfig, ResultsConfig
+from build.lib.zepben.eas.client.work_package import ResultsConfig
+from zepben.eas import StoredResultsConfig, RawResultsConfig, MetricsResultsConfig
 
 STORED_RESULTS_CONFIG_STORE_NONE = StoredResultsConfig(
     energy_meters_raw=False,
     energy_meter_voltages_raw=False,
-    over_loads_raw=False,
+    overloads_raw=False,
     voltage_exceptions_raw=False
 )
 
 STORED_RESULTS_CONFIG_STORE_ALL = StoredResultsConfig(
     energy_meters_raw=True,
     energy_meter_voltages_raw=True,
-    over_loads_raw=True,
+    overloads_raw=True,
     voltage_exceptions_raw=True
 )
 
@@ -37,7 +38,7 @@ RAW_RESULTS_CONFIG_ALL_RAW_VALUES = RawResultsConfig(
     energy_meters_raw=True,
     energy_meter_voltages_raw=True,
     results_per_meter=True,
-    over_loads_raw=True,
+    overloads_raw=True,
     voltage_exceptions_raw=True
 )
 
@@ -45,7 +46,7 @@ RAW_RESULTS_CONFIG_STANDARD = RawResultsConfig(
     energy_meters_raw=True,
     energy_meter_voltages_raw=True,
     results_per_meter=True,
-    over_loads_raw=True,
+    overloads_raw=True,
     voltage_exceptions_raw=True
 )
 
@@ -69,7 +70,7 @@ RESULTS_CONFIG_DEFAULT_RESULTS_CONFIG = ResultsConfig(
 STANDARD_RESULTS_CONFIG = ResultsConfig(
     raw_config=RAW_RESULTS_CONFIG_STANDARD,
     metrics_config=METRICS_RESULTS_CONFIG_CALCULATE_PERFORMANCE_METRICS,
-    stored_results_config=StoredResultsConfig(voltage_exceptions_raw=True, over_loads_raw=True)
+    stored_results_config=StoredResultsConfig(voltage_exceptions_raw=True, overloads_raw=True)
 )
 
 BASIC_RESULTS_CONFIG = ResultsConfig(
