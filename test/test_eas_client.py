@@ -780,10 +780,16 @@ def run_opendss_export_request_handler(request):
                 },
                 "modulesConfiguration": {
                     "common": {
-                        "timeZone": "UTC+10:00",
                         "timePeriod": {
-                            "start": "2022-04-01T00:00:00",
-                            "end": "2023-04-01T00:00:00",
+                            "startTime": "2022-04-01T00:00:00",
+                            "endTime": "2023-04-01T00:00:00",
+                            "overrides": [{
+                                'loadId': 'meter1',
+                                'loadWattsOverride': [1.0],
+                                'genWattsOverride': [2.0],
+                                'loadVarOverride': [3.0],
+                                'genVarOverride': [4.0]
+                            }]
                         }
                     },
                     "generator": {
@@ -879,10 +885,10 @@ OPENDSS_CONFIG = OpenDssConfig(
     scenario="scenario1",
     year=2024,
     feeder="feeder1",
-    time_zone=timezone(timedelta(hours=10)),
     load_time=TimePeriod(
         datetime(2022, 4, 1),
-        datetime(2023, 4, 1)
+        datetime(2023, 4, 1),
+        {"meter1": TimePeriodLoadOverride([1.0], [2.0], [3.0], [4.0])}
     ),
     model_name="TEST OPENDSS MODEL 1",
     generator_config=GeneratorConfig(
@@ -1028,9 +1034,26 @@ get_paged_opendss_models_query = """
                         }
                         modulesConfiguration {
                             common {
+                                fixedTime{
+                                    loadTime
+                                    overrides {
+                                        loadId
+                                        loadWattsOverride
+                                        genWattsOverride
+                                        loadVarOverride
+                                        genVarOverride
+                                    }
+                                }
                                 timePeriod {
-                                    start
-                                    end
+                                    startTime
+                                    endTime
+                                    overrides {
+                                        loadId
+                                        loadWattsOverride
+                                        genWattsOverride
+                                        loadVarOverride
+                                        genVarOverride
+                                    }
                                 }
                             }
                             generator {
