@@ -18,7 +18,7 @@
 * Added work package config documentation.
 
 ### Fixes
-* None.
+* Fix inconsistency between GQL and python load override assignment.
 
 ### Notes
 * None.

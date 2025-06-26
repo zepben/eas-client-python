@@ -222,15 +222,27 @@ class EasClient:
                                     "timePeriod": {
                                         "startTime": config.load_time.start_time.isoformat(),
                                         "endTime": config.load_time.end_time.isoformat(),
-                                        "overrides": config.load_time.load_overrides and {
-                                            key: value.__dict__
-                                            for key, value in config.load_time.load_overrides.items()}
+                                        "overrides": config.load_time.load_overrides and [
+                                            {
+                                                "loadId": key,
+                                                "loadWattsOverride": value.load_watts,
+                                                "genWattsOverride": value.gen_watts,
+                                                "loadVarOverride": value.load_var,
+                                                "genVarOverride": value.gen_var,
+                                            } for key, value in config.load_time.load_overrides.items()
+                                        ]
                                     } if isinstance(config.load_time, TimePeriod) else None,
                                     "fixedTime": config.load_time and {
                                         "loadTime": config.load_time.time.isoformat(),
-                                        "overrides": config.load_time.load_overrides and {
-                                            key: value.__dict__
-                                            for key, value in config.load_time.load_overrides.items()}
+                                        "overrides": config.load_time.load_overrides and [
+                                            {
+                                                "loadId": key,
+                                                "loadWattsOverride": value.load_watts,
+                                                "genWattsOverride": value.gen_watts,
+                                                "loadVarOverride": value.load_var,
+                                                "genVarOverride": value.gen_var,
+                                            } for key, value in config.load_time.load_overrides.items()
+                                        ]
                                     } if isinstance(config.load_time, FixedTime) else None,
                                 } for config in work_package.syf_config.configs
                             ]
@@ -441,15 +453,27 @@ class EasClient:
                                     "timePeriod": {
                                         "startTime": config.load_time.start_time.isoformat(),
                                         "endTime": config.load_time.end_time.isoformat(),
-                                        "overrides": config.load_time.load_overrides and {
-                                            key: value.__dict__
-                                            for key, value in config.load_time.load_overrides.items()}
+                                        "overrides": config.load_time.load_overrides and [
+                                            {
+                                                "loadId": key,
+                                                "loadWattsOverride": value.load_watts,
+                                                "genWattsOverride": value.gen_watts,
+                                                "loadVarOverride": value.load_var,
+                                                "genVarOverride": value.gen_var,
+                                            } for key, value in config.load_time.load_overrides.items()
+                                        ]
                                     } if isinstance(config.load_time, TimePeriod) else None,
                                     "fixedTime": config.load_time and {
                                         "loadTime": config.load_time.time.isoformat(),
-                                        "overrides": config.load_time.load_overrides and {
-                                            key: value.__dict__
-                                            for key, value in config.load_time.load_overrides.items()}
+                                        "overrides": config.load_time.load_overrides and [
+                                            {
+                                                "loadId": key,
+                                                "loadWattsOverride": value.load_watts,
+                                                "genWattsOverride": value.gen_watts,
+                                                "loadVarOverride": value.load_var,
+                                                "genVarOverride": value.gen_var,
+                                            } for key, value in config.load_time.load_overrides.items()
+                                        ]
                                     } if isinstance(config.load_time, FixedTime) else None,
                                 } for config in work_package.syf_config.configs
                             ]
