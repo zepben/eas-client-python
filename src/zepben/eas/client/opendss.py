@@ -25,7 +25,6 @@ class OpenDssConfig:
     scenario: str
     year: int
     feeder: str
-    time_zone: tzinfo
     load_time: Union[TimePeriod, FixedTime]
     generator_config: Optional[GeneratorConfig] = None
     model_name: Optional[str] = None
