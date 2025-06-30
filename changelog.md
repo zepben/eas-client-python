@@ -1,5 +1,5 @@
 # EAS Python client
-## [0.18.0] - UNRELEASED
+## [0.18.0] - 2025-06-30
 ### Breaking Changes
 * Added `load_overrides` to both `FixedTime` and `TimePeriod` which consist of a list of `FixedTimeLoadOverride` and `TimePeriodLoadOverride`
 * `WorkPackageConfig` has some of its variables moved into the new classes `ForecastConfig` and `FeederConfig`.
