@@ -1,4 +1,20 @@
 # EAS Python client
+## [0.19.0] - UNRELEASED
+### Breaking Changes
+* None.
+
+### New Features
+* None.
+
+### Enhancements
+* None.
+
+### Fixes
+* None.
+
+### Notes
+* None.
+
 ## [0.18.0] - 2025-06-30
 ### Breaking Changes
 * Added `load_overrides` to both `FixedTime` and `TimePeriod` which consist of a list of `FixedTimeLoadOverride` and `TimePeriodLoadOverride`
