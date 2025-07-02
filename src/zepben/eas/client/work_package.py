@@ -69,22 +69,22 @@ class SwitchMeterPlacementConfig:
 
 @dataclass
 class FixedTimeLoadOverride:
-    load_watts: Optional[float]
+    load_watts: Optional[List[float]]
     """
     The reading to be used to override load watts
     """
 
-    gen_watts: Optional[float]
+    gen_watts: Optional[List[float]]
     """
     The reading to be used to override gen watts
     """
 
-    load_var: Optional[float]
+    load_var: Optional[List[float]]
     """
     The reading to be used to override load var
     """
 
-    gen_var: Optional[float]
+    gen_var: Optional[List[float]]
     """
     The reading to be used to override gen var
     """
