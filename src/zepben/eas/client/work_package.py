@@ -252,11 +252,11 @@ class ModelConfig:
     """
 
     closed_loop_v_reg_enabled: Optional[bool] = None
-    """Create models with a Closed Loop Voltage Regulator at the Zone sub. If false, existing voltage regulator's in the zone sub will be used."""
+    """Create models with a Closed Loop Voltage Regulator at the Zone sub. If False, existing voltage regulator's in the zone sub will be used."""
 
     closed_loop_v_reg_replace_all: Optional[bool] = None
     """
-    Replace all existing Voltage Regulators with Closed Loop Voltage Regulator. If false existing zone sub regulators will be
+    Replace all existing Voltage Regulators with Closed Loop Voltage Regulator. If False existing zone sub regulators will be
     modelled as-is which may be in non-closed loop configuration.
     """
 
@@ -462,6 +462,20 @@ class StoredResultsConfig:
     Store the raw voltage exception results
     """
 
+@dataclass
+class NodeLevelResultsConfig:
+    """
+    Node level configuration e.g. where to add sample points in the opendss model
+    """
+    collectVoltage: bool = True
+    collectCurrent: bool = True
+    collectPower: bool = True
+    mridsToCollect: Optional[List] = None
+    collectAllSwitches: bool = False
+    collectAllTransformers: bool = False
+    collectAllConductors: bool = False
+    collectAllEnergyConsumers: bool = False
+
 
 @dataclass
 class GeneratorConfig:
@@ -473,6 +487,7 @@ class GeneratorConfig:
     model: Optional[ModelConfig] = None
     solve: Optional[SolveConfig] = None
     raw_results: Optional[RawResultsConfig] = None
+    node_level_results: Optional[NodeLevelResultsConfig] = None
 
 
 @dataclass
