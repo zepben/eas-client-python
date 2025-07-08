@@ -233,7 +233,7 @@ class EasClient:
                                         ]
                                     } if isinstance(config.load_time, TimePeriod) else None,
                                     "fixedTime": config.load_time and {
-                                        "loadTime": config.load_time.time.isoformat(),
+                                        "loadTime": config.load_time.load_time.isoformat(),
                                         "overrides": config.load_time.load_overrides and [
                                             {
                                                 "loadId": key,
@@ -259,7 +259,7 @@ class EasClient:
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
                             } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
                             "fixedTime": work_package.syf_config.load_time and {
-                                "loadTime": work_package.syf_config.load_time.fetch_load_time.isoformat(),
+                                "loadTime": work_package.syf_config.load_time.load_time.isoformat(),
                                 "overrides": work_package.syf_config.load_time.load_overrides and {
                                     key: value.__dict__
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
@@ -269,8 +269,10 @@ class EasClient:
                         "generatorConfig": work_package.generator_config and {
                             "model": work_package.generator_config.model and {
                                 "vmPu": work_package.generator_config.model.vm_pu,
-                                "vMinPu": work_package.generator_config.model.vmin_pu,
-                                "vMaxPu": work_package.generator_config.model.vmax_pu,
+                                "loadVMinPu": work_package.generator_config.model.load_vmin_pu,
+                                "loadVMaxPu": work_package.generator_config.model.load_vmax_pu,
+                                "genVMinPu": work_package.generator_config.model.gen_vmin_pu,
+                                "genVMaxPu": work_package.generator_config.model.gen_vmax_pu,
                                 "loadModel": work_package.generator_config.model.load_model,
                                 "collapseSWER": work_package.generator_config.model.collapse_swer,
                                 "calibration": work_package.generator_config.model.calibration,
@@ -319,6 +321,7 @@ class EasClient:
                                 "defaultLoadVar": work_package.generator_config.model.default_load_var,
                                 "defaultGenVar": work_package.generator_config.model.default_gen_var,
                                 "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings,
+                                "ctPrimScalingFactor": work_package.generator_config.model.ct_prim_scaling_factor,
                             },
                             "solve": work_package.generator_config.solve and {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
@@ -464,7 +467,7 @@ class EasClient:
                                         ]
                                     } if isinstance(config.load_time, TimePeriod) else None,
                                     "fixedTime": config.load_time and {
-                                        "loadTime": config.load_time.time.isoformat(),
+                                        "loadTime": config.load_time.load_time.isoformat(),
                                         "overrides": config.load_time.load_overrides and [
                                             {
                                                 "loadId": key,
@@ -490,7 +493,7 @@ class EasClient:
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
                             } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
                             "fixedTime": work_package.syf_config.load_time and {
-                                "loadTime": work_package.syf_config.load_time.time.isoformat(),
+                                "loadTime": work_package.syf_config.load_time.load_time.isoformat(),
                                 "overrides": work_package.syf_config.load_time.load_overrides and {
                                     key: value.__dict__
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
@@ -500,8 +503,8 @@ class EasClient:
                         "generatorConfig": work_package.generator_config and {
                             "model": work_package.generator_config.model and {
                                 "vmPu": work_package.generator_config.model.vm_pu,
-                                "vMinPu": work_package.generator_config.model.vmin_pu,
-                                "vMaxPu": work_package.generator_config.model.vmax_pu,
+                                "vMinPu": work_package.generator_config.model.load_vmin_pu,
+                                "vMaxPu": work_package.generator_config.model.load_vmax_pu,
                                 "loadModel": work_package.generator_config.model.load_model,
                                 "collapseSWER": work_package.generator_config.model.collapse_swer,
                                 "calibration": work_package.generator_config.model.calibration,
@@ -986,7 +989,7 @@ class EasClient:
                             },
                             "modulesConfiguration": {
                                 "common": {
-                                    **({ "loadTime": config.load_time.time.isoformat(),
+                                    **({ "loadTime": config.load_time.load_time.isoformat(),
                                           "overrides": config.load_time.load_overrides and [
                                                {
                                                    "loadId": key,
@@ -1014,8 +1017,8 @@ class EasClient:
                                 **({"generator": {
                                     **({"model": {
                                         "vmPu": config.generator_config.model.vm_pu,
-                                        "vMinPu": config.generator_config.model.vmin_pu,
-                                        "vMaxPu": config.generator_config.model.vmax_pu,
+                                        "vMinPu": config.generator_config.model.load_vmin_pu,
+                                        "vMaxPu": config.generator_config.model.load_vmax_pu,
                                         "loadModel": config.generator_config.model.load_model,
                                         "collapseSWER": config.generator_config.model.collapse_swer,
                                         "calibration": config.generator_config.model.calibration,
