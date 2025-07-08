@@ -9,7 +9,8 @@ from asyncio import get_event_loop
 from hashlib import sha256
 from http import HTTPStatus
 from json import dumps
-from typing import Optional
+from typing import Optional, List
+from dataclasses import asdict
 
 import aiohttp
 from aiohttp import ClientSession
@@ -18,6 +19,7 @@ from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, cr
 
 from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
 from zepben.eas.client.study import Study
+from zepben.eas.client.ingestor import IngestorConfigInput
 from zepben.eas.client.util import construct_url
 from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod, ForecastConfig, FeederConfigs
 
@@ -815,6 +817,50 @@ class EasClient:
                     response = await response.text()
                 return response
 
+    def run_ingestor(self, run_config: List[IngestorConfigInput]):
+        """
+        Send request to perform an ingestor run
+        :param run_config: A list of IngestorConfigInput
+        :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
+        """
+        return get_event_loop().run_until_complete(
+            self.async_run_ingestor(run_config))
+
+    async def async_run_ingestor(self, run_config: List[IngestorConfigInput]):
+        """
+        Send asynchronous request to perform an ingestor run
+        :param run_config: A list of IngestorConfigInput
+        :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    mutation executeIngestor($runConfig: [IngestorConfigInput!]) {
+                        executeIngestor(runConfig: $runConfig)
+                    }
+                """,
+                "variables": {
+                    "runConfig": [asdict(x) for x in run_config],
+                }
+            }
+
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
     def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: Optional[str] = None):
         """
         Send request to run hosting capacity calibration
@@ -986,17 +1032,17 @@ class EasClient:
                             },
                             "modulesConfiguration": {
                                 "common": {
-                                    **({ "loadTime": config.load_time.time.isoformat(),
-                                          "overrides": config.load_time.load_overrides and [
-                                               {
-                                                   "loadId": key,
-                                                   "loadWattsOverride": value.load_watts,
-                                                   "genWattsOverride": value.gen_watts,
-                                                   "loadVarOverride": value.load_var,
-                                                   "genVarOverride": value.gen_var,
-                                               } for key, value in config.load_time.load_overrides.items()
-                                           ]
-                                       } if isinstance(config.load_time, FixedTime) else {}),
+                                    **({"loadTime": config.load_time.time.isoformat(),
+                                        "overrides": config.load_time.load_overrides and [
+                                            {
+                                                "loadId": key,
+                                                "loadWattsOverride": value.load_watts,
+                                                "genWattsOverride": value.gen_watts,
+                                                "loadVarOverride": value.load_var,
+                                                "genVarOverride": value.gen_var,
+                                            } for key, value in config.load_time.load_overrides.items()
+                                        ]
+                                        } if isinstance(config.load_time, FixedTime) else {}),
                                     **({"timePeriod": {
                                         "startTime": config.load_time.start_time.isoformat(),
                                         "endTime": config.load_time.end_time.isoformat(),

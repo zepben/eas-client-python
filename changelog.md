@@ -4,7 +4,7 @@
 * None.
 
 ### New Features
-* None.
+* Add support for running ingestors via the `executeIngestor` graphql mutation.
 
 ### Enhancements
 * None.
