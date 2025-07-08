@@ -2,11 +2,12 @@
 ## [0.19.0] - UNRELEASED
 ### Breaking Changes
 * `FixedTimeLoadOverride` now takes in optional list of floats instead of optional float for its variable.
-
-### New Features
 * Modification to `ModelConfig` to allow more customization for model generation
   * Added support for separate `vMinPu` and `vMaxPu` with load and generators.
   * Added support for `ctPrimScalingFactor` which is required when calculating new `ctPrim` value when feeder proxy loads are not in use.
+
+### New Features
+* None.
 
 ### Enhancements
 * None.
