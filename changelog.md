@@ -4,7 +4,8 @@
 * None.
 
 ### New Features
-* None.
+* Added basic client method `run_ingestor` to run ingestors via EAS's `executeIngestor` graphql mutation. 
+* Added basic client methods `get_ingestor_run` and `get_ingestor_run_list` to retrieve the records of previous ingestor runs.
 
 ### Enhancements
 * None.
