@@ -904,8 +904,10 @@ OPENDSS_CONFIG = OpenDssConfig(
     generator_config=GeneratorConfig(
         ModelConfig(
             vm_pu=1.0,
-            vmin_pu=0.80,
-            vmax_pu=1.15,
+            load_vmin_pu=0.80,
+            load_vmax_pu=1.15,
+            gen_vmin_pu=0.50,
+            gen_vmax_pu=2.00,
             load_model=1,
             collapse_swer=False,
             calibration=False,
@@ -954,7 +956,8 @@ OPENDSS_CONFIG = OpenDssConfig(
             default_gen_watts=[50.0, 150.0, 250.0],
             default_load_var=[10.0, 20.0, 30.0],
             default_gen_var=[5.0, 15.0, 25.0],
-            transformer_tap_settings="tap-3"
+            transformer_tap_settings="tap-3",
+            ct_prim_scaling_factor= 2.0
         ),
         SolveConfig(
             norm_vmin_pu=0.9,
