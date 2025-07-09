@@ -20,7 +20,8 @@
 * `FixedTimeLoadOverride` now takes in optional list of floats instead of optional float for its variable.
 
 ### New Features
-* None.
+* Added `FeederLoadAnalysisInput` which holds the config for feeder-load-analysis studies.
+  * These then can be utilized in the `run_feeder_load_analysis_report` and `async_run_feeder_load_analysis_report` functions
 
 ### Enhancements
 * None.
