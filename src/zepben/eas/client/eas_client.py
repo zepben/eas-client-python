@@ -19,7 +19,7 @@ from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, cr
 
 from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
 from zepben.eas.client.study import Study
-from zepben.eas.client.ingestor import IngestorConfigInput
+from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput
 from zepben.eas.client.util import construct_url
 from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod, ForecastConfig, FeederConfigs
 
@@ -843,6 +843,180 @@ class EasClient:
                 """,
                 "variables": {
                     "runConfig": [asdict(x) for x in run_config],
+                }
+            }
+
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def get_ingestor_run(self, ingestor_run_id: int):
+        """
+        Send request to perform an ingestor run
+        :param ingestor_run_id: A list of IngestorConfigInput
+        :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
+        """
+        return get_event_loop().run_until_complete(
+            self.async_get_ingestor_run(ingestor_run_id))
+
+    async def async_get_ingestor_run(self, ingestor_run_id: int):
+        """
+        Send asynchronous request to perform an ingestor run
+        :param ingestor_run_id: A list of IngestorConfigInput
+        :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    query getIngestorRun($id: Int!) {
+                        getIngestorRun(id: $id) {
+                        id
+                        containerRuntimeType,
+                        payload,
+                        token,
+                        status,
+                        startedAt,
+                        statusLastUpdatedAt,
+                        completedAt
+                        }
+                    }
+                """,
+                "variables": {
+                    "id": ingestor_run_id,
+                }
+            }
+
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def get_ingestor_run(self, ingestor_run_id: int):
+        """
+        Send request to perform an ingestor run
+        :param ingestor_run_id: A list of IngestorConfigInput
+        :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
+        """
+        return get_event_loop().run_until_complete(
+            self.async_get_ingestor_run(ingestor_run_id))
+
+    async def async_get_ingestor_run(self, ingestor_run_id: int):
+        """
+        Send asynchronous request to perform an ingestor run
+        :param ingestor_run_id: A list of IngestorConfigInput
+        :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    query getIngestorRun($id: Int!) {
+                        getIngestorRun(id: $id) {
+                        id
+                        containerRuntimeType,
+                        payload,
+                        token,
+                        status,
+                        startedAt,
+                        statusLastUpdatedAt,
+                        completedAt
+                        }
+                    }
+                """,
+                "variables": {
+                    "id": ingestor_run_id,
+                }
+            }
+
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def get_ingestor_run_list(self, query_filter: Optional[IngestorRunsFilterInput] = None,
+                              query_sort: Optional[IngestorRunsSortCriteriaInput] = None):
+        """
+        Send request to perform an ingestor run
+        :param ingestor_run_id: A list of IngestorConfigInput
+        :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
+        """
+        return get_event_loop().run_until_complete(
+            self.async_get_ingestor_run_list(query_filter, query_sort))
+
+    async def async_get_ingestor_run_list(self, query_filter: Optional[IngestorRunsFilterInput] = None,
+                              query_sort: Optional[IngestorRunsSortCriteriaInput] = None):
+        """
+        Send asynchronous request to perform an ingestor run
+        :param ingestor_run_id: A list of IngestorConfigInput
+        :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
+        """
+
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
+                        listIngestorRuns(filter: $filter, sort: $sort) {
+                        id
+                        containerRuntimeType,
+                        payload,
+                        token,
+                        status,
+                        startedAt,
+                        statusLastUpdatedAt,
+                        completedAt
+                        }
+                    }
+                """,
+                "variables": {
+                    **({"filter": {
+                        "id": query_filter.id,
+                        "status": query_filter.status,
+                        "completed": query_filter.completed,
+                        "containerRuntimeType": query_filter.containerRuntimeType and [state.name for state in query_filter.containerRuntimeType]
+                    }} if query_filter else {}),
+                    **({"sort": {
+                        "status": query_sort.status and query_sort.status.name,
+                        "startedAt": query_sort.startedAt and query_sort.startedAt.name,
+                        "statusLastUpdatedAt": query_sort.statusLastUpdatedAt and query_sort.statusLastUpdatedAt.name,
+                        "completedAt": query_sort.completedAt and query_sort.completedAt.name,
+                        "containerRuntimeType": query_sort.containerRuntimeType and query_sort.containerRuntimeType.name,
+                    }} if query_sort else {})
                 }
             }
 

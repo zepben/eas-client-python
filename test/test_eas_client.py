@@ -19,6 +19,7 @@ from zepben.auth import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study, SolveConfig
 from zepben.eas import FeederConfig, ForecastConfig, FixedTimeLoadOverride
+from zepben.eas.client.ingestor import IngestorConfigInput
 from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, OpenDssModelState, \
     GetOpenDssModelsSortCriteriaInput, \
     Order
@@ -1264,3 +1265,28 @@ def test_get_opendss_model_download_url_valid_certificate_success(ca: trustme.CA
         res = eas_client.get_opendss_model_download_url(1)
         httpserver.check_assertions()
         assert res == "https://example.com/download/1"
+
+
+def run_ingestor_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert query == "mutation executeIngestor($runConfig: [IngestorConfigInput!]) { executeIngestor(runConfig: $runConfig) }"
+    assert actual_body['variables'] == {'runConfig': [{'key': 'random.config', 'value': 'random.value'},
+                                                      {'key': 'dataStorePath', 'value': '/some/place/with/data'}]}
+
+    return Response(json.dumps({"executeIngestor": 5}), status=200, content_type="application/json")
+
+
+def test_run_ingestor_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        run_ingestor_request_handler)
+    res = eas_client.run_ingestor([IngestorConfigInput("random.config", "random.value"), IngestorConfigInput("dataStorePath", "/some/place/with/data")])
+    httpserver.check_assertions()
+    assert res == {"executeIngestor": 5}
