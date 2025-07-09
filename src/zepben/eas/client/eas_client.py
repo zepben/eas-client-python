@@ -16,6 +16,7 @@ from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
 from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, create_token_fetcher_managed_identity
 
+from zepben.eas.client.feeder_load_analysis_input import FeederLoadAnalysisInput
 from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
@@ -750,6 +751,62 @@ class EasClient:
                     response = await response.text()
                 return response
 
+    def run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
+        """
+        Send request to evolve app server to run a feeder load analysis study
+
+        :param feeder_load_analysis_input:: An instance of the `FeederLoadAnalysisConfig` data class representing the configuration for the run
+        :return: The HTTP response received from the Evolve App Server after attempting to run work package
+        """
+        return get_event_loop().run_until_complete(
+            self.async_run_feeder_load_analysis_report(feeder_load_analysis_input))
+
+    async def async_run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
+        """
+        Asynchronously send request to evolve app server to run a feeder load analysis study
+
+        :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query":
+                    """
+                    mutation runFeederLoadAnalysis($input: FeederLoadAnalysisInput!) {
+                        runFeederLoadAnalysis(input: $input)
+                    }
+                """,
+                "variables": {
+                    "input": {
+                        "feeders": feeder_load_analysis_input.feeders,
+                        "startDate": feeder_load_analysis_input.startDate,
+                        "endDate": feeder_load_analysis_input.endDate,
+                        "fetchLvNetwork": feeder_load_analysis_input.fetchLvNetwork,
+                        "processFeederLoads": feeder_load_analysis_input.processFeederLoads,
+                        "processCoincidentLoads": feeder_load_analysis_input.processCoincidentLoads,
+                        "produceBasicReport": feeder_load_analysis_input.produceBasicReport,
+                        "produceConductorReport": feeder_load_analysis_input.produceConductorReport,
+                        "aggregateAtFeederLevel": feeder_load_analysis_input.aggregateAtFeederLevel,
+                        "output": feeder_load_analysis_input.output
+                    }
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
     def upload_study(self, study: Study):
         """
         Uploads a new study to the Evolve App Server
@@ -986,17 +1043,17 @@ class EasClient:
                             },
                             "modulesConfiguration": {
                                 "common": {
-                                    **({ "loadTime": config.load_time.time.isoformat(),
-                                          "overrides": config.load_time.load_overrides and [
-                                               {
-                                                   "loadId": key,
-                                                   "loadWattsOverride": value.load_watts,
-                                                   "genWattsOverride": value.gen_watts,
-                                                   "loadVarOverride": value.load_var,
-                                                   "genVarOverride": value.gen_var,
-                                               } for key, value in config.load_time.load_overrides.items()
-                                           ]
-                                       } if isinstance(config.load_time, FixedTime) else {}),
+                                    **({"loadTime": config.load_time.time.isoformat(),
+                                        "overrides": config.load_time.load_overrides and [
+                                            {
+                                                "loadId": key,
+                                                "loadWattsOverride": value.load_watts,
+                                                "genWattsOverride": value.gen_watts,
+                                                "loadVarOverride": value.load_var,
+                                                "genVarOverride": value.gen_var,
+                                            } for key, value in config.load_time.load_overrides.items()
+                                        ]
+                                        } if isinstance(config.load_time, FixedTime) else {}),
                                     **({"timePeriod": {
                                         "startTime": config.load_time.start_time.isoformat(),
                                         "endTime": config.load_time.end_time.isoformat(),
