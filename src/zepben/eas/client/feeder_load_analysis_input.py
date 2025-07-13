@@ -21,34 +21,34 @@ class FeederLoadAnalysisInput:
     substations: Optional[List[str]]
     """The mRIDs of substations to solve for feeder load analysis"""
 
-    subGeographicalRegions: Optional[List[str]]
+    sub_geographical_regions: Optional[List[str]]
     """The mRIDs of sub-Geographical Region to solve for feeder load analysis"""
 
-    geographicalRegions: Optional[List[str]]
+    geographical_regions: Optional[List[str]]
     """The mRIDs of Geographical Region to solve for feeder load analysis"""
 
-    startDate: str
+    start_date: str
     """Start date for this analysis"""
 
-    endDate: str
+    end_date: str
     """End date for this analysis"""
 
-    fetchLvNetwork: bool
+    fetch_lv_network: bool
     """Whether to stop analysis at distribution transformer"""
 
-    processFeederLoads: bool
+    process_feeder_loads: bool
     """Whether to include values corresponding to feeder event time points in the report"""
 
-    processCoincidentLoads: bool
+    process_coincident_loads: bool
     """Whether to include values corresponding to conductor event time points in the report"""
 
-    produceBasicReport: bool
+    produce_basic_report: bool
     """Request for a basic report"""
 
-    produceConductorReport: bool
+    produce_conductor_report: bool
     """Request for an extensive report"""
 
-    aggregateAtFeederLevel: bool
+    aggregate_at_feeder_level: bool
     """Request for a report which aggregate all downstream load at the feeder level"""
 
     output: str
