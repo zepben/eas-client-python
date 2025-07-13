@@ -780,14 +780,17 @@ class EasClient:
                 "variables": {
                     "input": {
                         "feeders": feeder_load_analysis_input.feeders,
-                        "startDate": feeder_load_analysis_input.startDate,
-                        "endDate": feeder_load_analysis_input.endDate,
-                        "fetchLvNetwork": feeder_load_analysis_input.fetchLvNetwork,
-                        "processFeederLoads": feeder_load_analysis_input.processFeederLoads,
-                        "processCoincidentLoads": feeder_load_analysis_input.processCoincidentLoads,
-                        "produceBasicReport": feeder_load_analysis_input.produceBasicReport,
-                        "produceConductorReport": feeder_load_analysis_input.produceConductorReport,
-                        "aggregateAtFeederLevel": feeder_load_analysis_input.aggregateAtFeederLevel,
+                        "substations": feeder_load_analysis_input.substations,
+                        "subGeographicalRegions": feeder_load_analysis_input.sub_geographical_regions,
+                        "geographicalRegions": feeder_load_analysis_input.feeders,
+                        "startDate": feeder_load_analysis_input.start_date,
+                        "endDate": feeder_load_analysis_input.end_date,
+                        "fetchLvNetwork": feeder_load_analysis_input.fetch_lv_network,
+                        "processFeederLoads": feeder_load_analysis_input.process_feeder_loads,
+                        "processCoincidentLoads": feeder_load_analysis_input.process_coincident_loads,
+                        "produceBasicReport": feeder_load_analysis_input.produce_basic_report,
+                        "produceConductorReport": feeder_load_analysis_input.produce_conductor_report,
+                        "aggregateAtFeederLevel": feeder_load_analysis_input.aggregate_at_feeder_level,
                         "output": feeder_load_analysis_input.output
                     }
                 }
