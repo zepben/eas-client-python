@@ -1325,3 +1325,35 @@ class EasClient:
                 else:
                     response = await response.text()
                 return response
+
+    def get_opendss_model(self, model_id: int):
+        """
+        Retrieve information of a hosting capacity calibration run
+        :param model_id: The openDss model export ID
+        :return: The HTTP response received from the Evolve App Server after requesting the openDss model info
+        """
+        return get_event_loop().run_until_complete(self.async_get_opendss_model(model_id))
+
+    async def async_get_opendss_model(self, model_id: int):
+        """
+        Retrieve information of a hosting capacity calibration run
+        :param model_id: The openDss model export ID
+        :return: The HTTP response received from the Evolve App Server after requesting the openDss model info
+        """
+
+        offset = 0
+        page_size = 20
+
+        while True:
+            response = await self.async_get_paged_opendss_models(page_size, offset)
+            total_count = int(response["data"]["pagedOpenDssModels"]["totalCount"])
+            page_count = len(response["data"]["pagedOpenDssModels"]["models"])
+            for model in response["data"]["pagedOpenDssModels"]["models"]:
+                if model["id"] == model_id:
+                    return model
+            offset += page_count
+
+            if offset >= total_count:
+                break
+
+        raise ValueError(f"Model id:{model_id} was not found in EAS database.")

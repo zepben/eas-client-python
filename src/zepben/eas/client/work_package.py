@@ -172,7 +172,7 @@ class TimePeriod:
     def _validate(start_time: datetime, end_time: datetime):
         ddelta = (end_time - start_time).days
 
-        if ddelta > 365:
+        if ddelta > 367:
             raise ValueError("The difference between 'start_time' and 'end_time' cannot be greater than a year.")
 
         if ddelta < 1:
