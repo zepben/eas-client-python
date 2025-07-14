@@ -1,5 +1,5 @@
 # EAS Python client
-## [0.19.0] - UNRELEASED
+## [0.19.0] - 2025-07-14
 ### Breaking Changes
 * `FixedTimeLoadOverride` now takes in optional list of floats instead of optional float for its variable.
 
