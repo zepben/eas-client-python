@@ -42,12 +42,6 @@ class FeederLoadAnalysisInput:
     process_coincident_loads: bool
     """Whether to include values corresponding to conductor event time points in the report"""
 
-    produce_basic_report: bool
-    """Request for a basic report"""
-
-    produce_conductor_report: bool
-    """Request for an extensive report"""
-
     aggregate_at_feeder_level: bool
     """Request for a report which aggregate all downstream load at the feeder level"""
 

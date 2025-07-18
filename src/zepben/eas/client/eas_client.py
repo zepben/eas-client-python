@@ -788,8 +788,7 @@ class EasClient:
                         "fetchLvNetwork": feeder_load_analysis_input.fetch_lv_network,
                         "processFeederLoads": feeder_load_analysis_input.process_feeder_loads,
                         "processCoincidentLoads": feeder_load_analysis_input.process_coincident_loads,
-                        "produceBasicReport": feeder_load_analysis_input.produce_basic_report,
-                        "produceConductorReport": feeder_load_analysis_input.produce_conductor_report,
+                        "produceConductorReport": True, # We currently only support conductor report
                         "aggregateAtFeederLevel": feeder_load_analysis_input.aggregate_at_feeder_level,
                         "output": feeder_load_analysis_input.output
                     }
