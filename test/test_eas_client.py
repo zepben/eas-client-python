@@ -780,7 +780,17 @@ def run_opendss_export_request_handler(request):
                 },
                 "modulesConfiguration": {
                     "common": {
-                        "timePeriod": {
+                        **({"fixedTime": {
+                            "loadTime": "2022-04-01T00:00:00",
+                            "overrides": [{
+                                'loadId': 'meter1',
+                                'loadWattsOverride': [1.0],
+                                'genWattsOverride': [2.0],
+                                'loadVarOverride': [3.0],
+                                'genVarOverride': [4.0]
+                            }]
+                        }} if isinstance(OPENDSS_CONFIG.load_time, FixedTime) else
+                           {"timePeriod": {
                             "startTime": "2022-04-01T00:00:00",
                             "endTime": "2023-04-01T00:00:00",
                             "overrides": [{
@@ -790,7 +800,7 @@ def run_opendss_export_request_handler(request):
                                 'loadVarOverride': [3.0],
                                 'genVarOverride': [4.0]
                             }]
-                        }
+                        }})
                     },
                     "generator": {
                         "model": {
@@ -1005,6 +1015,7 @@ def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver
             ca_filename=ca_filename
         )
 
+        OPENDSS_CONFIG.load_time = FixedTime(datetime(2022, 4, 1), {"meter1": FixedTimeLoadOverride([1.0], [2.0], [3.0], [4.0])})
         httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
             run_opendss_export_request_handler)
         res = eas_client.run_opendss_export(OPENDSS_CONFIG)
