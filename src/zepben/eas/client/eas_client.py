@@ -16,6 +16,7 @@ from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
 from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, create_token_fetcher_managed_identity
 
+from zepben.eas.client.feeder_load_analysis_input import FeederLoadAnalysisInput
 from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
@@ -30,20 +31,20 @@ class EasClient:
     """
 
     def __init__(
-            self,
-            host: str,
-            port: int,
-            protocol: str = "https",
-            client_id: Optional[str] = None,
-            username: Optional[str] = None,
-            password: Optional[str] = None,
-            access_token: Optional[str] = None,
-            client_secret: Optional[str] = None,
-            token_fetcher: Optional[ZepbenTokenFetcher] = None,
-            verify_certificate: bool = True,
-            ca_filename: Optional[str] = None,
-            session: ClientSession = None,
-            json_serialiser=None
+        self,
+        host: str,
+        port: int,
+        protocol: str = "https",
+        client_id: Optional[str] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        access_token: Optional[str] = None,
+        client_secret: Optional[str] = None,
+        token_fetcher: Optional[ZepbenTokenFetcher] = None,
+        verify_certificate: bool = True,
+        ca_filename: Optional[str] = None,
+        session: ClientSession = None,
+        json_serialiser=None
     ):
         """
         Construct a client for the Evolve App Server. If the server is HTTPS, authentication may be configured.
@@ -414,10 +415,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                    headers=self._get_request_headers(),
-                    json=json,
-                    ssl=sslcontext if self._verify_certificate else False
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     response = await response.json()
@@ -645,10 +646,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                    headers=self._get_request_headers(),
-                    json=json,
-                    ssl=sslcontext if self._verify_certificate else False
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     response = await response.json()
@@ -687,10 +688,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                    headers=self._get_request_headers(),
-                    json=json,
-                    ssl=sslcontext if self._verify_certificate else False
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     response = await response.json()
@@ -739,10 +740,68 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                    headers=self._get_request_headers(),
-                    json=json,
-                    ssl=sslcontext if self._verify_certificate else False
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    response = await response.json()
+                else:
+                    response = await response.text()
+                return response
+
+    def run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
+        """
+        Send request to evolve app server to run a feeder load analysis study
+
+        :param feeder_load_analysis_input:: An instance of the `FeederLoadAnalysisConfig` data class representing the configuration for the run
+        :return: The HTTP response received from the Evolve App Server after attempting to run work package
+        """
+        return get_event_loop().run_until_complete(
+            self.async_run_feeder_load_analysis_report(feeder_load_analysis_input))
+
+    async def async_run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
+        """
+        Asynchronously send request to evolve app server to run a feeder load analysis study
+
+        :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query":
+                    """
+                    mutation runFeederLoadAnalysis($input: FeederLoadAnalysisInput!) {
+                        runFeederLoadAnalysis(input: $input)
+                    }
+                """,
+                "variables": {
+                    "input": {
+                        "feeders": feeder_load_analysis_input.feeders,
+                        "substations": feeder_load_analysis_input.substations,
+                        "subGeographicalRegions": feeder_load_analysis_input.sub_geographical_regions,
+                        "geographicalRegions": feeder_load_analysis_input.feeders,
+                        "startDate": feeder_load_analysis_input.start_date,
+                        "endDate": feeder_load_analysis_input.end_date,
+                        "fetchLvNetwork": feeder_load_analysis_input.fetch_lv_network,
+                        "processFeederLoads": feeder_load_analysis_input.process_feeder_loads,
+                        "processCoincidentLoads": feeder_load_analysis_input.process_coincident_loads,
+                        "produceConductorReport": True, # We currently only support conductor report
+                        "aggregateAtFeederLevel": feeder_load_analysis_input.aggregate_at_feeder_level,
+                        "output": feeder_load_analysis_input.output
+                    }
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     response = await response.json()
@@ -804,10 +863,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                    headers=self._get_request_headers(),
-                    json=json,
-                    ssl=sslcontext if self._verify_certificate else False
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     response = await response.json()
@@ -852,10 +911,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                    headers=self._get_request_headers(),
-                    json=json,
-                    ssl=sslcontext if self._verify_certificate else False
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     response = await response.json()
@@ -903,10 +962,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                    headers=self._get_request_headers(),
-                    json=json,
-                    ssl=sslcontext if self._verify_certificate else False
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     response = await response.json()
@@ -940,10 +999,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                    headers=self._get_request_headers(),
-                    json=json,
-                    ssl=sslcontext if self._verify_certificate else False
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     response = await response.json()
@@ -1094,10 +1153,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                    headers=self._get_request_headers(),
-                    json=json,
-                    ssl=sslcontext if self._verify_certificate else False
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     response = await response.json()
@@ -1106,11 +1165,11 @@ class EasClient:
                 return response
 
     def get_paged_opendss_models(
-            self,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None,
-            query_filter: Optional[GetOpenDssModelsFilterInput] = None,
-            query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
+        self,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        query_filter: Optional[GetOpenDssModelsFilterInput] = None,
+        query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
         """
         Retrieve a paginated opendss export run information
         :param limit: The number of opendss export runs to retrieve
@@ -1123,11 +1182,11 @@ class EasClient:
             self.async_get_paged_opendss_models(limit, offset, query_filter, query_sort))
 
     async def async_get_paged_opendss_models(
-            self,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None,
-            query_filter: Optional[GetOpenDssModelsFilterInput] = None,
-            query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
+        self,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        query_filter: Optional[GetOpenDssModelsFilterInput] = None,
+        query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
         """
         Retrieve a paginated opendss export run information
         :param limit: The number of opendss export runs to retrieve
@@ -1281,10 +1340,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                    headers=self._get_request_headers(),
-                    json=json,
-                    ssl=sslcontext if self._verify_certificate else False
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     response = await response.json()
@@ -1314,11 +1373,11 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.get(
-                    construct_url(protocol=self._protocol, host=self._host, port=self._port,
-                                  path=f"/api/opendss-model/{run_id}"),
-                    headers=self._get_request_headers(),
-                    ssl=sslcontext if self._verify_certificate else False,
-                    allow_redirects=False
+                construct_url(protocol=self._protocol, host=self._host, port=self._port,
+                              path=f"/api/opendss-model/{run_id}"),
+                headers=self._get_request_headers(),
+                ssl=sslcontext if self._verify_certificate else False,
+                allow_redirects=False
             ) as response:
                 if response.status == HTTPStatus.FOUND:
                     response = response.headers["Location"]
