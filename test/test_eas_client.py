@@ -863,7 +863,8 @@ def run_opendss_export_request_handler(request):
                             "defaultGenWatts": [50.0, 150.0, 250.0],
                             "defaultLoadVar": [10.0, 20.0, 30.0],
                             "defaultGenVar": [5.0, 15.0, 25.0],
-                            "transformerTapSettings": "tap-3"
+                            "transformerTapSettings": "tap-3",
+                            "ctPrimScalingFactor": 2.0
                         },
                         "solve": {
                             "normVMinPu": 0.9,
@@ -959,7 +960,7 @@ OPENDSS_CONFIG = OpenDssConfig(
             default_load_var=[10.0, 20.0, 30.0],
             default_gen_var=[5.0, 15.0, 25.0],
             transformer_tap_settings="tap-3",
-            ct_prim_scaling_factor= 2.0
+            ct_prim_scaling_factor=2.0
         ),
         SolveConfig(
             norm_vmin_pu=0.9,
@@ -1124,6 +1125,7 @@ get_paged_opendss_models_query = """
                                     defaultLoadVar
                                     defaultGenVar
                                     transformerTapSettings
+                                    ctPrimScalingFactor
                                 }
                                 solve {
                                     normVMinPu

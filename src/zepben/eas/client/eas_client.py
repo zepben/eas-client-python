@@ -1131,7 +1131,7 @@ class EasClient:
                                         "defaultLoadVar": config.generator_config.model.default_load_var,
                                         "defaultGenVar": config.generator_config.model.default_gen_var,
                                         "transformerTapSettings": config.generator_config.model.transformer_tap_settings,
-                                        "ctPrimScalingFactor": work_package.generator_config.model.ct_prim_scaling_factor,
+                                        "ctPrimScalingFactor": config.generator_config.model.ct_prim_scaling_factor,
                                     }} if config.generator_config.model else {}),
                                     **({"solve": {
                                         "normVMinPu": config.generator_config.solve.norm_vmin_pu,
@@ -1303,7 +1303,7 @@ class EasClient:
                                             defaultGenWatts
                                             defaultLoadVar
                                             defaultGenVar
-                                            transformerTapSettings,
+                                            transformerTapSettings
                                             ctPrimScalingFactor
                                         }
                                         solve {
