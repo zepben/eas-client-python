@@ -960,6 +960,8 @@ class EasClient:
                             startAt
                             completedAt
                             status
+                            feeders
+                            calibrationWorkPackageConfig
                         }
                     }
                 """,
