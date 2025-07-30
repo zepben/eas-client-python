@@ -805,8 +805,10 @@ def run_opendss_export_request_handler(request):
                     "generator": {
                         "model": {
                             "vmPu": 1.0,
-                            "vMinPu": 0.80,
-                            "vMaxPu": 1.15,
+                            "loadVMinPu": 0.80,
+                            "loadVMaxPu": 1.15,
+                            "genVMinPu": 0.50,
+                            "genVMaxPu": 2.00,
                             "loadModel": 1,
                             "collapseSWER": False,
                             "calibration": False,
@@ -1073,8 +1075,10 @@ get_paged_opendss_models_query = """
                             generator {
                                 model {
                                     vmPu
-                                    vMinPu
-                                    vMaxPu
+                                    loadVMinPu
+                                    loadVMaxPu
+                                    genVMinPu
+                                    genVMaxPu
                                     loadModel
                                     collapseSWER
                                     calibration

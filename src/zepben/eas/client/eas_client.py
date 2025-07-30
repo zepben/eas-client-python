@@ -1253,8 +1253,10 @@ class EasClient:
                                     generator {
                                         model {
                                             vmPu
-                                            vMinPu
-                                            vMaxPu
+                                            loadVMinPu
+                                            loadVMaxPu
+                                            genVMinPu
+                                            genVMaxPu
                                             loadModel
                                             collapseSWER
                                             calibration
