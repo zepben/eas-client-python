@@ -1404,16 +1404,16 @@ class EasClient:
 
     def get_opendss_model(self, model_id: int):
         """
-        Retrieve information of a hosting capacity calibration run
-        :param model_id: The openDss model export ID
+        Retrieve information of a OpenDss model export
+        :param model_id: The OpenDss model export ID
         :return: The HTTP response received from the Evolve App Server after requesting the openDss model info
         """
         return get_event_loop().run_until_complete(self.async_get_opendss_model(model_id))
 
     async def async_get_opendss_model(self, model_id: int):
         """
-        Retrieve information of a hosting capacity calibration run
-        :param model_id: The openDss model export ID
+        Retrieve information of a OpenDss model export
+        :param model_id: The OpenDss model export ID
         :return: The HTTP response received from the Evolve App Server after requesting the openDss model info
         """
 
