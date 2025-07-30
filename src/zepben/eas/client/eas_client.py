@@ -504,8 +504,10 @@ class EasClient:
                         "generatorConfig": work_package.generator_config and {
                             "model": work_package.generator_config.model and {
                                 "vmPu": work_package.generator_config.model.vm_pu,
-                                "vMinPu": work_package.generator_config.model.load_vmin_pu,
-                                "vMaxPu": work_package.generator_config.model.load_vmax_pu,
+                                "loadVMinPu": work_package.generator_config.model.load_vmin_pu,
+                                "loadVMaxPu": work_package.generator_config.model.load_vmax_pu,
+                                "genVMinPu": work_package.generator_config.model.gen_vmin_pu,
+                                "genVMaxPu": work_package.generator_config.model.gen_vmax_pu,
                                 "loadModel": work_package.generator_config.model.load_model,
                                 "collapseSWER": work_package.generator_config.model.collapse_swer,
                                 "calibration": work_package.generator_config.model.calibration,
@@ -1076,8 +1078,10 @@ class EasClient:
                                 **({"generator": {
                                     **({"model": {
                                         "vmPu": config.generator_config.model.vm_pu,
-                                        "vMinPu": config.generator_config.model.load_vmin_pu,
-                                        "vMaxPu": config.generator_config.model.load_vmax_pu,
+                                        "loadVMinPu": config.generator_config.model.load_vmin_pu,
+                                        "loadVMaxPu": config.generator_config.model.load_vmax_pu,
+                                        "genVMinPu": config.generator_config.model.gen_vmin_pu,
+                                        "genVMaxPu": config.generator_config.model.gen_vmax_pu,
                                         "loadModel": config.generator_config.model.load_model,
                                         "collapseSWER": config.generator_config.model.collapse_swer,
                                         "calibration": config.generator_config.model.calibration,
