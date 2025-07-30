@@ -609,8 +609,8 @@ def hosting_capacity_run_calibration_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal) }"
-    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION", "calibrationTimeLocal": None}
+    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!]) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders) }"
+    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION", "calibrationTimeLocal": None, "feeders": None}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
@@ -663,7 +663,7 @@ def get_hosting_capacity_run_calibration_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == "query getCalibrationRun($id: ID!) { getCalibrationRun(id: $id) { id name workflowId runId calibrationTimeLocal startAt completedAt status } }"
+    assert query == "query getCalibrationRun($id: ID!) { getCalibrationRun(id: $id) { id name workflowId runId calibrationTimeLocal startAt completedAt status feeders calibrationWorkPackageConfig } }"
     assert actual_body['variables'] == {"id": "calibration-id"}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
@@ -717,9 +717,10 @@ def hosting_capacity_run_calibration_with_calibration_time_request_handler(reque
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal) }"
+    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!]) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders) }"
     assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION",
-                                        "calibrationTimeLocal": "1992-01-28T00:00:20"}
+                                        "calibrationTimeLocal": "1992-01-28T00:00:20",
+                                        "feeders": ["one", "two"]}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
@@ -733,7 +734,7 @@ def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_succes
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
         hosting_capacity_run_calibration_with_calibration_time_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", "1992-01-28T00:00:20")
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", "1992-01-28T00:00:20", ["one", "two"])
     httpserver.check_assertions()
     assert res == {"result": "success"}
 

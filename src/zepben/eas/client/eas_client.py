@@ -9,7 +9,7 @@ from asyncio import get_event_loop
 from hashlib import sha256
 from http import HTTPStatus
 from json import dumps
-from typing import Optional
+from typing import Optional, List
 
 import aiohttp
 from aiohttp import ClientSession
@@ -880,22 +880,24 @@ class EasClient:
                     response = await response.text()
                 return response
 
-    def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: Optional[str] = None):
+    def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: Optional[str] = None, feeders: Optional[List[str]] = None):
         """
         Send request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
         :param local_calibration_time: A string representation of the calibration time, in model time.
+        :param feeders: A list of feeder ID's to run the calibration over. If not supplied then the calibration is run over all feeders in the network.
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
         return get_event_loop().run_until_complete(
-            self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time))
+            self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time, feeders))
 
     async def async_run_hosting_capacity_calibration(self, calibration_name: str,
-                                                     calibration_time_local: Optional[str] = None):
+                                                     calibration_time_local: Optional[str] = None, feeders: Optional[List[str]] = None):
         """
         Send asynchronous request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
         :param calibration_time_local: A string representation of the calibration time, in model time.
+        :param feeders: A list of feeder ID's to run the calibration over. If not supplied then the calibration is run over all feeders in the network.
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
         with warnings.catch_warnings():
@@ -903,13 +905,14 @@ class EasClient:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             json = {
                 "query": """
-                    mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime) {
-                        runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal)
+                    mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!]) {
+                        runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders)
                     }
                 """,
                 "variables": {
                     "calibrationName": calibration_name,
-                    "calibrationTimeLocal": calibration_time_local
+                    "calibrationTimeLocal": calibration_time_local,
+                    "feeders": feeders
                 }
             }
 
@@ -957,6 +960,8 @@ class EasClient:
                             startAt
                             completedAt
                             status
+                            feeders
+                            calibrationWorkPackageConfig
                         }
                     }
                 """,
@@ -1399,16 +1404,16 @@ class EasClient:
 
     def get_opendss_model(self, model_id: int):
         """
-        Retrieve information of a hosting capacity calibration run
-        :param model_id: The openDss model export ID
+        Retrieve information of a OpenDss model export
+        :param model_id: The OpenDss model export ID
         :return: The HTTP response received from the Evolve App Server after requesting the openDss model info
         """
         return get_event_loop().run_until_complete(self.async_get_opendss_model(model_id))
 
     async def async_get_opendss_model(self, model_id: int):
         """
-        Retrieve information of a hosting capacity calibration run
-        :param model_id: The openDss model export ID
+        Retrieve information of a OpenDss model export
+        :param model_id: The OpenDss model export ID
         :return: The HTTP response received from the Evolve App Server after requesting the openDss model info
         """
 
