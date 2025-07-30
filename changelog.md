@@ -9,7 +9,7 @@
   * Added support for `ctPrimScalingFactor` which is required when calculating new `ctPrim` value when feeder proxy loads are not in use.
 
 ### Enhancements
-* None.
+* Supports passing a list of feeders to `run_hosting_capacity_calibration` to perform calibration on a subset of the network.
 
 ### Fixes
 * None.
