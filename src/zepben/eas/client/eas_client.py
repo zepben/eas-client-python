@@ -555,7 +555,8 @@ class EasClient:
                                 "defaultGenWatts": work_package.generator_config.model.default_gen_watts,
                                 "defaultLoadVar": work_package.generator_config.model.default_load_var,
                                 "defaultGenVar": work_package.generator_config.model.default_gen_var,
-                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings
+                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings,
+                                "ctPrimScalingFactor": work_package.generator_config.model.ct_prim_scaling_factor,
                             },
                             "solve": work_package.generator_config.solve and {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
@@ -1129,7 +1130,8 @@ class EasClient:
                                         "defaultGenWatts": config.generator_config.model.default_gen_watts,
                                         "defaultLoadVar": config.generator_config.model.default_load_var,
                                         "defaultGenVar": config.generator_config.model.default_gen_var,
-                                        "transformerTapSettings": config.generator_config.model.transformer_tap_settings
+                                        "transformerTapSettings": config.generator_config.model.transformer_tap_settings,
+                                        "ctPrimScalingFactor": work_package.generator_config.model.ct_prim_scaling_factor,
                                     }} if config.generator_config.model else {}),
                                     **({"solve": {
                                         "normVMinPu": config.generator_config.solve.norm_vmin_pu,
@@ -1301,7 +1303,8 @@ class EasClient:
                                             defaultGenWatts
                                             defaultLoadVar
                                             defaultGenVar
-                                            transformerTapSettings
+                                            transformerTapSettings,
+                                            ctPrimScalingFactor
                                         }
                                         solve {
                                             normVMinPu
