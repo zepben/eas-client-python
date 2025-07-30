@@ -145,8 +145,8 @@ class FixedTime:
     present for the provided time in the load database for accurate results.
     """
 
-    def __init__(self, time: datetime, load_overrides: Optional[Dict[str, FixedTimeLoadOverride]] = None):
-        self.time = time.replace(tzinfo=None)
+    def __init__(self, load_time: datetime, load_overrides: Optional[Dict[str, FixedTimeLoadOverride]] = None):
+        self.load_time = load_time.replace(tzinfo=None)
         self.load_overrides = load_overrides
 
 
@@ -212,17 +212,25 @@ class ModelConfig:
     vm_pu: Optional[float] = None
     """Voltage per-unit of voltage source."""
 
-    vmin_pu: Optional[float] = None
+    load_vmin_pu: Optional[float] = None
     """
-    Minimum per unit voltage for which the load model selected and generator model is assumed to apply. Below this value, the load/gen model reverts to a 
-    constant impedance model. For generator model used, this is used to determine the upper current limit. For example, if Vminpu is 0.90 then the current 
-    limit is (1/0.90) = 111%.
+    Minimum per unit voltage for which the load model selected is assumed to apply. Below this value, the load model reverts to a constant impedance model.
     """
 
-    vmax_pu: Optional[float] = None
+    load_vmax_pu: Optional[float] = None
     """
-    Maximum per unit voltage for which the load model selected and generator model is assumed to apply. Above this value, the load/gen model reverts to a 
-    constant impedance model.
+    Maximum per unit voltage for which the load model selected is assumed to apply. Above this value, the load model reverts to a constant impedance model.
+    """
+
+    gen_vmin_pu: Optional[float] = None
+    """
+    Minimum per unit voltage for which the generator model is assumed to apply. Below this value, the gen model reverts to a constant impedance model. 
+    For generator model used, this is used to determine the upper current limit. For example, if Vminpu is 0.90 then the current limit is (1/0.90) = 111%.
+    """
+
+    gen_vmax_pu: Optional[float] = None
+    """
+    Maximum per unit voltage for which the generator model is assumed to apply. Above this value, the gen model reverts to a constant impedance model.
     """
 
     load_model: Optional[int] = None
@@ -436,6 +444,11 @@ class ModelConfig:
     transformer_tap_settings: Optional[str] = None
     """
     The name of the set of distribution transformer tap settings to be applied to the model from an external source.
+    """
+
+    ct_prim_scaling_factor: Optional[float] = None
+    """
+    Optional setting for scaling factor of calculated CTPrim for zone sub transformers.
     """
 
 

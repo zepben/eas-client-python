@@ -805,8 +805,10 @@ def run_opendss_export_request_handler(request):
                     "generator": {
                         "model": {
                             "vmPu": 1.0,
-                            "vMinPu": 0.80,
-                            "vMaxPu": 1.15,
+                            "loadVMinPu": 0.80,
+                            "loadVMaxPu": 1.15,
+                            "genVMinPu": 0.50,
+                            "genVMaxPu": 2.00,
                             "loadModel": 1,
                             "collapseSWER": False,
                             "calibration": False,
@@ -861,7 +863,8 @@ def run_opendss_export_request_handler(request):
                             "defaultGenWatts": [50.0, 150.0, 250.0],
                             "defaultLoadVar": [10.0, 20.0, 30.0],
                             "defaultGenVar": [5.0, 15.0, 25.0],
-                            "transformerTapSettings": "tap-3"
+                            "transformerTapSettings": "tap-3",
+                            "ctPrimScalingFactor": 2.0
                         },
                         "solve": {
                             "normVMinPu": 0.9,
@@ -904,8 +907,10 @@ OPENDSS_CONFIG = OpenDssConfig(
     generator_config=GeneratorConfig(
         ModelConfig(
             vm_pu=1.0,
-            vmin_pu=0.80,
-            vmax_pu=1.15,
+            load_vmin_pu=0.80,
+            load_vmax_pu=1.15,
+            gen_vmin_pu=0.50,
+            gen_vmax_pu=2.00,
             load_model=1,
             collapse_swer=False,
             calibration=False,
@@ -954,7 +959,8 @@ OPENDSS_CONFIG = OpenDssConfig(
             default_gen_watts=[50.0, 150.0, 250.0],
             default_load_var=[10.0, 20.0, 30.0],
             default_gen_var=[5.0, 15.0, 25.0],
-            transformer_tap_settings="tap-3"
+            transformer_tap_settings="tap-3",
+            ct_prim_scaling_factor=2.0
         ),
         SolveConfig(
             norm_vmin_pu=0.9,
@@ -1070,8 +1076,10 @@ get_paged_opendss_models_query = """
                             generator {
                                 model {
                                     vmPu
-                                    vMinPu
-                                    vMaxPu
+                                    loadVMinPu
+                                    loadVMaxPu
+                                    genVMinPu
+                                    genVMaxPu
                                     loadModel
                                     collapseSWER
                                     calibration
@@ -1117,6 +1125,7 @@ get_paged_opendss_models_query = """
                                     defaultLoadVar
                                     defaultGenVar
                                     transformerTapSettings
+                                    ctPrimScalingFactor
                                 }
                                 solve {
                                     normVMinPu

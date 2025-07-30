@@ -234,7 +234,7 @@ class EasClient:
                                         ]
                                     } if isinstance(config.load_time, TimePeriod) else None,
                                     "fixedTime": config.load_time and {
-                                        "loadTime": config.load_time.time.isoformat(),
+                                        "loadTime": config.load_time.load_time.isoformat(),
                                         "overrides": config.load_time.load_overrides and [
                                             {
                                                 "loadId": key,
@@ -260,7 +260,7 @@ class EasClient:
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
                             } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
                             "fixedTime": work_package.syf_config.load_time and {
-                                "loadTime": work_package.syf_config.load_time.fetch_load_time.isoformat(),
+                                "loadTime": work_package.syf_config.load_time.load_time.isoformat(),
                                 "overrides": work_package.syf_config.load_time.load_overrides and {
                                     key: value.__dict__
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
@@ -270,8 +270,10 @@ class EasClient:
                         "generatorConfig": work_package.generator_config and {
                             "model": work_package.generator_config.model and {
                                 "vmPu": work_package.generator_config.model.vm_pu,
-                                "vMinPu": work_package.generator_config.model.vmin_pu,
-                                "vMaxPu": work_package.generator_config.model.vmax_pu,
+                                "loadVMinPu": work_package.generator_config.model.load_vmin_pu,
+                                "loadVMaxPu": work_package.generator_config.model.load_vmax_pu,
+                                "genVMinPu": work_package.generator_config.model.gen_vmin_pu,
+                                "genVMaxPu": work_package.generator_config.model.gen_vmax_pu,
                                 "loadModel": work_package.generator_config.model.load_model,
                                 "collapseSWER": work_package.generator_config.model.collapse_swer,
                                 "calibration": work_package.generator_config.model.calibration,
@@ -320,6 +322,7 @@ class EasClient:
                                 "defaultLoadVar": work_package.generator_config.model.default_load_var,
                                 "defaultGenVar": work_package.generator_config.model.default_gen_var,
                                 "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings,
+                                "ctPrimScalingFactor": work_package.generator_config.model.ct_prim_scaling_factor,
                             },
                             "solve": work_package.generator_config.solve and {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
@@ -465,7 +468,7 @@ class EasClient:
                                         ]
                                     } if isinstance(config.load_time, TimePeriod) else None,
                                     "fixedTime": config.load_time and {
-                                        "loadTime": config.load_time.time.isoformat(),
+                                        "loadTime": config.load_time.load_time.isoformat(),
                                         "overrides": config.load_time.load_overrides and [
                                             {
                                                 "loadId": key,
@@ -491,7 +494,7 @@ class EasClient:
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
                             } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
                             "fixedTime": work_package.syf_config.load_time and {
-                                "loadTime": work_package.syf_config.load_time.time.isoformat(),
+                                "loadTime": work_package.syf_config.load_time.load_time.isoformat(),
                                 "overrides": work_package.syf_config.load_time.load_overrides and {
                                     key: value.__dict__
                                     for key, value in work_package.syf_config.load_time.load_overrides.items()}
@@ -501,8 +504,10 @@ class EasClient:
                         "generatorConfig": work_package.generator_config and {
                             "model": work_package.generator_config.model and {
                                 "vmPu": work_package.generator_config.model.vm_pu,
-                                "vMinPu": work_package.generator_config.model.vmin_pu,
-                                "vMaxPu": work_package.generator_config.model.vmax_pu,
+                                "loadVMinPu": work_package.generator_config.model.load_vmin_pu,
+                                "loadVMaxPu": work_package.generator_config.model.load_vmax_pu,
+                                "genVMinPu": work_package.generator_config.model.gen_vmin_pu,
+                                "genVMaxPu": work_package.generator_config.model.gen_vmax_pu,
                                 "loadModel": work_package.generator_config.model.load_model,
                                 "collapseSWER": work_package.generator_config.model.collapse_swer,
                                 "calibration": work_package.generator_config.model.calibration,
@@ -550,7 +555,8 @@ class EasClient:
                                 "defaultGenWatts": work_package.generator_config.model.default_gen_watts,
                                 "defaultLoadVar": work_package.generator_config.model.default_load_var,
                                 "defaultGenVar": work_package.generator_config.model.default_gen_var,
-                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings
+                                "transformerTapSettings": work_package.generator_config.model.transformer_tap_settings,
+                                "ctPrimScalingFactor": work_package.generator_config.model.ct_prim_scaling_factor,
                             },
                             "solve": work_package.generator_config.solve and {
                                 "normVMinPu": work_package.generator_config.solve.norm_vmin_pu,
@@ -1045,17 +1051,17 @@ class EasClient:
                             },
                             "modulesConfiguration": {
                                 "common": {
-                                    **({"fixedTime": {"loadTime": config.load_time.time.isoformat(),
-                                                      "overrides": config.load_time.load_overrides and [
-                                                          {
-                                                              "loadId": key,
-                                                              "loadWattsOverride": value.load_watts,
-                                                              "genWattsOverride": value.gen_watts,
-                                                              "loadVarOverride": value.load_var,
-                                                              "genVarOverride": value.gen_var,
-                                                          } for key, value in config.load_time.load_overrides.items()
-                                                      ]
-                                                      }} if isinstance(config.load_time, FixedTime) else {}),
+                                    **({"fixedTime": {"loadTime": config.load_time.load_time.isoformat(),
+                                          "overrides": config.load_time.load_overrides and [
+                                               {
+                                                   "loadId": key,
+                                                   "loadWattsOverride": value.load_watts,
+                                                   "genWattsOverride": value.gen_watts,
+                                                   "loadVarOverride": value.load_var,
+                                                   "genVarOverride": value.gen_var,
+                                               } for key, value in config.load_time.load_overrides.items()
+                                           ]
+                                       }} if isinstance(config.load_time, FixedTime) else {}),
                                     **({"timePeriod": {
                                         "startTime": config.load_time.start_time.isoformat(),
                                         "endTime": config.load_time.end_time.isoformat(),
@@ -1073,8 +1079,10 @@ class EasClient:
                                 **({"generator": {
                                     **({"model": {
                                         "vmPu": config.generator_config.model.vm_pu,
-                                        "vMinPu": config.generator_config.model.vmin_pu,
-                                        "vMaxPu": config.generator_config.model.vmax_pu,
+                                        "loadVMinPu": config.generator_config.model.load_vmin_pu,
+                                        "loadVMaxPu": config.generator_config.model.load_vmax_pu,
+                                        "genVMinPu": config.generator_config.model.gen_vmin_pu,
+                                        "genVMaxPu": config.generator_config.model.gen_vmax_pu,
                                         "loadModel": config.generator_config.model.load_model,
                                         "collapseSWER": config.generator_config.model.collapse_swer,
                                         "calibration": config.generator_config.model.calibration,
@@ -1122,7 +1130,8 @@ class EasClient:
                                         "defaultGenWatts": config.generator_config.model.default_gen_watts,
                                         "defaultLoadVar": config.generator_config.model.default_load_var,
                                         "defaultGenVar": config.generator_config.model.default_gen_var,
-                                        "transformerTapSettings": config.generator_config.model.transformer_tap_settings
+                                        "transformerTapSettings": config.generator_config.model.transformer_tap_settings,
+                                        "ctPrimScalingFactor": config.generator_config.model.ct_prim_scaling_factor,
                                     }} if config.generator_config.model else {}),
                                     **({"solve": {
                                         "normVMinPu": config.generator_config.solve.norm_vmin_pu,
@@ -1246,8 +1255,10 @@ class EasClient:
                                     generator {
                                         model {
                                             vmPu
-                                            vMinPu
-                                            vMaxPu
+                                            loadVMinPu
+                                            loadVMaxPu
+                                            genVMinPu
+                                            genVMaxPu
                                             loadModel
                                             collapseSWER
                                             calibration
@@ -1293,6 +1304,7 @@ class EasClient:
                                             defaultLoadVar
                                             defaultGenVar
                                             transformerTapSettings
+                                            ctPrimScalingFactor
                                         }
                                         solve {
                                             normVMinPu
