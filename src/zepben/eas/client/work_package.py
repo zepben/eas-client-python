@@ -43,6 +43,7 @@ __all__ = [
     "ForecastConfig",
     "FeederConfig",
     "FeederConfigs",
+    "NodeLevelResultsConfig"
 ]
 
 
@@ -330,8 +331,23 @@ class ModelConfig:
     Note the LV line fixer will fix all conductors upstream of the consumer up to the distribution transformer they are connected to.
     """
 
+    simplify_network: Optional[bool] = None
+    """
+    Flag to control whether to simplify the network model before translation.
+    """
+
     collapse_lv_networks: Optional[bool] = None
     """Flag to control whether to collapse lv network in the model."""
+
+    collapse_negligible_impedance: Optional[bool] = None
+    """
+    Flag to control whether to collapse conductors with negligible impedance during network simplification.
+    """
+
+    collapse_common_impedance: Optional[bool] = None
+    """
+    Flag to control whether to combine conductors with common impedance during network simplification.
+    """
 
     feeder_scenario_allocation_strategy: Optional[FeederScenarioAllocationStrategy] = None
     """
@@ -557,6 +573,54 @@ class StoredResultsConfig:
 
 
 @dataclass
+class NodeLevelResultsConfig:
+    """
+    Configuration settings for node level results.
+    """
+
+    collect_voltage: Optional[bool] = None
+    """
+    Include voltage values in node level results.
+    """
+
+    collect_current: Optional[bool] = None
+    """
+    Include current values in node level results
+    """
+
+    collect_power: Optional[bool] = None
+    """
+    Include power values in node level results
+    """
+
+    mrids_to_collect: Optional[List[str]] = None
+    """
+    A list of MRID's to collect node level results at. Note: Depending on the network simplification
+    and translation these mrid's may not exist in the final OpenDss and no results will be collected.
+    """
+
+    collect_all_switches: Optional[bool] = None
+    """
+    Collect node level results at all switches in the network.
+    """
+
+    collect_all_transformers: Optional[bool] = None
+    """
+    Collect node level results at all transformers in the network.
+    """
+
+    collect_all_conductors: Optional[bool] = None
+    """
+    Collect node level results at all conductors in the network.
+    """
+
+    collect_all_energy_consumers: Optional[bool] = None
+    """
+    collect node level results at all energy consumers in the network.
+    """
+
+
+@dataclass
 class GeneratorConfig:
     """
     Configuration settings for the OpenDSS model.
@@ -566,6 +630,7 @@ class GeneratorConfig:
     model: Optional[ModelConfig] = None
     solve: Optional[SolveConfig] = None
     raw_results: Optional[RawResultsConfig] = None
+    node_level_results: Optional[NodeLevelResultsConfig] = None
 
 
 @dataclass
@@ -780,6 +845,38 @@ class InterventionConfig:
     """The config for DVMS. This must be specified if intervention_type = DVMS."""
 
 
+class SampleTypeKind(Enum):
+    ENERGY_CONSUMER = "ENERGY_CONSUMER",
+    CONDUCTOR = "CONDUCTOR",
+    SWITCH = "SWITCH",
+    POWER_TRANSFORMER_PRIMARY = "POWER_TRANSFORMER_PRIMARY",
+    POWER_TRANSFORMER_SECONDARY = "POWER_TRANSFORMER_SECONDARY",
+    POWER_TRANSFORMER_TERTIARY = "POWER_TRANSFORMER_TERTIARY",
+    POWER_TRANSFORMER_PHASE_A_PRIMARY = "POWER_TRANSFORMER_PHASE_A_PRIMARY",
+    POWER_TRANSFORMER_PHASE_B_PRIMARY = "POWER_TRANSFORMER_PHASE_B_PRIMARY",
+    POWER_TRANSFORMER_PHASE_C_PRIMARY = "POWER_TRANSFORMER_PHASE_C_PRIMARY",
+    POWER_TRANSFORMER_PHASE_A_SECONDARY = "POWER_TRANSFORMER_PHASE_A_SECONDARY",
+    POWER_TRANSFORMER_PHASE_B_SECONDARY = "POWER_TRANSFORMER_PHASE_B_SECONDARY",
+    POWER_TRANSFORMER_PHASE_C_SECONDARY = "POWER_TRANSFORMER_PHASE_C_SECONDARY"
+
+
+@dataclass
+class NodeLevelSamplePointInfo:
+    sample_id: str
+    sample_type: SampleTypeKind
+    element_id: str
+    conducting_equipment_mrid: str
+    terminal_sequence_number: int
+    voltage: bool
+    current: bool
+    power: bool
+
+
+@dataclass
+class ExecutorConfig:
+    node_level_sample_point_info: Optional[List[NodeLevelSamplePointInfo]] = None
+
+
 @dataclass
 class ForecastConfig(object):
     feeders: List[str]
@@ -851,8 +948,8 @@ class WorkPackageConfig:
     generator_config: Optional[GeneratorConfig] = None
     """Configuration for the OpenDSS model generator"""
 
-    executor_config: Optional[object] = None
-    """Executor config - currently unused."""
+    executor_config: Optional[ExecutorConfig] = None
+    """Executor config - Not user configurable. Populated by the model generator."""
 
     result_processor_config: Optional[ResultProcessorConfig] = None
     """Configuration for processing and storing results"""

@@ -522,7 +522,10 @@ class EasClient:
                                 "fixUndersizedServiceLines": work_package.generator_config.model.fix_undersized_service_lines,
                                 "maxLoadServiceLineRatio": work_package.generator_config.model.max_load_service_line_ratio,
                                 "maxLoadLvLineRatio": work_package.generator_config.model.max_load_lv_line_ratio,
+                                "simplifyNetwork": work_package.generator_config.model.simplify_network,
                                 "collapseLvNetworks": work_package.generator_config.model.collapse_lv_networks,
+                                "collapseNegligibleImpedance": work_package.generator_config.model.collapse_negligible_impedance,
+                                "combineCommonImpedances": work_package.generator_config.model.collapse_common_impedance,
                                 "feederScenarioAllocationStrategy": work_package.generator_config.model.feeder_scenario_allocation_strategy and work_package.generator_config.model.feeder_scenario_allocation_strategy.name,
                                 "closedLoopVRegEnabled": work_package.generator_config.model.closed_loop_v_reg_enabled,
                                 "closedLoopVRegReplaceAll": work_package.generator_config.model.closed_loop_v_reg_replace_all,
@@ -576,7 +579,17 @@ class EasClient:
                                 "resultsPerMeter": work_package.generator_config.raw_results.results_per_meter,
                                 "overloadsRaw": work_package.generator_config.raw_results.overloads_raw,
                                 "voltageExceptionsRaw": work_package.generator_config.raw_results.voltage_exceptions_raw
-                            }
+                            },
+                            "nodeLevelResults": work_package.generator_config.node_level_results and {
+                                "collectVoltage": work_package.generator_config.node_level_results.collect_voltage,
+                                "collectCurrent": work_package.generator_config.node_level_results.collect_current,
+                                "collectPower": work_package.generator_config.node_level_results.collect_power,
+                                "mridsToCollect": work_package.generator_config.node_level_results.mrids_to_collect,
+                                "collectAllSwitches": work_package.generator_config.node_level_results.collect_all_switches,
+                                "collectAllTransformers": work_package.generator_config.node_level_results.collect_all_transformers,
+                                "collectAllConductors": work_package.generator_config.node_level_results.collect_all_conductors,
+                                "collectAllEnergyConsumers": work_package.generator_config.node_level_results.collect_all_energy_consumers,
+                            },
                         },
                         "executorConfig": {},
                         "resultProcessorConfig": work_package.result_processor_config and {
