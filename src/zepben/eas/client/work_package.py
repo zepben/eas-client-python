@@ -339,12 +339,12 @@ class ModelConfig:
     collapse_lv_networks: Optional[bool] = None
     """Flag to control whether to collapse lv network in the model."""
 
-    collapse_negligible_impedance: Optional[bool] = None
+    collapse_negligible_impedances: Optional[bool] = None
     """
     Flag to control whether to collapse conductors with negligible impedance during network simplification.
     """
 
-    collapse_common_impedance: Optional[bool] = None
+    combine_common_impedances: Optional[bool] = None
     """
     Flag to control whether to combine conductors with common impedance during network simplification.
     """

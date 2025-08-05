@@ -524,8 +524,8 @@ class EasClient:
                                 "maxLoadLvLineRatio": work_package.generator_config.model.max_load_lv_line_ratio,
                                 "simplifyNetwork": work_package.generator_config.model.simplify_network,
                                 "collapseLvNetworks": work_package.generator_config.model.collapse_lv_networks,
-                                "collapseNegligibleImpedance": work_package.generator_config.model.collapse_negligible_impedance,
-                                "combineCommonImpedances": work_package.generator_config.model.collapse_common_impedance,
+                                "collapseNegligibleImpedances": work_package.generator_config.model.collapse_negligible_impedances,
+                                "combineCommonImpedances": work_package.generator_config.model.combine_common_impedance,
                                 "feederScenarioAllocationStrategy": work_package.generator_config.model.feeder_scenario_allocation_strategy and work_package.generator_config.model.feeder_scenario_allocation_strategy.name,
                                 "closedLoopVRegEnabled": work_package.generator_config.model.closed_loop_v_reg_enabled,
                                 "closedLoopVRegReplaceAll": work_package.generator_config.model.closed_loop_v_reg_replace_all,
@@ -1115,7 +1115,10 @@ class EasClient:
                                         "fixUndersizedServiceLines": config.generator_config.model.fix_undersized_service_lines,
                                         "maxLoadServiceLineRatio": config.generator_config.model.max_load_service_line_ratio,
                                         "maxLoadLvLineRatio": config.generator_config.model.max_load_lv_line_ratio,
+                                        "simplifyNetwork": config.generator_config.model.simplify_network,
                                         "collapseLvNetworks": config.generator_config.model.collapse_lv_networks,
+                                        "collapseNegligibleImpedances": config.generator_config.model.collapse_negligible_impedances,
+                                        "combineCommonImpedances": config.generator_config.model.combine_common_impedances,
                                         "feederScenarioAllocationStrategy": config.generator_config.model.feeder_scenario_allocation_strategy and config.generator_config.model.feeder_scenario_allocation_strategy.name,
                                         "closedLoopVRegEnabled": config.generator_config.model.closed_loop_v_reg_enabled,
                                         "closedLoopVRegReplaceAll": config.generator_config.model.closed_loop_v_reg_replace_all,
@@ -1169,7 +1172,17 @@ class EasClient:
                                         "resultsPerMeter": config.generator_config.raw_results.results_per_meter,
                                         "overloadsRaw": config.generator_config.raw_results.overloads_raw,
                                         "voltageExceptionsRaw": config.generator_config.raw_results.voltage_exceptions_raw
-                                    }} if config.generator_config.raw_results else {})
+                                    }} if config.generator_config.raw_results else {}),
+                                    "nodeLevelResults": config.generator_config.node_level_results and {
+                                        "collectVoltage": config.generator_config.node_level_results.collect_voltage,
+                                        "collectCurrent": config.generator_config.node_level_results.collect_current,
+                                        "collectPower": config.generator_config.node_level_results.collect_power,
+                                        "mridsToCollect": config.generator_config.node_level_results.mrids_to_collect,
+                                        "collectAllSwitches": config.generator_config.node_level_results.collect_all_switches,
+                                        "collectAllTransformers": config.generator_config.node_level_results.collect_all_transformers,
+                                        "collectAllConductors": config.generator_config.node_level_results.collect_all_conductors,
+                                        "collectAllEnergyConsumers": config.generator_config.node_level_results.collect_all_energy_consumers,
+                                    },
                                 }} if config.generator_config else {})
                             }
                         }
@@ -1291,7 +1304,10 @@ class EasClient:
                                             fixUndersizedServiceLines
                                             maxLoadServiceLineRatio
                                             maxLoadLvLineRatio
+                                            simplifyNetwork
                                             collapseLvNetworks
+                                            collapseNegligibleImpedances
+                                            combineCommonImpedances
                                             feederScenarioAllocationStrategy
                                             closedLoopVRegEnabled
                                             closedLoopVRegReplaceAll
@@ -1342,6 +1358,16 @@ class EasClient:
                                             resultsPerMeter
                                             overloadsRaw
                                             voltageExceptionsRaw
+                                        }
+                                        nodeLevelResults {
+                                            collectVoltage
+                                            collectCurrent
+                                            collectPower
+                                            mridsToCollect
+                                            collectAllSwitches
+                                            collectAllTransformers
+                                            collectAllConductors
+                                            collectAllEnergyConsumers
                                         }
                                     }
                                 }
