@@ -845,38 +845,6 @@ class InterventionConfig:
     """The config for DVMS. This must be specified if intervention_type = DVMS."""
 
 
-class SampleTypeKind(Enum):
-    ENERGY_CONSUMER = "ENERGY_CONSUMER",
-    CONDUCTOR = "CONDUCTOR",
-    SWITCH = "SWITCH",
-    POWER_TRANSFORMER_PRIMARY = "POWER_TRANSFORMER_PRIMARY",
-    POWER_TRANSFORMER_SECONDARY = "POWER_TRANSFORMER_SECONDARY",
-    POWER_TRANSFORMER_TERTIARY = "POWER_TRANSFORMER_TERTIARY",
-    POWER_TRANSFORMER_PHASE_A_PRIMARY = "POWER_TRANSFORMER_PHASE_A_PRIMARY",
-    POWER_TRANSFORMER_PHASE_B_PRIMARY = "POWER_TRANSFORMER_PHASE_B_PRIMARY",
-    POWER_TRANSFORMER_PHASE_C_PRIMARY = "POWER_TRANSFORMER_PHASE_C_PRIMARY",
-    POWER_TRANSFORMER_PHASE_A_SECONDARY = "POWER_TRANSFORMER_PHASE_A_SECONDARY",
-    POWER_TRANSFORMER_PHASE_B_SECONDARY = "POWER_TRANSFORMER_PHASE_B_SECONDARY",
-    POWER_TRANSFORMER_PHASE_C_SECONDARY = "POWER_TRANSFORMER_PHASE_C_SECONDARY"
-
-
-@dataclass
-class NodeLevelSamplePointInfo:
-    sample_id: str
-    sample_type: SampleTypeKind
-    element_id: str
-    conducting_equipment_mrid: str
-    terminal_sequence_number: int
-    voltage: bool
-    current: bool
-    power: bool
-
-
-@dataclass
-class ExecutorConfig:
-    node_level_sample_point_info: Optional[List[NodeLevelSamplePointInfo]] = None
-
-
 @dataclass
 class ForecastConfig(object):
     feeders: List[str]
@@ -948,8 +916,8 @@ class WorkPackageConfig:
     generator_config: Optional[GeneratorConfig] = None
     """Configuration for the OpenDSS model generator"""
 
-    executor_config: Optional[ExecutorConfig] = None
-    """Executor config - Not user configurable. Populated by the model generator."""
+    executor_config: Optional[object] = None
+    """Executor config - currently unused."""
 
     result_processor_config: Optional[ResultProcessorConfig] = None
     """Configuration for processing and storing results"""
