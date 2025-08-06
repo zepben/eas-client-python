@@ -1,5 +1,21 @@
 # EAS Python client
-## [0.20.1] - UNRELEASED
+## [0.21.0] - UNRELEASED
+### Breaking Changes
+* None.
+
+### New Features
+* None.
+
+### Enhancements
+* None.
+
+### Fixes
+* None.
+
+### Notes
+* None.
+
+## [0.20.1] - 2025-08-06
 ### Breaking Changes
 * `run_hosting_capacity_calibration` now takes a `datetime` object rather than a string.
 
