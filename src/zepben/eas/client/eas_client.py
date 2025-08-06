@@ -6,6 +6,7 @@
 import ssl
 import warnings
 from asyncio import get_event_loop
+from datetime import datetime
 from hashlib import sha256
 from http import HTTPStatus
 from json import dumps
@@ -424,10 +425,9 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    response.raise_for_status()
 
     async def async_run_hosting_capacity_work_package(self, work_package: WorkPackageConfig):
         """
@@ -658,10 +658,9 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    response.raise_for_status()
 
     def cancel_hosting_capacity_work_package(self, work_package_id: str):
         """
@@ -700,10 +699,9 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    response.raise_for_status()
 
     def get_hosting_capacity_work_packages_progress(self):
         """
@@ -752,10 +750,9 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    response.raise_for_status()
 
     def run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
         """
@@ -810,10 +807,9 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    response.raise_for_status()
 
     def upload_study(self, study: Study):
         """
@@ -875,12 +871,11 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    response.raise_for_status()
 
-    def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: Optional[str] = None, feeders: Optional[List[str]] = None):
+    def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: Optional[datetime] = None, feeders: Optional[List[str]] = None):
         """
         Send request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
@@ -892,14 +887,18 @@ class EasClient:
             self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time, feeders))
 
     async def async_run_hosting_capacity_calibration(self, calibration_name: str,
-                                                     calibration_time_local: Optional[str] = None, feeders: Optional[List[str]] = None):
+                                                     calibration_time_local: Optional[datetime] = None, feeders: Optional[List[str]] = None):
         """
         Send asynchronous request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
-        :param calibration_time_local: A string representation of the calibration time, in model time.
+        :param calibration_time_local: a datetime representation of the calibration time, in the timezone of your pqv data ("model time").
         :param feeders: A list of feeder ID's to run the calibration over. If not supplied then the calibration is run over all feeders in the network.
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
+
+        # Only replace microsecond, as in database we only have down to second precision.
+        # tzinfo will be whatever the user passed through, which should be the timezone of their load data.
+        parsed_time = calibration_time_local.replace(microsecond=0, tzinfo=None)
         with warnings.catch_warnings():
             if not self._verify_certificate:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
@@ -911,7 +910,7 @@ class EasClient:
                 """,
                 "variables": {
                     "calibrationName": calibration_name,
-                    "calibrationTimeLocal": calibration_time_local,
+                    "calibrationTimeLocal": parsed_time.isoformat(),
                     "feeders": feeders
                 }
             }
@@ -926,10 +925,9 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    raise response.raise_for_status()
 
     def get_hosting_capacity_calibration_run(self, id: str):
         """
@@ -979,10 +977,9 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    response.raise_for_status()
 
     def get_hosting_capacity_calibration_sets(self):
         """
@@ -1016,10 +1013,9 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    response.raise_for_status()
 
     def run_opendss_export(self, config: OpenDssConfig):
         """
@@ -1173,10 +1169,9 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    response.raise_for_status()
 
     def get_paged_opendss_models(
         self,
@@ -1363,10 +1358,9 @@ class EasClient:
                 ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    response.raise_for_status()
 
     def get_opendss_model_download_url(self, run_id: int):
         """
@@ -1397,10 +1391,9 @@ class EasClient:
                 allow_redirects=False
             ) as response:
                 if response.status == HTTPStatus.FOUND:
-                    response = response.headers["Location"]
-                else:
-                    response = await response.text()
-                return response
+                    return response.headers["Location"]
+                elif not response.ok:
+                    response.raise_for_status()
 
     def get_opendss_model(self, model_id: int):
         """
