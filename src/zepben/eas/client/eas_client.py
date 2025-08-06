@@ -875,7 +875,7 @@ class EasClient:
                 else:
                     response.raise_for_status()
 
-    def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: Optional[datetime] = None, feeders: Optional[List[str]] = None):
+    def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: datetime, feeders: Optional[List[str]] = None):
         """
         Send request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
@@ -886,8 +886,7 @@ class EasClient:
         return get_event_loop().run_until_complete(
             self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time, feeders))
 
-    async def async_run_hosting_capacity_calibration(self, calibration_name: str,
-                                                     calibration_time_local: Optional[datetime] = None, feeders: Optional[List[str]] = None):
+    async def async_run_hosting_capacity_calibration(self, calibration_name: str, calibration_time_local: datetime, feeders: Optional[List[str]] = None):
         """
         Send asynchronous request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name

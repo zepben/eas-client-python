@@ -610,7 +610,7 @@ def hosting_capacity_run_calibration_request_handler(request):
     query = " ".join(actual_body['query'].split())
 
     assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!]) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders) }"
-    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION", "calibrationTimeLocal": None, "feeders": None}
+    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION", "calibrationTimeLocal": datetime(2025, month=7, day=12).isoformat(), "feeders": None}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
@@ -622,9 +622,8 @@ def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServ
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        hosting_capacity_run_calibration_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION")
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(hosting_capacity_run_calibration_request_handler)
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
@@ -640,7 +639,7 @@ def test_run_hosting_capacity_calibration_invalid_certificate_failure(ca: trustm
 
         httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
         with pytest.raises(ssl.SSLError):
-            eas_client.run_hosting_capacity_calibration("TEST CALIBRATION")
+            eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
 
 
 def test_run_hosting_capacity_calibration_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
@@ -654,7 +653,7 @@ def test_run_hosting_capacity_calibration_valid_certificate_success(ca: trustme.
 
         httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
             hosting_capacity_run_calibration_request_handler)
-        res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION")
+        res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
         httpserver.check_assertions()
         assert res == {"result": "success"}
 
@@ -719,7 +718,7 @@ def hosting_capacity_run_calibration_with_calibration_time_request_handler(reque
 
     assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!]) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders) }"
     assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION",
-                                        "calibrationTimeLocal": "1992-01-28T00:00:20",
+                                        "calibrationTimeLocal": datetime(1902, month=1, day=28, hour=0, minute=0, second=20).isoformat(),
                                         "feeders": ["one", "two"]}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
@@ -732,9 +731,8 @@ def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_succes
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        hosting_capacity_run_calibration_with_calibration_time_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", "1992-01-28T00:00:20", ["one", "two"])
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(hosting_capacity_run_calibration_with_calibration_time_request_handler)
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(1902, month=1, day=28, hour=0, minute=0, second=20), ["one", "two"])
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
@@ -792,16 +790,16 @@ def run_opendss_export_request_handler(request):
                             }]
                         }} if isinstance(OPENDSS_CONFIG.load_time, FixedTime) else
                            {"timePeriod": {
-                            "startTime": "2022-04-01T00:00:00",
-                            "endTime": "2023-04-01T00:00:00",
-                            "overrides": [{
-                                'loadId': 'meter1',
-                                'loadWattsOverride': [1.0],
-                                'genWattsOverride': [2.0],
-                                'loadVarOverride': [3.0],
-                                'genVarOverride': [4.0]
-                            }]
-                        }})
+                               "startTime": "2022-04-01T00:00:00",
+                               "endTime": "2023-04-01T00:00:00",
+                               "overrides": [{
+                                   'loadId': 'meter1',
+                                   'loadWattsOverride': [1.0],
+                                   'genWattsOverride': [2.0],
+                                   'loadVarOverride': [3.0],
+                                   'genVarOverride': [4.0]
+                               }]
+                           }})
                     },
                     "generator": {
                         "model": {
