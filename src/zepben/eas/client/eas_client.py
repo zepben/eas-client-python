@@ -20,7 +20,7 @@ from zepben.eas.client.feeder_load_analysis_input import FeederLoadAnalysisInput
 from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
 from zepben.eas.client.study import Study
 from zepben.eas.client.util import construct_url
-from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod, ForecastConfig, FeederConfigs
+from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod, ForecastConfig, FeederConfigs, GeneratorConfig
 
 __all__ = ["EasClient"]
 
@@ -880,7 +880,7 @@ class EasClient:
                     response = await response.text()
                 return response
 
-    def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: Optional[str] = None, feeders: Optional[List[str]] = None):
+    def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: Optional[str] = None, feeders: Optional[List[str]] = None, generator_config: Optional[GeneratorConfig] = None):
         """
         Send request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
@@ -889,10 +889,10 @@ class EasClient:
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
         return get_event_loop().run_until_complete(
-            self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time, feeders))
+            self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time, feeders, generator_config))
 
     async def async_run_hosting_capacity_calibration(self, calibration_name: str,
-                                                     calibration_time_local: Optional[str] = None, feeders: Optional[List[str]] = None):
+                                                     calibration_time_local: Optional[str] = None, feeders: Optional[List[str]] = None, generator_config: Optional[GeneratorConfig] = None):
         """
         Send asynchronous request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
@@ -905,14 +905,91 @@ class EasClient:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             json = {
                 "query": """
-                    mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!]) {
-                        runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders)
+                    mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!], $generatorConfig: HcGeneratorConfigInput) {
+                        runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders, generatorConfig: $generatorConfig)
                     }
                 """,
                 "variables": {
                     "calibrationName": calibration_name,
                     "calibrationTimeLocal": calibration_time_local,
-                    "feeders": feeders
+                    "feeders": feeders,
+                    "generatorConfig": generator_config and {
+                        "model": generator_config.model and {
+                            "vmPu": generator_config.model.vm_pu,
+                            "loadVMinPu": generator_config.model.load_vmin_pu,
+                            "loadVMaxPu": generator_config.model.load_vmax_pu,
+                            "genVMinPu": generator_config.model.gen_vmin_pu,
+                            "genVMaxPu": generator_config.model.gen_vmax_pu,
+                            "loadModel": generator_config.model.load_model,
+                            "collapseSWER": generator_config.model.collapse_swer,
+                            "calibration": generator_config.model.calibration,
+                            "pFactorBaseExports": generator_config.model.p_factor_base_exports,
+                            "pFactorForecastPv": generator_config.model.p_factor_forecast_pv,
+                            "pFactorBaseImports": generator_config.model.p_factor_base_imports,
+                            "fixSinglePhaseLoads": generator_config.model.fix_single_phase_loads,
+                            "maxSinglePhaseLoad": generator_config.model.max_single_phase_load,
+                            "fixOverloadingConsumers": generator_config.model.fix_overloading_consumers,
+                            "maxLoadTxRatio": generator_config.model.max_load_tx_ratio,
+                            "maxGenTxRatio": generator_config.model.max_gen_tx_ratio,
+                            "fixUndersizedServiceLines": generator_config.model.fix_undersized_service_lines,
+                            "maxLoadServiceLineRatio": generator_config.model.max_load_service_line_ratio,
+                            "maxLoadLvLineRatio": generator_config.model.max_load_lv_line_ratio,
+                            "collapseLvNetworks": generator_config.model.collapse_lv_networks,
+                            "feederScenarioAllocationStrategy": generator_config.model.feeder_scenario_allocation_strategy and generator_config.model.feeder_scenario_allocation_strategy.name,
+                            "closedLoopVRegEnabled": generator_config.model.closed_loop_v_reg_enabled,
+                            "closedLoopVRegReplaceAll": generator_config.model.closed_loop_v_reg_replace_all,
+                            "closedLoopVRegSetPoint": generator_config.model.closed_loop_v_reg_set_point,
+                            "closedLoopVBand": generator_config.model.closed_loop_v_band,
+                            "closedLoopTimeDelay": generator_config.model.closed_loop_time_delay,
+                            "closedLoopVLimit": generator_config.model.closed_loop_v_limit,
+                            "defaultTapChangerTimeDelay": generator_config.model.default_tap_changer_time_delay,
+                            "defaultTapChangerSetPointPu": generator_config.model.default_tap_changer_set_point_pu,
+                            "defaultTapChangerBand": generator_config.model.default_tap_changer_band,
+                            "splitPhaseDefaultLoadLossPercentage": generator_config.model.split_phase_default_load_loss_percentage,
+                            "splitPhaseLVKV": generator_config.model.split_phase_lv_kv,
+                            "swerVoltageToLineVoltage": generator_config.model.swer_voltage_to_line_voltage,
+                            "loadPlacement": generator_config.model.load_placement and generator_config.model.load_placement.name,
+                            "loadIntervalLengthHours": generator_config.model.load_interval_length_hours,
+                            "meterPlacementConfig": generator_config.model.meter_placement_config and {
+                                "feederHead": generator_config.model.meter_placement_config.feeder_head,
+                                "distTransformers": generator_config.model.meter_placement_config.dist_transformers,
+                                "switchMeterPlacementConfigs": generator_config.model.meter_placement_config.switch_meter_placement_configs and [
+                                    {
+                                        "meterSwitchClass": spc.meter_switch_class and spc.meter_switch_class.name,
+                                        "namePattern": spc.name_pattern
+                                    } for spc in
+                                    generator_config.model.meter_placement_config.switch_meter_placement_configs
+                                ],
+                                "energyConsumerMeterGroup": generator_config.model.meter_placement_config.energy_consumer_meter_group
+                            },
+                            "seed": generator_config.model.seed,
+                            "defaultLoadWatts": generator_config.model.default_load_watts,
+                            "defaultGenWatts": generator_config.model.default_gen_watts,
+                            "defaultLoadVar": generator_config.model.default_load_var,
+                            "defaultGenVar": generator_config.model.default_gen_var,
+                            "transformerTapSettings": generator_config.model.transformer_tap_settings,
+                            "ctPrimScalingFactor": generator_config.model.ct_prim_scaling_factor,
+                        },
+                        "solve": generator_config.solve and {
+                            "normVMinPu": generator_config.solve.norm_vmin_pu,
+                            "normVMaxPu": generator_config.solve.norm_vmax_pu,
+                            "emergVMinPu": generator_config.solve.emerg_vmin_pu,
+                            "emergVMaxPu": generator_config.solve.emerg_vmax_pu,
+                            "baseFrequency": generator_config.solve.base_frequency,
+                            "voltageBases": generator_config.solve.voltage_bases,
+                            "maxIter": generator_config.solve.max_iter,
+                            "maxControlIter": generator_config.solve.max_control_iter,
+                            "mode": generator_config.solve.mode and generator_config.solve.mode.name,
+                            "stepSizeMinutes": generator_config.solve.step_size_minutes
+                        },
+                        "rawResults": generator_config.raw_results and {
+                            "energyMeterVoltagesRaw": generator_config.raw_results.energy_meter_voltages_raw,
+                            "energyMetersRaw": generator_config.raw_results.energy_meters_raw,
+                            "resultsPerMeter": generator_config.raw_results.results_per_meter,
+                            "overloadsRaw": generator_config.raw_results.overloads_raw,
+                            "voltageExceptionsRaw": generator_config.raw_results.voltage_exceptions_raw
+                        }
+                    }
                 }
             }
 
