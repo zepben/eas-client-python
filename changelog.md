@@ -1,5 +1,21 @@
 # EAS Python client
-## [0.21.0] - UNRELEASED
+## [0.22.0] - UNRELEASED
+### Breaking Changes
+* None.
+
+### New Features
+* None.
+
+### Enhancements
+* None.
+
+### Fixes
+* None.
+
+### Notes
+* None.
+
+## [0.21.0] - 2025-08-07
 ### New Features
 * Added `EasClient.get_transformer_tap_settings` for retrieving tap settings for a calibration run.
 
