@@ -1016,6 +1016,55 @@ class EasClient:
                 else:
                     response.raise_for_status()
 
+    def get_transformer_tap_settings(self, calibration_id: str, feeder: Optional[str] = None, transformer_mrid: Optional[str] = None):
+        """
+        Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database.
+        :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
+        """
+        return get_event_loop().run_until_complete(self.async_get_transformer_tap_settings(calibration_id, feeder, transformer_mrid))
+
+    async def async_get_transformer_tap_settings(self, calibration_id: str, feeder: Optional[str] = None, transformer_mrid: Optional[str] = None):
+        """
+        Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database.
+        :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query": """
+                    query getTransformerTapSettings($calibrationName: String!, $feeder: String, $transformerMrid: String) {
+                        getTransformerTapSettings(calibrationName: $calibrationName, feeder: $feeder, transformerMrid: $transformerMrid) {
+                            id
+                            highStep
+                            lowStep
+                            nominalTapNum
+                            tapPosition
+                            controlEnabled
+                            stepVoltageIncrement
+                        }
+                     }
+                """,
+                "variables": {
+                    "calibrationName": calibration_id,
+                    "feeder": feeder,
+                    "transformerMrid": transformer_mrid
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                headers=self._get_request_headers(),
+                json=json,
+                ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    return await response.json()
+                else:
+                    response.raise_for_status()
+
     def run_opendss_export(self, config: OpenDssConfig):
         """
         Send request to run an opendss export
