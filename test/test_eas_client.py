@@ -24,7 +24,7 @@ from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput
     Order
 from zepben.eas.client.study import Result
 from zepben.eas.client.work_package import FeederConfigs, TimePeriodLoadOverride, \
-    FixedTime
+    FixedTime, NodeLevelResultsConfig
 from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, GeneratorConfig, ModelConfig, \
     FeederScenarioAllocationStrategy, LoadPlacement, MeterPlacementConfig, SwitchMeterPlacementConfig, SwitchClass, \
     SolveMode, RawResultsConfig
@@ -822,7 +822,10 @@ def run_opendss_export_request_handler(request):
                             "fixUndersizedServiceLines": True,
                             "maxLoadServiceLineRatio": 1.5,
                             "maxLoadLvLineRatio": 2.0,
+                            "simplifyNetwork": False,
                             "collapseLvNetworks": False,
+                            "collapseNegligibleImpedances": False,
+                            "combineCommonImpedances": False,
                             "feederScenarioAllocationStrategy": "ADDITIVE",
                             "closedLoopVRegEnabled": True,
                             "closedLoopVRegReplaceAll": True,
@@ -883,6 +886,16 @@ def run_opendss_export_request_handler(request):
                             "resultsPerMeter": True,
                             "overloadsRaw": True,
                             "voltageExceptionsRaw": True
+                        },
+                        "nodeLevelResults": {
+                            "collectVoltage": True,
+                            "collectCurrent": False,
+                            "collectPower": True,
+                            "mridsToCollect": ["mrid_one", "mrid_two"],
+                            "collectAllSwitches": False,
+                            "collectAllTransformers": True,
+                            "collectAllConductors": False,
+                            "collectAllEnergyConsumers": True
                         }
                     }
                 }
@@ -924,7 +937,10 @@ OPENDSS_CONFIG = OpenDssConfig(
             fix_undersized_service_lines=True,
             max_load_service_line_ratio=1.5,
             max_load_lv_line_ratio=2.0,
+            simplify_network=False,
             collapse_lv_networks=False,
+            collapse_negligible_impedances=False,
+            combine_common_impedances=False,
             feeder_scenario_allocation_strategy=FeederScenarioAllocationStrategy.ADDITIVE,
             closed_loop_v_reg_enabled=True,
             closed_loop_v_reg_replace_all=True,
@@ -979,6 +995,16 @@ OPENDSS_CONFIG = OpenDssConfig(
             results_per_meter=True,
             overloads_raw=True,
             voltage_exceptions_raw=True
+        ),
+        NodeLevelResultsConfig(
+            collect_voltage=True,
+            collect_current=False,
+            collect_power=True,
+            mrids_to_collect=["mrid_one", "mrid_two"],
+            collect_all_switches=False,
+            collect_all_transformers=True,
+            collect_all_conductors=False,
+            collect_all_energy_consumers=True
         )
     ),
     is_public=True)
@@ -1093,7 +1119,10 @@ get_paged_opendss_models_query = """
                                     fixUndersizedServiceLines
                                     maxLoadServiceLineRatio
                                     maxLoadLvLineRatio
+                                    simplifyNetwork
                                     collapseLvNetworks
+                                    collapseNegligibleImpedances
+                                    combineCommonImpedances
                                     feederScenarioAllocationStrategy
                                     closedLoopVRegEnabled
                                     closedLoopVRegReplaceAll
@@ -1144,6 +1173,16 @@ get_paged_opendss_models_query = """
                                     resultsPerMeter
                                     overloadsRaw
                                     voltageExceptionsRaw
+                                }
+                                nodeLevelResults {
+                                    collectVoltage
+                                    collectCurrent
+                                    collectPower
+                                    mridsToCollect
+                                    collectAllSwitches
+                                    collectAllTransformers
+                                    collectAllConductors
+                                    collectAllEnergyConsumers
                                 }
                             }
                         }
