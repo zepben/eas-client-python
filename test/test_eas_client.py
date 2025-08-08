@@ -19,6 +19,8 @@ from zepben.auth import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study, SolveConfig
 from zepben.eas import FeederConfig, ForecastConfig, FixedTimeLoadOverride
+from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsSortCriteriaInput, IngestorRunsFilterInput, \
+    IngestorRunState, IngestorRuntimeKind
 from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, OpenDssModelState, \
     GetOpenDssModelsSortCriteriaInput, \
     Order
@@ -1283,3 +1285,155 @@ def test_get_opendss_model_download_url_valid_certificate_success(ca: trustme.CA
         res = eas_client.get_opendss_model_download_url(1)
         httpserver.check_assertions()
         assert res == "https://example.com/download/1"
+
+
+def run_ingestor_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert query == "mutation executeIngestor($runConfig: [IngestorConfigInput!]) { executeIngestor(runConfig: $runConfig) }"
+    assert actual_body['variables'] == {'runConfig': [{'key': 'random.config', 'value': 'random.value'},
+                                                      {'key': 'dataStorePath', 'value': '/some/place/with/data'}]}
+
+    return Response(json.dumps({"executeIngestor": 5}), status=200, content_type="application/json")
+
+
+def test_run_ingestor_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        run_ingestor_request_handler)
+    res = eas_client.run_ingestor([IngestorConfigInput("random.config", "random.value"),
+                                   IngestorConfigInput("dataStorePath", "/some/place/with/data")])
+    httpserver.check_assertions()
+    assert res == {"executeIngestor": 5}
+
+
+def get_ingestor_run_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert query == "query getIngestorRun($id: Int!) { getIngestorRun(id: $id) { id containerRuntimeType, payload, token, status, startedAt, statusLastUpdatedAt, completedAt } }"
+    assert actual_body['variables'] == {"id": 1}
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+
+def test_get_ingestor_run_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_request_handler)
+    res = eas_client.get_ingestor_run(1)
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
+def get_ingestor_run_list_request_empty_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    get_ingestor_run_list_query = """
+                    query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
+                        listIngestorRuns(filter: $filter, sort: $sort) {
+                        id
+                        containerRuntimeType,
+                        payload,
+                        token,
+                        status,
+                        startedAt,
+                        statusLastUpdatedAt,
+                        completedAt
+                        }
+                    }
+            """
+    assert query == " ".join(line.strip() for line in get_ingestor_run_list_query.strip().splitlines())
+    assert actual_body['variables'] == {}
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+
+def test_get_ingestor_run_list_empty_filter_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_list_request_empty_handler)
+    res = eas_client.get_ingestor_run_list()
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
+def get_ingestor_run_list_request_complete_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    get_ingestor_run_list_query = """
+                    query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
+                        listIngestorRuns(filter: $filter, sort: $sort) {
+                        id
+                        containerRuntimeType,
+                        payload,
+                        token,
+                        status,
+                        startedAt,
+                        statusLastUpdatedAt,
+                        completedAt
+                        }
+                    }
+            """
+    assert query == " ".join(line.strip() for line in get_ingestor_run_list_query.strip().splitlines())
+    assert actual_body['variables'] == {
+        "filter": {
+            "id": 4,
+            "status": ["SUCCESS", "STARTED", "FAILED_TO_START"],
+            "completed": True,
+            "containerRuntimeType": ["TEMPORAL_KUBERNETES", "AZURE_CONTAINER_APP_JOB"]
+        },
+        "sort": {
+            "status": "ASC",
+            "startedAt": "DESC",
+            "statusLastUpdatedAt": "ASC",
+            "completedAt": "DESC",
+            "containerRuntimeType": "ASC",
+        }
+    }
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+
+def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_list_request_complete_handler)
+    res = eas_client.get_ingestor_run_list(
+        query_filter=IngestorRunsFilterInput(
+            id=4,
+            status=[IngestorRunState.SUCCESS, IngestorRunState.STARTED, IngestorRunState.FAILED_TO_START],
+            completed=True,
+            container_runtime_type=[IngestorRuntimeKind.TEMPORAL_KUBERNETES,
+                                    IngestorRuntimeKind.AZURE_CONTAINER_APP_JOB]
+        ),
+        query_sort=IngestorRunsSortCriteriaInput(
+            status=Order.ASC,
+            started_at=Order.DESC,
+            status_last_updated_at=Order.ASC,
+            completed_at=Order.DESC,
+            container_runtime_type=Order.ASC
+        )
+    )
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
