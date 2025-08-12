@@ -873,10 +873,9 @@ class EasClient:
                     ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    response.raise_for_status()
 
     def run_ingestor(self, run_config: List[IngestorConfigInput]):
         """
