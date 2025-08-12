@@ -969,10 +969,9 @@ class EasClient:
                     ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    raise response.raise_for_status()
 
     def get_ingestor_run_list(self, query_filter: Optional[IngestorRunsFilterInput] = None,
                               query_sort: Optional[IngestorRunsSortCriteriaInput] = None):
@@ -1042,10 +1041,9 @@ class EasClient:
                     ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
-                    response = await response.json()
+                    return await response.json()
                 else:
-                    response = await response.text()
-                return response
+                    raise response.raise_for_status()
 
     def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: Optional[str] = None, feeders: Optional[List[str]] = None):
         """
