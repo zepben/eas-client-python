@@ -1,5 +1,21 @@
 # EAS Python client
-## [0.22.0] - UNRELEASED
+## [0.23.0] - UNRELEASED
+### Breaking Changes
+* None.
+
+### New Features
+* None.
+
+### Enhancements
+* None.
+
+### Fixes
+* None.
+
+### Notes
+* None.
+
+## [0.22.0] - 2025-08-14
 ### Breaking Changes
 * None.
 
