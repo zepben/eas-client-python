@@ -627,8 +627,7 @@ def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServ
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        hosting_capacity_run_calibration_request_handler)
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(hosting_capacity_run_calibration_request_handler)
     res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
     httpserver.check_assertions()
     assert res == {"result": "success"}
@@ -1080,8 +1079,7 @@ def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver
             ca_filename=ca_filename
         )
 
-        OPENDSS_CONFIG.load_time = FixedTime(datetime(2022, 4, 1),
-                                             {"meter1": FixedTimeLoadOverride([1.0], [2.0], [3.0], [4.0])})
+        OPENDSS_CONFIG.load_time = FixedTime(datetime(2022, 4, 1), {"meter1": FixedTimeLoadOverride([1.0], [2.0], [3.0], [4.0])})
         httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
             run_opendss_export_request_handler)
         res = eas_client.run_opendss_export(OPENDSS_CONFIG)
@@ -1477,8 +1475,7 @@ def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPSer
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        get_ingestor_run_list_request_complete_handler)
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_list_request_complete_handler)
     res = eas_client.get_ingestor_run_list(
         query_filter=IngestorRunsFilterInput(
             id=4,
