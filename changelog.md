@@ -8,7 +8,11 @@
 * Added basic client methods `get_ingestor_run` and `get_ingestor_run_list` to retrieve the records of previous ingestor runs.
 
 ### Enhancements
-* None.
+
+* Added optional `generator_config` argument to `run_hosting_capacity_calibration`. This allows the user to override the
+  default values in the `WorkPackageConfig` used by calibration. Note: The following fields cannot be overridden during
+  calibration: GeneratorConfig.model.calibration, GeneratorConfig.model.meter_placement_config,
+  GeneratorConfig.solve.step_size_minutes, and GeneratorConfig.raw_results.
 
 ### Fixes
 * None.

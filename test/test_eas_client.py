@@ -611,8 +611,11 @@ def hosting_capacity_run_calibration_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!]) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders) }"
-    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION", "calibrationTimeLocal": datetime(2025, month=7, day=12).isoformat(), "feeders": None}
+    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!], $generatorConfig: HcGeneratorConfigInput) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders, generatorConfig: $generatorConfig) }"
+    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION",
+                                        "calibrationTimeLocal": datetime(2025, month=7, day=12).isoformat(),
+                                        "feeders": None, 'generatorConfig': None
+                                        }
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
@@ -624,7 +627,8 @@ def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServ
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(hosting_capacity_run_calibration_request_handler)
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        hosting_capacity_run_calibration_request_handler)
     res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
     httpserver.check_assertions()
     assert res == {"result": "success"}
@@ -718,10 +722,57 @@ def hosting_capacity_run_calibration_with_calibration_time_request_handler(reque
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!]) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders) }"
+    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!], $generatorConfig: HcGeneratorConfigInput) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders, generatorConfig: $generatorConfig) }"
     assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION",
-                                        "calibrationTimeLocal": datetime(1902, month=1, day=28, hour=0, minute=0, second=20).isoformat(),
-                                        "feeders": ["one", "two"]}
+                                        "calibrationTimeLocal": datetime(1902, month=1, day=28, hour=0, minute=0,
+                                                                         second=20).isoformat(),
+                                        "feeders": ["one", "two"],
+                                        "generatorConfig": {'model': {'calibration': None,
+                                                                                       'closedLoopTimeDelay': None,
+                                                                                       'closedLoopVBand': None,
+                                                                                       'closedLoopVLimit': None,
+                                                                                       'closedLoopVRegEnabled': None,
+                                                                                       'closedLoopVRegReplaceAll': None,
+                                                                                       'closedLoopVRegSetPoint': None,
+                                                                                       'collapseLvNetworks': None,
+                                                                                       'collapseSWER': None,
+                                                                                       'ctPrimScalingFactor': None,
+                                                                                       'defaultGenVar': None,
+                                                                                       'defaultGenWatts': None,
+                                                                                       'defaultLoadVar': None,
+                                                                                       'defaultLoadWatts': None,
+                                                                                       'defaultTapChangerBand': None,
+                                                                                       'defaultTapChangerSetPointPu': None,
+                                                                                       'defaultTapChangerTimeDelay': None,
+                                                                                       'feederScenarioAllocationStrategy': None,
+                                                                                       'fixOverloadingConsumers': None,
+                                                                                       'fixSinglePhaseLoads': None,
+                                                                                       'fixUndersizedServiceLines': None,
+                                                                                       'genVMaxPu': None,
+                                                                                       'genVMinPu': None,
+                                                                                       'loadIntervalLengthHours': None,
+                                                                                       'loadModel': None,
+                                                                                       'loadPlacement': None,
+                                                                                       'loadVMaxPu': None,
+                                                                                       'loadVMinPu': None,
+                                                                                       'maxGenTxRatio': None,
+                                                                                       'maxLoadLvLineRatio': None,
+                                                                                       'maxLoadServiceLineRatio': None,
+                                                                                       'maxLoadTxRatio': None,
+                                                                                       'maxSinglePhaseLoad': None,
+                                                                                       'meterPlacementConfig': None,
+                                                                                       'pFactorBaseExports': None,
+                                                                                       'pFactorBaseImports': None,
+                                                                                       'pFactorForecastPv': None,
+                                                                                       'seed': None,
+                                                                                       'splitPhaseDefaultLoadLossPercentage': None,
+                                                                                       'splitPhaseLVKV': None,
+                                                                                       'swerVoltageToLineVoltage': None,
+                                                                                       'transformerTapSettings': 'test_tap_settings',
+                                                                                       'vmPu': None},
+                                                                             'rawResults': None,
+                                                                             'solve': None}
+                                        }
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
@@ -733,8 +784,15 @@ def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_succes
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(hosting_capacity_run_calibration_with_calibration_time_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(1902, month=1, day=28, hour=0, minute=0, second=20), ["one", "two"])
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        hosting_capacity_run_calibration_with_calibration_time_request_handler)
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION",
+                                                      datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
+                                                      ["one", "two"],
+                                                      generator_config=GeneratorConfig(model=ModelConfig(
+                                                          transformer_tap_settings="test_tap_settings"
+                                                      ))
+                                                      )
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
@@ -1022,7 +1080,8 @@ def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver
             ca_filename=ca_filename
         )
 
-        OPENDSS_CONFIG.load_time = FixedTime(datetime(2022, 4, 1), {"meter1": FixedTimeLoadOverride([1.0], [2.0], [3.0], [4.0])})
+        OPENDSS_CONFIG.load_time = FixedTime(datetime(2022, 4, 1),
+                                             {"meter1": FixedTimeLoadOverride([1.0], [2.0], [3.0], [4.0])})
         httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
             run_opendss_export_request_handler)
         res = eas_client.run_opendss_export(OPENDSS_CONFIG)
@@ -1418,7 +1477,8 @@ def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPSer
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_list_request_complete_handler)
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        get_ingestor_run_list_request_complete_handler)
     res = eas_client.get_ingestor_run_list(
         query_filter=IngestorRunsFilterInput(
             id=4,
