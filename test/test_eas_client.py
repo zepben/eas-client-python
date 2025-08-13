@@ -611,8 +611,11 @@ def hosting_capacity_run_calibration_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!]) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders) }"
-    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION", "calibrationTimeLocal": datetime(2025, month=7, day=12).isoformat(), "feeders": None}
+    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!], $generatorConfig: HcGeneratorConfigInput) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders, generatorConfig: $generatorConfig) }"
+    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION",
+                                        "calibrationTimeLocal": datetime(2025, month=7, day=12).isoformat(),
+                                        "feeders": None, 'generatorConfig': None
+                                        }
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
@@ -718,10 +721,57 @@ def hosting_capacity_run_calibration_with_calibration_time_request_handler(reque
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!]) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders) }"
+    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!], $generatorConfig: HcGeneratorConfigInput) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders, generatorConfig: $generatorConfig) }"
     assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION",
-                                        "calibrationTimeLocal": datetime(1902, month=1, day=28, hour=0, minute=0, second=20).isoformat(),
-                                        "feeders": ["one", "two"]}
+                                        "calibrationTimeLocal": datetime(1902, month=1, day=28, hour=0, minute=0,
+                                                                         second=20).isoformat(),
+                                        "feeders": ["one", "two"],
+                                        "generatorConfig": {'model': {'calibration': None,
+                                                                                       'closedLoopTimeDelay': None,
+                                                                                       'closedLoopVBand': None,
+                                                                                       'closedLoopVLimit': None,
+                                                                                       'closedLoopVRegEnabled': None,
+                                                                                       'closedLoopVRegReplaceAll': None,
+                                                                                       'closedLoopVRegSetPoint': None,
+                                                                                       'collapseLvNetworks': None,
+                                                                                       'collapseSWER': None,
+                                                                                       'ctPrimScalingFactor': None,
+                                                                                       'defaultGenVar': None,
+                                                                                       'defaultGenWatts': None,
+                                                                                       'defaultLoadVar': None,
+                                                                                       'defaultLoadWatts': None,
+                                                                                       'defaultTapChangerBand': None,
+                                                                                       'defaultTapChangerSetPointPu': None,
+                                                                                       'defaultTapChangerTimeDelay': None,
+                                                                                       'feederScenarioAllocationStrategy': None,
+                                                                                       'fixOverloadingConsumers': None,
+                                                                                       'fixSinglePhaseLoads': None,
+                                                                                       'fixUndersizedServiceLines': None,
+                                                                                       'genVMaxPu': None,
+                                                                                       'genVMinPu': None,
+                                                                                       'loadIntervalLengthHours': None,
+                                                                                       'loadModel': None,
+                                                                                       'loadPlacement': None,
+                                                                                       'loadVMaxPu': None,
+                                                                                       'loadVMinPu': None,
+                                                                                       'maxGenTxRatio': None,
+                                                                                       'maxLoadLvLineRatio': None,
+                                                                                       'maxLoadServiceLineRatio': None,
+                                                                                       'maxLoadTxRatio': None,
+                                                                                       'maxSinglePhaseLoad': None,
+                                                                                       'meterPlacementConfig': None,
+                                                                                       'pFactorBaseExports': None,
+                                                                                       'pFactorBaseImports': None,
+                                                                                       'pFactorForecastPv': None,
+                                                                                       'seed': None,
+                                                                                       'splitPhaseDefaultLoadLossPercentage': None,
+                                                                                       'splitPhaseLVKV': None,
+                                                                                       'swerVoltageToLineVoltage': None,
+                                                                                       'transformerTapSettings': 'test_tap_settings',
+                                                                                       'vmPu': None},
+                                                                             'rawResults': None,
+                                                                             'solve': None}
+                                        }
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
@@ -733,11 +783,226 @@ def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_succes
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(hosting_capacity_run_calibration_with_calibration_time_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(1902, month=1, day=28, hour=0, minute=0, second=20), ["one", "two"])
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        hosting_capacity_run_calibration_with_calibration_time_request_handler)
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION",
+                                                      datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
+                                                      ["one", "two"],
+                                                      generator_config=GeneratorConfig(model=ModelConfig(
+                                                          transformer_tap_settings="test_tap_settings"
+                                                      ))
+                                                      )
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
+
+def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_no_generator_config(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        hosting_capacity_run_calibration_with_calibration_time_request_handler)
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION",
+                                                      datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
+                                                      ["one", "two"],
+                                                      transformer_tap_settings="test_tap_settings"
+                                                      )
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
+def hosting_capacity_run_calibration_with_generator_config_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!], $generatorConfig: HcGeneratorConfigInput) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders, generatorConfig: $generatorConfig) }"
+    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION",
+                                        "calibrationTimeLocal": datetime(1902, month=1, day=28, hour=0, minute=0,
+                                                                         second=20).isoformat(),
+                                        "feeders": ["one", "two"],
+                                        "generatorConfig": {'model': {'calibration': None,
+                                                                      'closedLoopTimeDelay': None,
+                                                                      'closedLoopVBand': None,
+                                                                      'closedLoopVLimit': None,
+                                                                      'closedLoopVRegEnabled': None,
+                                                                      'closedLoopVRegReplaceAll': None,
+                                                                      'closedLoopVRegSetPoint': None,
+                                                                      'collapseLvNetworks': None,
+                                                                      'collapseSWER': None,
+                                                                      'ctPrimScalingFactor': None,
+                                                                      'defaultGenVar': None,
+                                                                      'defaultGenWatts': None,
+                                                                      'defaultLoadVar': None,
+                                                                      'defaultLoadWatts': None,
+                                                                      'defaultTapChangerBand': None,
+                                                                      'defaultTapChangerSetPointPu': None,
+                                                                      'defaultTapChangerTimeDelay': None,
+                                                                      'feederScenarioAllocationStrategy': None,
+                                                                      'fixOverloadingConsumers': None,
+                                                                      'fixSinglePhaseLoads': None,
+                                                                      'fixUndersizedServiceLines': None,
+                                                                      'genVMaxPu': None,
+                                                                      'genVMinPu': None,
+                                                                      'loadIntervalLengthHours': None,
+                                                                      'loadModel': None,
+                                                                      'loadPlacement': None,
+                                                                      'loadVMaxPu': None,
+                                                                      'loadVMinPu': None,
+                                                                      'maxGenTxRatio': None,
+                                                                      'maxLoadLvLineRatio': None,
+                                                                      'maxLoadServiceLineRatio': None,
+                                                                      'maxLoadTxRatio': None,
+                                                                      'maxSinglePhaseLoad': None,
+                                                                      'meterPlacementConfig': None,
+                                                                      'pFactorBaseExports': None,
+                                                                      'pFactorBaseImports': None,
+                                                                      'pFactorForecastPv': None,
+                                                                      'seed': None,
+                                                                      'splitPhaseDefaultLoadLossPercentage': None,
+                                                                      'splitPhaseLVKV': None,
+                                                                      'swerVoltageToLineVoltage': None,
+                                                                      'transformerTapSettings': 'test_tap_settings',
+                                                                      'vmPu': None
+                                                                      },
+                                                            'rawResults': None,
+                                                            'solve': {'baseFrequency': None,
+                                                                      'emergVMaxPu': None,
+                                                                      'emergVMinPu': None,
+                                                                      'maxControlIter': None,
+                                                                      'maxIter': None,
+                                                                      'mode': None,
+                                                                      'normVMaxPu': 23.9,
+                                                                      'normVMinPu': None,
+                                                                      'stepSizeMinutes': None,
+                                                                      'voltageBases': None
+                                                                      }
+                                                            }
+                                        }
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+
+def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_generator_config(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        hosting_capacity_run_calibration_with_generator_config_request_handler)
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION",
+                                                      datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
+                                                      ["one", "two"],
+                                                      transformer_tap_settings="test_tap_settings",
+                                                      generator_config=GeneratorConfig(solve=SolveConfig(norm_vmax_pu=23.9))
+                                                      )
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
+def hosting_capacity_run_calibration_with_partial_model_config_request_handler(request):
+    actual_body = json.loads(request.data.decode())
+    query = " ".join(actual_body['query'].split())
+
+    assert query == "mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!], $generatorConfig: HcGeneratorConfigInput) { runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders, generatorConfig: $generatorConfig) }"
+    assert actual_body['variables'] == {"calibrationName": "TEST CALIBRATION",
+                                        "calibrationTimeLocal": datetime(1902, month=1, day=28, hour=0, minute=0,
+                                                                         second=20).isoformat(),
+                                        "feeders": ["one", "two"],
+                                        "generatorConfig": {'model': {'calibration': None,
+                                                                      'closedLoopTimeDelay': None,
+                                                                      'closedLoopVBand': None,
+                                                                      'closedLoopVLimit': None,
+                                                                      'closedLoopVRegEnabled': None,
+                                                                      'closedLoopVRegReplaceAll': None,
+                                                                      'closedLoopVRegSetPoint': None,
+                                                                      'collapseLvNetworks': None,
+                                                                      'collapseSWER': None,
+                                                                      'ctPrimScalingFactor': None,
+                                                                      'defaultGenVar': None,
+                                                                      'defaultGenWatts': None,
+                                                                      'defaultLoadVar': None,
+                                                                      'defaultLoadWatts': None,
+                                                                      'defaultTapChangerBand': None,
+                                                                      'defaultTapChangerSetPointPu': None,
+                                                                      'defaultTapChangerTimeDelay': None,
+                                                                      'feederScenarioAllocationStrategy': None,
+                                                                      'fixOverloadingConsumers': None,
+                                                                      'fixSinglePhaseLoads': None,
+                                                                      'fixUndersizedServiceLines': None,
+                                                                      'genVMaxPu': None,
+                                                                      'genVMinPu': None,
+                                                                      'loadIntervalLengthHours': None,
+                                                                      'loadModel': None,
+                                                                      'loadPlacement': None,
+                                                                      'loadVMaxPu': None,
+                                                                      'loadVMinPu': None,
+                                                                      'maxGenTxRatio': None,
+                                                                      'maxLoadLvLineRatio': None,
+                                                                      'maxLoadServiceLineRatio': None,
+                                                                      'maxLoadTxRatio': None,
+                                                                      'maxSinglePhaseLoad': None,
+                                                                      'meterPlacementConfig': None,
+                                                                      'pFactorBaseExports': None,
+                                                                      'pFactorBaseImports': None,
+                                                                      'pFactorForecastPv': None,
+                                                                      'seed': None,
+                                                                      'splitPhaseDefaultLoadLossPercentage': None,
+                                                                      'splitPhaseLVKV': None,
+                                                                      'swerVoltageToLineVoltage': None,
+                                                                      'transformerTapSettings': 'test_tap_settings',
+                                                                      'vmPu': 123.4
+                                                                      },
+                                                            'rawResults': None,
+                                                            'solve': None
+                                                            }
+                                        }
+
+    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+
+
+def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_model_config(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        hosting_capacity_run_calibration_with_partial_model_config_request_handler)
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION",
+                                                      datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
+                                                      ["one", "two"],
+                                                      transformer_tap_settings="test_tap_settings",
+                                                      generator_config=GeneratorConfig(model=ModelConfig(vm_pu=123.4))
+                                                      )
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
+def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        hosting_capacity_run_calibration_with_calibration_time_request_handler)
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION",
+                                                      datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
+                                                      ["one", "two"],
+                                                      transformer_tap_settings="test_tap_settings",
+                                                      generator_config=GeneratorConfig(model=ModelConfig(
+                                                          transformer_tap_settings="this_should_be_over_written"
+                                                      ))
+                                                      )
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
 
 def get_hosting_capacity_calibration_sets_request_handler(request):
     actual_body = json.loads(request.data.decode())
