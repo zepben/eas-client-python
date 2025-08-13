@@ -13,6 +13,9 @@
   default values in the `WorkPackageConfig` used by calibration. Note: The following fields cannot be overridden during
   calibration: GeneratorConfig.model.calibration, GeneratorConfig.model.meter_placement_config,
   GeneratorConfig.solve.step_size_minutes, and GeneratorConfig.raw_results.
+* Added optional `transformer_tap_settings` argument to `run_hosting_capacity_calibration`. This is the equivalent to supplying a `generator_config`
+  with `generator_config.model.transformer_tap_settings` set. If `transformer_tap_settings` is supplied, it will take precedence over any `transformer_tap_settings` 
+  configured in the `generator_config`.
 
 ### Fixes
 * None.

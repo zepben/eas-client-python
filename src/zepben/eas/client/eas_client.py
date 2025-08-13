@@ -24,7 +24,7 @@ from zepben.eas.client.study import Study
 from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput
 from zepben.eas.client.util import construct_url
 from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod, ForecastConfig, FeederConfigs, \
-    GeneratorConfig
+    GeneratorConfig, ModelConfig
 
 __all__ = ["EasClient"]
 
@@ -1047,39 +1047,57 @@ class EasClient:
 
     def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: datetime,
                                          feeders: Optional[List[str]] = None,
+                                         transformer_tap_settings: Optional[str] = None,
                                          generator_config: Optional[GeneratorConfig] = None):
         """
         Send request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
         :param local_calibration_time: A datetime representation of the calibration time, in the timezone of your pqv data ("model time").
         :param feeders: A list of feeder ID's to run the calibration over. If not supplied then the calibration is run over all feeders in the network.
+        :param transformer_tap_settings: A set of transformer tap settings to apply before running the calibration work package.
+                If provided, this will take precedence over any 'transformer_tap_settings' supplied in via the generator_config parameter
         :param generator_config: A `GeneratorConfig` object that overrides the default values in the `WorkPackageConfig` used by calibration.
-        Note: The following fields cannot be overridden during calibration: generator_config.model.calibration, generator_config.model.meter_placement_config, generator_config.solve.step_size_minutes, and generator_config.raw_results.
+                Note: The following fields cannot be overridden during calibration: generator_config.model.calibration, generator_config.model.meter_placement_config, generator_config.solve.step_size_minutes, and generator_config.raw_results.
 
 
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
         return get_event_loop().run_until_complete(
             self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time, feeders,
+                                                        transformer_tap_settings,
                                                         generator_config))
 
     async def async_run_hosting_capacity_calibration(self, calibration_name: str,
                                                      calibration_time_local: datetime,
                                                      feeders: Optional[List[str]] = None,
+                                                     transformer_tap_settings: Optional[str] = None,
                                                      generator_config: Optional[GeneratorConfig] = None):
         """
         Send asynchronous request to run hosting capacity calibration
         :param calibration_name: A string representation of the calibration name
         :param calibration_time_local: A datetime representation of the calibration time, in the timezone of your pqv data ("model time").
         :param feeders: A list of feeder ID's to run the calibration over. If not supplied then the calibration is run over all feeders in the network.
+        :param transformer_tap_settings: A set of transformer tap settings to apply before running the calibration work package.
+                If provided, this will take precedence over any 'transformer_tap_settings' supplied in via the generator_config parameter
         :param generator_config: A `GeneratorConfig` object that overrides the default values in the `WorkPackageConfig` used by calibration.
-        Note: The following fields cannot be overridden during calibration: generator_config.model.calibration, generator_config.model.meter_placement_config, generator_config.solve.step_size_minutes, and generator_config.raw_results.
+                Note: The following fields cannot be overridden during calibration: generator_config.model.calibration, generator_config.model.meter_placement_config, generator_config.solve.step_size_minutes, and generator_config.raw_results.
+
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
 
         # Only replace microsecond, as in database we only have down to second precision.
         # tzinfo will be whatever the user passed through, which should be the timezone of their load data.
         parsed_time = calibration_time_local.replace(microsecond=0, tzinfo=None)
+
+        if transformer_tap_settings:
+            if generator_config:
+                if generator_config.model:
+                    generator_config.model.transformer_tap_settings = transformer_tap_settings
+                else:
+                    generator_config.model = ModelConfig(transformer_tap_settings=transformer_tap_settings)
+            else:
+                generator_config = GeneratorConfig(model=ModelConfig(transformer_tap_settings=transformer_tap_settings))
+
         with warnings.catch_warnings():
             if not self._verify_certificate:
                 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
@@ -1275,14 +1293,17 @@ class EasClient:
                 else:
                     response.raise_for_status()
 
-    def get_transformer_tap_settings(self, calibration_id: str, feeder: Optional[str] = None, transformer_mrid: Optional[str] = None):
+    def get_transformer_tap_settings(self, calibration_id: str, feeder: Optional[str] = None,
+                                     transformer_mrid: Optional[str] = None):
         """
         Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database.
         :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
         """
-        return get_event_loop().run_until_complete(self.async_get_transformer_tap_settings(calibration_id, feeder, transformer_mrid))
+        return get_event_loop().run_until_complete(
+            self.async_get_transformer_tap_settings(calibration_id, feeder, transformer_mrid))
 
-    async def async_get_transformer_tap_settings(self, calibration_id: str, feeder: Optional[str] = None, transformer_mrid: Optional[str] = None):
+    async def async_get_transformer_tap_settings(self, calibration_id: str, feeder: Optional[str] = None,
+                                                 transformer_mrid: Optional[str] = None):
         """
         Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database.
         :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
