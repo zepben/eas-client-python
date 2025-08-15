@@ -26,7 +26,7 @@ from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput
     Order
 from zepben.eas.client.study import Result
 from zepben.eas.client.work_package import FeederConfigs, TimePeriodLoadOverride, \
-    FixedTime
+    FixedTime, NodeLevelResultsConfig
 from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, GeneratorConfig, ModelConfig, \
     FeederScenarioAllocationStrategy, LoadPlacement, MeterPlacementConfig, SwitchMeterPlacementConfig, SwitchClass, \
     SolveMode, RawResultsConfig
@@ -726,51 +726,57 @@ def hosting_capacity_run_calibration_with_calibration_time_request_handler(reque
                                         "calibrationTimeLocal": datetime(1902, month=1, day=28, hour=0, minute=0,
                                                                          second=20).isoformat(),
                                         "feeders": ["one", "two"],
-                                        "generatorConfig": {'model': {'calibration': None,
-                                                                                       'closedLoopTimeDelay': None,
-                                                                                       'closedLoopVBand': None,
-                                                                                       'closedLoopVLimit': None,
-                                                                                       'closedLoopVRegEnabled': None,
-                                                                                       'closedLoopVRegReplaceAll': None,
-                                                                                       'closedLoopVRegSetPoint': None,
-                                                                                       'collapseLvNetworks': None,
-                                                                                       'collapseSWER': None,
-                                                                                       'ctPrimScalingFactor': None,
-                                                                                       'defaultGenVar': None,
-                                                                                       'defaultGenWatts': None,
-                                                                                       'defaultLoadVar': None,
-                                                                                       'defaultLoadWatts': None,
-                                                                                       'defaultTapChangerBand': None,
-                                                                                       'defaultTapChangerSetPointPu': None,
-                                                                                       'defaultTapChangerTimeDelay': None,
-                                                                                       'feederScenarioAllocationStrategy': None,
-                                                                                       'fixOverloadingConsumers': None,
-                                                                                       'fixSinglePhaseLoads': None,
-                                                                                       'fixUndersizedServiceLines': None,
-                                                                                       'genVMaxPu': None,
-                                                                                       'genVMinPu': None,
-                                                                                       'loadIntervalLengthHours': None,
-                                                                                       'loadModel': None,
-                                                                                       'loadPlacement': None,
-                                                                                       'loadVMaxPu': None,
-                                                                                       'loadVMinPu': None,
-                                                                                       'maxGenTxRatio': None,
-                                                                                       'maxLoadLvLineRatio': None,
-                                                                                       'maxLoadServiceLineRatio': None,
-                                                                                       'maxLoadTxRatio': None,
-                                                                                       'maxSinglePhaseLoad': None,
-                                                                                       'meterPlacementConfig': None,
-                                                                                       'pFactorBaseExports': None,
-                                                                                       'pFactorBaseImports': None,
-                                                                                       'pFactorForecastPv': None,
-                                                                                       'seed': None,
-                                                                                       'splitPhaseDefaultLoadLossPercentage': None,
-                                                                                       'splitPhaseLVKV': None,
-                                                                                       'swerVoltageToLineVoltage': None,
-                                                                                       'transformerTapSettings': 'test_tap_settings',
-                                                                                       'vmPu': None},
-                                                                             'rawResults': None,
-                                                                             'solve': None}
+                                        "generatorConfig": {
+                                            'model': {
+                                                'calibration': None,
+                                                'closedLoopTimeDelay': None,
+                                                'closedLoopVBand': None,
+                                                'closedLoopVLimit': None,
+                                                'closedLoopVRegEnabled': None,
+                                                'closedLoopVRegReplaceAll': None,
+                                                'closedLoopVRegSetPoint': None,
+                                                'collapseLvNetworks': None,
+                                                'collapseNegligibleImpedances': None,
+                                                'collapseSWER': None,
+                                                'combineCommonImpedances': None,
+                                                'ctPrimScalingFactor': None,
+                                                'defaultGenVar': None,
+                                                'defaultGenWatts': None,
+                                                'defaultLoadVar': None,
+                                                'defaultLoadWatts': None,
+                                                'defaultTapChangerBand': None,
+                                                'defaultTapChangerSetPointPu': None,
+                                                'defaultTapChangerTimeDelay': None,
+                                                'feederScenarioAllocationStrategy': None,
+                                                'fixOverloadingConsumers': None,
+                                                'fixSinglePhaseLoads': None,
+                                                'fixUndersizedServiceLines': None,
+                                                'genVMaxPu': None,
+                                                'genVMinPu': None,
+                                                'loadIntervalLengthHours': None,
+                                                'loadModel': None,
+                                                'loadPlacement': None,
+                                                'loadVMaxPu': None,
+                                                'loadVMinPu': None,
+                                                'maxGenTxRatio': None,
+                                                'maxLoadLvLineRatio': None,
+                                                'maxLoadServiceLineRatio': None,
+                                                'maxLoadTxRatio': None,
+                                                'maxSinglePhaseLoad': None,
+                                                'meterPlacementConfig': None,
+                                                'pFactorBaseExports': None,
+                                                'pFactorBaseImports': None,
+                                                'pFactorForecastPv': None,
+                                                'seed': None,
+                                                'simplifyNetwork': None,
+                                                'splitPhaseDefaultLoadLossPercentage': None,
+                                                'splitPhaseLVKV': None,
+                                                'swerVoltageToLineVoltage': None,
+                                                'transformerTapSettings': 'test_tap_settings',
+                                                'vmPu': None},
+                                            'rawResults': None,
+                                            'nodeLevelResults': None,
+                                            'solve': None}
                                         }
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
@@ -823,63 +829,70 @@ def hosting_capacity_run_calibration_with_generator_config_request_handler(reque
                                         "calibrationTimeLocal": datetime(1902, month=1, day=28, hour=0, minute=0,
                                                                          second=20).isoformat(),
                                         "feeders": ["one", "two"],
-                                        "generatorConfig": {'model': {'calibration': None,
-                                                                      'closedLoopTimeDelay': None,
-                                                                      'closedLoopVBand': None,
-                                                                      'closedLoopVLimit': None,
-                                                                      'closedLoopVRegEnabled': None,
-                                                                      'closedLoopVRegReplaceAll': None,
-                                                                      'closedLoopVRegSetPoint': None,
-                                                                      'collapseLvNetworks': None,
-                                                                      'collapseSWER': None,
-                                                                      'ctPrimScalingFactor': None,
-                                                                      'defaultGenVar': None,
-                                                                      'defaultGenWatts': None,
-                                                                      'defaultLoadVar': None,
-                                                                      'defaultLoadWatts': None,
-                                                                      'defaultTapChangerBand': None,
-                                                                      'defaultTapChangerSetPointPu': None,
-                                                                      'defaultTapChangerTimeDelay': None,
-                                                                      'feederScenarioAllocationStrategy': None,
-                                                                      'fixOverloadingConsumers': None,
-                                                                      'fixSinglePhaseLoads': None,
-                                                                      'fixUndersizedServiceLines': None,
-                                                                      'genVMaxPu': None,
-                                                                      'genVMinPu': None,
-                                                                      'loadIntervalLengthHours': None,
-                                                                      'loadModel': None,
-                                                                      'loadPlacement': None,
-                                                                      'loadVMaxPu': None,
-                                                                      'loadVMinPu': None,
-                                                                      'maxGenTxRatio': None,
-                                                                      'maxLoadLvLineRatio': None,
-                                                                      'maxLoadServiceLineRatio': None,
-                                                                      'maxLoadTxRatio': None,
-                                                                      'maxSinglePhaseLoad': None,
-                                                                      'meterPlacementConfig': None,
-                                                                      'pFactorBaseExports': None,
-                                                                      'pFactorBaseImports': None,
-                                                                      'pFactorForecastPv': None,
-                                                                      'seed': None,
-                                                                      'splitPhaseDefaultLoadLossPercentage': None,
-                                                                      'splitPhaseLVKV': None,
-                                                                      'swerVoltageToLineVoltage': None,
-                                                                      'transformerTapSettings': 'test_tap_settings',
-                                                                      'vmPu': None
-                                                                      },
-                                                            'rawResults': None,
-                                                            'solve': {'baseFrequency': None,
-                                                                      'emergVMaxPu': None,
-                                                                      'emergVMinPu': None,
-                                                                      'maxControlIter': None,
-                                                                      'maxIter': None,
-                                                                      'mode': None,
-                                                                      'normVMaxPu': 23.9,
-                                                                      'normVMinPu': None,
-                                                                      'stepSizeMinutes': None,
-                                                                      'voltageBases': None
-                                                                      }
-                                                            }
+                                        "generatorConfig": {
+                                            'model': {
+                                                'calibration': None,
+                                                'closedLoopTimeDelay': None,
+                                                'closedLoopVBand': None,
+                                                'closedLoopVLimit': None,
+                                                'closedLoopVRegEnabled': None,
+                                                'closedLoopVRegReplaceAll': None,
+                                                'closedLoopVRegSetPoint': None,
+                                                'collapseLvNetworks': None,
+                                                'collapseNegligibleImpedances': None,
+                                                'collapseSWER': None,
+                                                'combineCommonImpedances': None,
+                                                'ctPrimScalingFactor': None,
+                                                'defaultGenVar': None,
+                                                'defaultGenWatts': None,
+                                                'defaultLoadVar': None,
+                                                'defaultLoadWatts': None,
+                                                'defaultTapChangerBand': None,
+                                                'defaultTapChangerSetPointPu': None,
+                                                'defaultTapChangerTimeDelay': None,
+                                                'feederScenarioAllocationStrategy': None,
+                                                'fixOverloadingConsumers': None,
+                                                'fixSinglePhaseLoads': None,
+                                                'fixUndersizedServiceLines': None,
+                                                'genVMaxPu': None,
+                                                'genVMinPu': None,
+                                                'loadIntervalLengthHours': None,
+                                                'loadModel': None,
+                                                'loadPlacement': None,
+                                                'loadVMaxPu': None,
+                                                'loadVMinPu': None,
+                                                'maxGenTxRatio': None,
+                                                'maxLoadLvLineRatio': None,
+                                                'maxLoadServiceLineRatio': None,
+                                                'maxLoadTxRatio': None,
+                                                'maxSinglePhaseLoad': None,
+                                                'meterPlacementConfig': None,
+                                                'pFactorBaseExports': None,
+                                                'pFactorBaseImports': None,
+                                                'pFactorForecastPv': None,
+                                                'seed': None,
+                                                'simplifyNetwork': None,
+                                                'splitPhaseDefaultLoadLossPercentage': None,
+                                                'splitPhaseLVKV': None,
+                                                'swerVoltageToLineVoltage': None,
+                                                'transformerTapSettings': 'test_tap_settings',
+                                                'vmPu': None
+                                            },
+                                            'nodeLevelResults': None,
+                                            'rawResults': None,
+                                            'solve': {
+                                                'baseFrequency': None,
+                                                'emergVMaxPu': None,
+                                                'emergVMinPu': None,
+                                                'maxControlIter': None,
+                                                'maxIter': None,
+                                                'mode': None,
+                                                'normVMaxPu': 23.9,
+                                                'normVMinPu': None,
+                                                'stepSizeMinutes': None,
+                                                'voltageBases': None
+                                                }
+                                            }
                                         }
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
@@ -913,53 +926,59 @@ def hosting_capacity_run_calibration_with_partial_model_config_request_handler(r
                                         "calibrationTimeLocal": datetime(1902, month=1, day=28, hour=0, minute=0,
                                                                          second=20).isoformat(),
                                         "feeders": ["one", "two"],
-                                        "generatorConfig": {'model': {'calibration': None,
-                                                                      'closedLoopTimeDelay': None,
-                                                                      'closedLoopVBand': None,
-                                                                      'closedLoopVLimit': None,
-                                                                      'closedLoopVRegEnabled': None,
-                                                                      'closedLoopVRegReplaceAll': None,
-                                                                      'closedLoopVRegSetPoint': None,
-                                                                      'collapseLvNetworks': None,
-                                                                      'collapseSWER': None,
-                                                                      'ctPrimScalingFactor': None,
-                                                                      'defaultGenVar': None,
-                                                                      'defaultGenWatts': None,
-                                                                      'defaultLoadVar': None,
-                                                                      'defaultLoadWatts': None,
-                                                                      'defaultTapChangerBand': None,
-                                                                      'defaultTapChangerSetPointPu': None,
-                                                                      'defaultTapChangerTimeDelay': None,
-                                                                      'feederScenarioAllocationStrategy': None,
-                                                                      'fixOverloadingConsumers': None,
-                                                                      'fixSinglePhaseLoads': None,
-                                                                      'fixUndersizedServiceLines': None,
-                                                                      'genVMaxPu': None,
-                                                                      'genVMinPu': None,
-                                                                      'loadIntervalLengthHours': None,
-                                                                      'loadModel': None,
-                                                                      'loadPlacement': None,
-                                                                      'loadVMaxPu': None,
-                                                                      'loadVMinPu': None,
-                                                                      'maxGenTxRatio': None,
-                                                                      'maxLoadLvLineRatio': None,
-                                                                      'maxLoadServiceLineRatio': None,
-                                                                      'maxLoadTxRatio': None,
-                                                                      'maxSinglePhaseLoad': None,
-                                                                      'meterPlacementConfig': None,
-                                                                      'pFactorBaseExports': None,
-                                                                      'pFactorBaseImports': None,
-                                                                      'pFactorForecastPv': None,
-                                                                      'seed': None,
-                                                                      'splitPhaseDefaultLoadLossPercentage': None,
-                                                                      'splitPhaseLVKV': None,
-                                                                      'swerVoltageToLineVoltage': None,
-                                                                      'transformerTapSettings': 'test_tap_settings',
-                                                                      'vmPu': 123.4
-                                                                      },
-                                                            'rawResults': None,
-                                                            'solve': None
-                                                            }
+                                        "generatorConfig": {
+                                            'model': {
+                                                'calibration': None,
+                                                'closedLoopTimeDelay': None,
+                                                'closedLoopVBand': None,
+                                                'closedLoopVLimit': None,
+                                                'closedLoopVRegEnabled': None,
+                                                'closedLoopVRegReplaceAll': None,
+                                                'closedLoopVRegSetPoint': None,
+                                                'collapseLvNetworks': None,
+                                                'collapseNegligibleImpedances': None,
+                                                'collapseSWER': None,
+                                                'combineCommonImpedances': None,
+                                                'ctPrimScalingFactor': None,
+                                                'defaultGenVar': None,
+                                                'defaultGenWatts': None,
+                                                'defaultLoadVar': None,
+                                                'defaultLoadWatts': None,
+                                                'defaultTapChangerBand': None,
+                                                'defaultTapChangerSetPointPu': None,
+                                                'defaultTapChangerTimeDelay': None,
+                                                'feederScenarioAllocationStrategy': None,
+                                                'fixOverloadingConsumers': None,
+                                                'fixSinglePhaseLoads': None,
+                                                'fixUndersizedServiceLines': None,
+                                                'genVMaxPu': None,
+                                                'genVMinPu': None,
+                                                'loadIntervalLengthHours': None,
+                                                'loadModel': None,
+                                                'loadPlacement': None,
+                                                'loadVMaxPu': None,
+                                                'loadVMinPu': None,
+                                                'maxGenTxRatio': None,
+                                                'maxLoadLvLineRatio': None,
+                                                'maxLoadServiceLineRatio': None,
+                                                'maxLoadTxRatio': None,
+                                                'maxSinglePhaseLoad': None,
+                                                'meterPlacementConfig': None,
+                                                'pFactorBaseExports': None,
+                                                'pFactorBaseImports': None,
+                                                'pFactorForecastPv': None,
+                                                'seed': None,
+                                                'simplifyNetwork': None,
+                                                'splitPhaseDefaultLoadLossPercentage': None,
+                                                'splitPhaseLVKV': None,
+                                                'swerVoltageToLineVoltage': None,
+                                                'transformerTapSettings': 'test_tap_settings',
+                                                'vmPu': 123.4
+                                                },
+                                            'nodeLevelResults': None,
+                                            'rawResults': None,
+                                            'solve': None
+                                            }
                                         }
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
@@ -1089,7 +1108,10 @@ def run_opendss_export_request_handler(request):
                             "fixUndersizedServiceLines": True,
                             "maxLoadServiceLineRatio": 1.5,
                             "maxLoadLvLineRatio": 2.0,
+                            "simplifyNetwork": False,
                             "collapseLvNetworks": False,
+                            "collapseNegligibleImpedances": False,
+                            "combineCommonImpedances": False,
                             "feederScenarioAllocationStrategy": "ADDITIVE",
                             "closedLoopVRegEnabled": True,
                             "closedLoopVRegReplaceAll": True,
@@ -1150,6 +1172,16 @@ def run_opendss_export_request_handler(request):
                             "resultsPerMeter": True,
                             "overloadsRaw": True,
                             "voltageExceptionsRaw": True
+                        },
+                        "nodeLevelResults": {
+                            "collectVoltage": True,
+                            "collectCurrent": False,
+                            "collectPower": True,
+                            "mridsToCollect": ["mrid_one", "mrid_two"],
+                            "collectAllSwitches": False,
+                            "collectAllTransformers": True,
+                            "collectAllConductors": False,
+                            "collectAllEnergyConsumers": True
                         }
                     }
                 }
@@ -1191,7 +1223,10 @@ OPENDSS_CONFIG = OpenDssConfig(
             fix_undersized_service_lines=True,
             max_load_service_line_ratio=1.5,
             max_load_lv_line_ratio=2.0,
+            simplify_network=False,
             collapse_lv_networks=False,
+            collapse_negligible_impedances=False,
+            combine_common_impedances=False,
             feeder_scenario_allocation_strategy=FeederScenarioAllocationStrategy.ADDITIVE,
             closed_loop_v_reg_enabled=True,
             closed_loop_v_reg_replace_all=True,
@@ -1246,6 +1281,16 @@ OPENDSS_CONFIG = OpenDssConfig(
             results_per_meter=True,
             overloads_raw=True,
             voltage_exceptions_raw=True
+        ),
+        NodeLevelResultsConfig(
+            collect_voltage=True,
+            collect_current=False,
+            collect_power=True,
+            mrids_to_collect=["mrid_one", "mrid_two"],
+            collect_all_switches=False,
+            collect_all_transformers=True,
+            collect_all_conductors=False,
+            collect_all_energy_consumers=True
         )
     ),
     is_public=True)
@@ -1360,7 +1405,10 @@ get_paged_opendss_models_query = """
                                     fixUndersizedServiceLines
                                     maxLoadServiceLineRatio
                                     maxLoadLvLineRatio
+                                    simplifyNetwork
                                     collapseLvNetworks
+                                    collapseNegligibleImpedances
+                                    combineCommonImpedances
                                     feederScenarioAllocationStrategy
                                     closedLoopVRegEnabled
                                     closedLoopVRegReplaceAll
@@ -1411,6 +1459,16 @@ get_paged_opendss_models_query = """
                                     resultsPerMeter
                                     overloadsRaw
                                     voltageExceptionsRaw
+                                }
+                                nodeLevelResults {
+                                    collectVoltage
+                                    collectCurrent
+                                    collectPower
+                                    mridsToCollect
+                                    collectAllSwitches
+                                    collectAllTransformers
+                                    collectAllConductors
+                                    collectAllEnergyConsumers
                                 }
                             }
                         }
