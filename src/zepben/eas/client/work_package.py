@@ -3,12 +3,9 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-from dataclasses import dataclass
-from datetime import datetime
-from enum import Enum
-from typing import List, Optional, Union, Dict
 
 __all__ = [
+    "HostingCapacityDataclass",
     "SwitchClass",
     "SwitchMeterPlacementConfig",
     "CandidateGenerationConfig",
@@ -45,18 +42,47 @@ __all__ = [
     "FeederConfigs",
 ]
 
+from abc import ABC
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional, Union, Dict, Any
+from zepben.eas.client.util import snake_to_camel
+
+
+class HostingCapacityDataclass(ABC):  # TODO: Another terrible name
+    def to_json(self) -> Any:
+        def _process_value(_value):
+            if isinstance(_value, HostingCapacityDataclass):
+                return _value.to_json()
+            elif isinstance(_value, Enum):
+                return _value.value
+            elif isinstance(_value, datetime):
+                return _value.isoformat()
+            elif isinstance(_value, list):
+                return [_process_value(i) for i in _value]
+            elif isinstance(_value, dict):
+                return {k: _process_value(v) for k, v in _value.items()}
+            elif isinstance(_value, (str, int, float)):
+                return _value
+            elif _value is None:
+                return None
+            else:
+                raise TypeError(f"Unsupported value type: {_value}")
+        return {snake_to_camel(k): _process_value(v) for k, v in self.__dict__.items() if not k.startswith("__")}
+
 
 class SwitchClass(Enum):
-    BREAKER = "BREAKER",
-    DISCONNECTOR = "DISCONNECTOR",
-    FUSE = "FUSE",
-    JUMPER = "JUMPER",
-    LOAD_BREAK_SWITCH = "LOAD_BREAK_SWITCH",
+    BREAKER = "BREAKER"
+    DISCONNECTOR = "DISCONNECTOR"
+    FUSE = "FUSE"
+    JUMPER = "JUMPER"
+    LOAD_BREAK_SWITCH = "LOAD_BREAK_SWITCH"
     RECLOSER = "RECLOSER"
 
 
 @dataclass
-class SwitchMeterPlacementConfig:
+class SwitchMeterPlacementConfig(HostingCapacityDataclass):
     meter_switch_class: Optional[SwitchClass] = None
     """The CIM class of Switch to create meters at"""
 
@@ -68,7 +94,7 @@ class SwitchMeterPlacementConfig:
 
 
 @dataclass
-class FixedTimeLoadOverride:
+class FixedTimeLoadOverride(HostingCapacityDataclass):
     load_watts: Optional[List[float]]
     """
     The readings to be used to override load watts
@@ -89,11 +115,13 @@ class FixedTimeLoadOverride:
     The readings to be used to override gen var
     """
 
-    # def __str__(self):
+    def to_json(self) -> dict:
+        _json = super().to_json()
+        return {f'{k}Override': v for k, v in _json.items()}
 
 
 @dataclass
-class TimePeriodLoadOverride:
+class TimePeriodLoadOverride(HostingCapacityDataclass):
     load_watts: Optional[List[float]]
     """
     A list of readings to be used to override load watts.
@@ -138,8 +166,22 @@ class TimePeriodLoadOverride:
         1.0: 24 entries for daily and 8760 for yearly
     """
 
+    def to_json(self) -> dict:
+        _json = super().to_json()
+        return {f'{k}Override': v for k, v in _json.items()}
 
-class FixedTime:
+
+class OverrideModel(HostingCapacityDataclass):
+    def to_json(self):
+        _json = super().to_json()
+        try:
+            _json['overrides'] = [{'loadId': k, **v} for k, v in _json.pop('loadOverrides').items()]
+        except AttributeError:
+            _json['overrides'] = None
+        return _json
+
+
+class FixedTime(OverrideModel):
     """
     A single point in time to model. Should be precise to the minute, and load data must be
     present for the provided time in the load database for accurate results.
@@ -150,7 +192,7 @@ class FixedTime:
         self.load_overrides = load_overrides
 
 
-class TimePeriod:
+class TimePeriod(OverrideModel):
     """
     A time period to model, from a start time to an end time. Maximum of 1 year.
 
@@ -193,7 +235,7 @@ class FeederScenarioAllocationStrategy(Enum):
 
 
 @dataclass
-class MeterPlacementConfig:
+class MeterPlacementConfig(HostingCapacityDataclass):
     feeder_head: Optional[bool] = None
     """Whether to place a meter at the voltage source at the feeder head."""
 
@@ -208,7 +250,7 @@ class MeterPlacementConfig:
 
 
 @dataclass
-class ModelConfig:
+class ModelConfig(HostingCapacityDataclass):
     vm_pu: Optional[float] = None
     """Voltage per-unit of voltage source."""
 
@@ -451,6 +493,22 @@ class ModelConfig:
     Optional setting for scaling factor of calculated CTPrim for zone sub transformers.
     """
 
+    def to_json(self) -> dict:
+        _json = super().to_json()
+        for _from, _to in (
+            ('collapseSwer', 'collapseSWER'),
+            ('genVmaxPu', 'genVMaxPu'),
+            ('genVminPu', 'genVMinPu'),
+            ('loadVmaxPu', 'loadVMaxPu'),
+            ('loadVminPu', 'loadVMinPu'),
+            ('splitPhaseLvKv', 'splitPhaseLVKV'),
+        ):
+            try:
+                _json[_to] = _json.pop(_from)
+            except KeyError:
+                continue
+        return _json
+
 
 class SolveMode(Enum):
     YEARLY = "YEARLY"
@@ -458,7 +516,7 @@ class SolveMode(Enum):
 
 
 @dataclass
-class SolveConfig:
+class SolveConfig(HostingCapacityDataclass):
     norm_vmin_pu: Optional[float] = None
     norm_vmax_pu: Optional[float] = None
     emerg_vmin_pu: Optional[float] = None
@@ -478,9 +536,23 @@ class SolveConfig:
     step_size_minutes: Optional[float] = None
     """The step size to solve"""
 
+    def to_json(self) -> dict:
+        _json = super().to_json()
+        for _from, _to in (
+            ('emergVmaxPu', 'emergVMaxPu'),
+            ('emergVminPu', 'emergVMinPu'),
+            ('normVmaxPu', 'normVMaxPu'),
+            ('normVminPu', 'normVMinPu'),
+        ):
+            try:
+                _json[_to] = _json.pop(_from)
+            except KeyError:
+                continue
+        return _json
+
 
 @dataclass
-class RawResultsConfig:
+class RawResultsConfig(HostingCapacityDataclass):
     """
     Whether to produce raw results generated from OpenDSS.
     You will likely always want defaults for this, as setting any of these to False will limit
@@ -514,7 +586,7 @@ class RawResultsConfig:
 
 
 @dataclass
-class MetricsResultsConfig:
+class MetricsResultsConfig(HostingCapacityDataclass):
     """
     Calculated metrics based off the raw results
     """
@@ -524,7 +596,7 @@ class MetricsResultsConfig:
 
 
 @dataclass
-class StoredResultsConfig:
+class StoredResultsConfig(HostingCapacityDataclass):
     """
     The raw results that will be stored.
     Note storing raw results will utilise a lot of storage space and should be avoided for
@@ -557,7 +629,7 @@ class StoredResultsConfig:
 
 
 @dataclass
-class GeneratorConfig:
+class GeneratorConfig(HostingCapacityDataclass):
     """
     Configuration settings for the OpenDSS model.
     These settings make changes to the network and specific OpenDSS settings prior to model execution.
@@ -569,7 +641,7 @@ class GeneratorConfig:
 
 
 @dataclass
-class EnhancedMetricsConfig:
+class EnhancedMetricsConfig(HostingCapacityDataclass):
     populate_enhanced_metrics: Optional[bool] = None
     populate_enhanced_metrics_profile: Optional[bool] = None
     populate_duration_curves: Optional[bool] = None
@@ -581,19 +653,24 @@ class EnhancedMetricsConfig:
     calculate_emerg_for_gen_thermal: Optional[bool] = None
     calculate_co2: Optional[bool] = None
 
+    def to_json(self) -> dict:
+        _json = super().to_json()
+        _json['calculateCO2'] = _json.pop('calculateCo2')
+        return _json
+
 
 class WriterType(Enum):
-    POSTGRES = "POSTGRES",
+    POSTGRES = "POSTGRES"
     PARQUET = "PARQUET"
 
 
 @dataclass
-class WriterOutputConfig:
+class WriterOutputConfig(HostingCapacityDataclass):
     enhanced_metrics_config: Optional[EnhancedMetricsConfig] = None
 
 
 @dataclass
-class WriterConfig:
+class WriterConfig(HostingCapacityDataclass):
     writer_type: Optional[WriterType] = None
     """
     Whether to write output to Parquet files or a Postgres database.
@@ -605,7 +682,7 @@ class WriterConfig:
 
 
 @dataclass
-class ResultProcessorConfig:
+class ResultProcessorConfig(HostingCapacityDataclass):
     """
     Configuration specific to processing of results.
     """
@@ -621,31 +698,30 @@ class ResultProcessorConfig:
 
 
 @dataclass
-class YearRange:
+class YearRange(HostingCapacityDataclass):
     min_year: int
     max_year: int
 
 
-@dataclass
 class InterventionClass(Enum):
-    TARIFF_REFORM = "TARIFF_REFORM",
-    CONTROLLED_LOAD_HOT_WATER = "CONTROLLED_LOAD_HOT_WATER",
-    COMMUNITY_BESS = "COMMUNITY_BESS",
-    DISTRIBUTION_TX_OLTC = "DISTRIBUTION_TX_OLTC",
-    LV_STATCOMS = "LV_STATCOMS",
-    DVMS = "DVMS",
-    PHASE_REBALANCING = "PHASE_REBALANCING",
-    DISTRIBUTION_TAP_OPTIMIZATION = "DISTRIBUTION_TAP_OPTIMIZATION",
+    TARIFF_REFORM = "TARIFF_REFORM"
+    CONTROLLED_LOAD_HOT_WATER = "CONTROLLED_LOAD_HOT_WATER"
+    COMMUNITY_BESS = "COMMUNITY_BESS"
+    DISTRIBUTION_TX_OLTC = "DISTRIBUTION_TX_OLTC"
+    LV_STATCOMS = "LV_STATCOMS"
+    DVMS = "DVMS"
+    PHASE_REBALANCING = "PHASE_REBALANCING"
+    DISTRIBUTION_TAP_OPTIMIZATION = "DISTRIBUTION_TAP_OPTIMIZATION"
     UNKNOWN = "UNKNOWN"
 
 
 class CandidateGenerationType(Enum):
-    CRITERIA = "CRITERIA",
+    CRITERIA = "CRITERIA"
     TAP_OPTIMIZATION = "TAP_OPTIMIZATION"
 
 
 @dataclass
-class CandidateGenerationConfig:
+class CandidateGenerationConfig(HostingCapacityDataclass):
     type: CandidateGenerationType
     """The type of method for generating the intervention candidates."""
 
@@ -690,14 +766,14 @@ class CandidateGenerationConfig:
 
 
 @dataclass
-class PhaseRebalanceProportions:
+class PhaseRebalanceProportions(HostingCapacityDataclass):
     a: float
     b: float
     c: float
 
 
 @dataclass
-class RegulatorConfig:
+class RegulatorConfig(HostingCapacityDataclass):
     pu_target: float
     """Voltage p.u. to move the average customer voltage towards."""
 
@@ -715,7 +791,7 @@ class RegulatorConfig:
 
 
 @dataclass
-class DvmsConfig:
+class DvmsConfig(HostingCapacityDataclass):
     lower_limit: float
     """The lower limit of voltage (p.u.) considered acceptable for the purposes of DVMS."""
 
@@ -736,7 +812,7 @@ class DvmsConfig:
 
 
 @dataclass
-class InterventionConfig:
+class InterventionConfig(HostingCapacityDataclass):
     base_work_package_id: str
     """
     ID of the work package that this intervention is based on.
@@ -781,7 +857,7 @@ class InterventionConfig:
 
 
 @dataclass
-class ForecastConfig(object):
+class ForecastConfig(HostingCapacityDataclass):
     feeders: List[str]
     """The feeders to process in this work package"""
 
@@ -802,10 +878,19 @@ class ForecastConfig(object):
     load database for accurate results. Specifying an invalid time (i.e one with no load data) will
     result in inaccurate results.
     """
+    def to_json(self) -> Any:
+        _json = super().to_json()
+        if isinstance(self.load_time, TimePeriod):
+            _json['timePeriod'] = _json.pop('loadTime')
+            _json['fixedTime'] = None
+        elif isinstance(self.load_time, FixedTime):
+            _json['fixedTime'] = _json.pop('loadTime')
+            _json['timePeriod'] = None
+        return _json
 
 
 @dataclass
-class FeederConfig(object):
+class FeederConfig(HostingCapacityDataclass):
     feeder: str
     """The feeder to process in this work package"""
 
@@ -826,16 +911,24 @@ class FeederConfig(object):
     load database for accurate results. Specifying an invalid time (i.e one with no load data) will
     result in inaccurate results.
     """
+    def to_json(self) -> Any:
+        _json = super().to_json()
+        if isinstance(self.load_time, TimePeriod):
+            _json['timePeriod'] = _json.pop('loadTime')
+        elif isinstance(self.load_time, FixedTime):
+            _json['fixedTime'] = _json.pop('loadTime')
+        return _json
+
 
 
 @dataclass
-class FeederConfigs(object):
+class FeederConfigs(HostingCapacityDataclass):
     configs: list[FeederConfig]
     """The feeder to process in this work package"""
 
 
 @dataclass
-class WorkPackageConfig:
+class WorkPackageConfig(HostingCapacityDataclass):
     """ A data class representing the configuration for a hosting capacity work package """
     name: str
     syf_config: Union[ForecastConfig, FeederConfigs]
@@ -860,9 +953,24 @@ class WorkPackageConfig:
     intervention: Optional[InterventionConfig] = None
     """Configuration for applying an intervention"""
 
+    def to_json(self) -> dict:
+        _json = super().to_json()
+        if _json.get('syfConfig'):
+            if isinstance(self.syf_config, ForecastConfig):
+                _json['forecastConfig'] = _json.pop('syfConfig')
+                _json['feederConfigs'] = None
+            elif isinstance(self.syf_config, FeederConfigs):
+                _json['feederConfigs'] = _json.pop('syfConfig')
+                _json['forecastConfig'] = None
+
+        if _json.get('executorConfig') is None:
+            _json['executorConfig'] = {}
+
+        return {"input": _json, 'workPackageName': _json.pop('name')}
+
 
 @dataclass
-class WorkPackageProgress:
+class WorkPackageProgress(HostingCapacityDataclass):
     id: str
     progress_percent: int
     pending: List[str]
@@ -874,6 +982,6 @@ class WorkPackageProgress:
 
 
 @dataclass
-class WorkPackagesProgress:
+class WorkPackagesProgress(HostingCapacityDataclass):
     pending: List[str]
     in_progress: List[WorkPackageProgress]
