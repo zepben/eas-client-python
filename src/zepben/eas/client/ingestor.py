@@ -3,19 +3,22 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-from dataclasses import dataclass
-from enum import Enum
-from typing import Optional, List
-from datetime import datetime
 
 __all__ = [
     "IngestorConfigInput", "IngestorRuntimeKind", "IngestorRunState", "IngestorRun", "IngestorRunsFilterInput", "Order",
     "IngestorRunsSortCriteriaInput"
 ]
 
+from dataclasses import dataclass
+from enum import Enum
+from typing import Optional, List
+from datetime import datetime
+
+from zepben.eas.client.work_package import HostingCapacityDataclass
+
 
 @dataclass
-class IngestorConfigInput:
+class IngestorConfigInput(HostingCapacityDataclass):
     key: str
     value: str
 
@@ -39,7 +42,7 @@ class IngestorRunState(Enum):
 
 
 @dataclass
-class IngestorRun:
+class IngestorRun(HostingCapacityDataclass):
     id: int
     container_runtime_type: Optional[IngestorRuntimeKind]
     payload: str
@@ -51,7 +54,7 @@ class IngestorRun:
 
 
 @dataclass
-class IngestorRunsFilterInput:
+class IngestorRunsFilterInput(HostingCapacityDataclass):
     id: Optional[int] = None
     status: Optional[List[IngestorRunState]] = None
     completed: Optional[bool] = None
@@ -64,7 +67,7 @@ class Order(Enum):
 
 
 @dataclass
-class IngestorRunsSortCriteriaInput:
+class IngestorRunsSortCriteriaInput(HostingCapacityDataclass):
     status: Optional[Order] = None
     started_at: Optional[Order] = None
     status_last_updated_at: Optional[Order] = None

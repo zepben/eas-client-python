@@ -69,8 +69,12 @@ class HostingCapacityDataclass(ABC):  # TODO: Another terrible name
                 return None
             else:
                 raise TypeError(f"Unsupported value type: {_value}")
-        return {snake_to_camel(k): _process_value(v) for k, v in self.__dict__.items() if not k.startswith("__")}
+        return {snake_to_camel(k): _process_value(v) for k, v in self.public_attrs()}
 
+    def public_attrs(self) -> Generator[Tuple[str, Any], None, None]:
+        for k, v in self.__dict__.items():
+            if not k.startswith("_"):
+                yield k, v
 
 class SwitchClass(Enum):
     BREAKER = "BREAKER"

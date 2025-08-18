@@ -3,16 +3,19 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-from dataclasses import dataclass
-from typing import List, Optional
 
 __all__ = [
     "FeederLoadAnalysisInput"
 ]
 
+from dataclasses import dataclass
+from typing import List, Optional
+
+from zepben.eas.client.work_package import HostingCapacityDataclass
+
 
 @dataclass
-class FeederLoadAnalysisInput:
+class FeederLoadAnalysisInput(HostingCapacityDataclass):
     """ A data class representing the configuration for a feeder load analysis study """
 
     feeders: Optional[List[str]]

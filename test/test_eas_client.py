@@ -21,6 +21,8 @@ from zepben.auth import ZepbenTokenFetcher
 from zepben.eas import EasClient, Study, SolveConfig
 from zepben.eas import FeederConfig, ForecastConfig, FixedTimeLoadOverride
 from zepben.eas.client.auth_method import BaseAuthMethod, TokenAuth
+from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsFilterInput, IngestorRunState, \
+    IngestorRuntimeKind, IngestorRunsSortCriteriaInput
 from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, OpenDssModelState, \
     GetOpenDssModelsSortCriteriaInput, \
     Order
@@ -880,9 +882,11 @@ def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_succes
 
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_no_generator_config(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -969,9 +973,11 @@ def hosting_capacity_run_calibration_with_generator_config_request_handler(reque
 
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_generator_config(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -1049,9 +1055,11 @@ def hosting_capacity_run_calibration_with_partial_model_config_request_handler(r
 
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_model_config(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -1068,9 +1076,11 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
 
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -2011,9 +2021,11 @@ def run_ingestor_request_handler(request):
 
 def test_run_ingestor_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -2036,9 +2048,11 @@ def get_ingestor_run_request_handler(request):
 
 def test_get_ingestor_run_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_request_handler)
@@ -2073,9 +2087,11 @@ def get_ingestor_run_list_request_empty_handler(request):
 
 def test_get_ingestor_run_list_empty_filter_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_list_request_empty_handler)
@@ -2124,9 +2140,11 @@ def get_ingestor_run_list_request_complete_handler(request):
 
 def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_list_request_complete_handler)
