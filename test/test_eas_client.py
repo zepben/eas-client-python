@@ -3,7 +3,6 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-import asyncio
 import json
 import random
 import ssl
@@ -1738,6 +1737,20 @@ def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver
         httpserver.check_assertions()
         assert res == {"result": "success"}
 
+get_ingestor_run_list_query = """
+                query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
+                    listIngestorRuns(filter: $filter, sort: $sort) {
+                    id
+                    containerRuntimeType
+                    payload
+                    token
+                    status
+                    startedAt
+                    statusLastUpdatedAt
+                    completedAt
+                    }
+                }
+        """
 
 get_paged_opendss_models_query = """
         query pagedOpenDssModels($limit: Int, $offset: Long, $filter: GetOpenDssModelsFilterInput, $sort: GetOpenDssModelsSortCriteriaInput) {
@@ -2040,7 +2053,7 @@ def get_ingestor_run_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == "query getIngestorRun($id: Int!) { getIngestorRun(id: $id) { id containerRuntimeType, payload, token, status, startedAt, statusLastUpdatedAt, completedAt } }"
+    assert query == "query getIngestorRun($id: Int!) { getIngestorRun(id: $id) { id containerRuntimeType payload token status startedAt statusLastUpdatedAt completedAt } }"
     assert actual_body['variables'] == {"id": 1}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
@@ -2065,20 +2078,6 @@ def get_ingestor_run_list_request_empty_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    get_ingestor_run_list_query = """
-                    query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
-                        listIngestorRuns(filter: $filter, sort: $sort) {
-                        id
-                        containerRuntimeType,
-                        payload,
-                        token,
-                        status,
-                        startedAt,
-                        statusLastUpdatedAt,
-                        completedAt
-                        }
-                    }
-            """
     assert query == " ".join(line.strip() for line in get_ingestor_run_list_query.strip().splitlines())
     assert actual_body['variables'] == {}
 
@@ -2104,20 +2103,6 @@ def get_ingestor_run_list_request_complete_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    get_ingestor_run_list_query = """
-                    query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
-                        listIngestorRuns(filter: $filter, sort: $sort) {
-                        id
-                        containerRuntimeType,
-                        payload,
-                        token,
-                        status,
-                        startedAt,
-                        statusLastUpdatedAt,
-                        completedAt
-                        }
-                    }
-            """
     assert query == " ".join(line.strip() for line in get_ingestor_run_list_query.strip().splitlines())
     assert actual_body['variables'] == {
         "filter": {

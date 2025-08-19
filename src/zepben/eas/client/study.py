@@ -1,4 +1,4 @@
-#  Copyright 2020 Zeppelin Bend Pty Ltd
+#  Copyright 2025 Zeppelin Bend Pty Ltd
 #
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,7 +11,7 @@ from typing import List, Any
 
 from geojson import GeoJSON
 
-from zepben.eas.client.work_package import HostingCapacityDataclass
+from zepben.eas.client.util import HostingCapacityDataclass
 
 
 @dataclass

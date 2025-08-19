@@ -16,7 +16,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Union, Optional, List
 
-from zepben.eas.client.work_package import GeneratorConfig, TimePeriod, FixedTime, HostingCapacityDataclass
+from zepben.eas.client.work_package import GeneratorConfig, TimePeriod, FixedTime
+from zepben.eas.client.util import HostingCapacityDataclass
 
 
 @dataclass

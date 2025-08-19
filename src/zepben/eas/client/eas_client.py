@@ -1,4 +1,4 @@
-#  Copyright 2020 Zeppelin Bend Pty Ltd
+#  Copyright 2025 Zeppelin Bend Pty Ltd
 #
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -24,9 +24,10 @@ from zepben.eas.client.decorators import catch_warnings
 from zepben.eas.client.feeder_load_analysis_input import FeederLoadAnalysisInput
 from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
 from zepben.eas.client.study import Study
-from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput
+from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput, \
+    IngestorRun
 from zepben.eas.client.util import construct_url
-from zepben.eas.client.work_package import WorkPackageConfig, GeneratorConfig, ModelConfig
+from zepben.eas.client.work_package import WorkPackageConfig, GeneratorConfig, ModelConfig, WorkPackageProgress
 
 
 class EasClient:
@@ -182,19 +183,7 @@ class EasClient:
         return await self._do_post_request(
             self.build_request("""
                 query getWorkPackageProgress {
-                    getWorkPackageProgress {
-                        pending
-                        inProgress {
-                           id
-                           progressPercent
-                           pending
-                           generation
-                           execution
-                           resultProcessing
-                           failureProcessing
-                           complete
-                        }
-                    }
+                    """ + WorkPackageProgress.build_gql_query_object_model() + """
                 }"""
             )
         )
@@ -296,14 +285,7 @@ class EasClient:
             self.build_request("""
                 query getIngestorRun($id: Int!) {
                     getIngestorRun(id: $id) {
-                    id
-                    containerRuntimeType,
-                    payload,
-                    token,
-                    status,
-                    startedAt,
-                    statusLastUpdatedAt,
-                    completedAt
+                        """ + IngestorRun.build_gql_query_object_model() + """
                     }
                 }""", {
                     "id": ingestor_run_id,
@@ -348,14 +330,7 @@ class EasClient:
             self.build_request("""
                 query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
                     listIngestorRuns(filter: $filter, sort: $sort) {
-                    id
-                    containerRuntimeType,
-                    payload,
-                    token,
-                    status,
-                    startedAt,
-                    statusLastUpdatedAt,
-                    completedAt
+                        """ + IngestorRun.build_gql_query_object_model() + """
                     }
                 }""", _json
             )
@@ -628,78 +603,7 @@ class EasClient:
                                     }
                                 }
                                 generator {
-                                    model {
-                                        vmPu
-                                        loadVMinPu
-                                        loadVMaxPu
-                                        genVMinPu
-                                        genVMaxPu
-                                        loadModel
-                                        collapseSWER
-                                        calibration
-                                        pFactorBaseExports
-                                        pFactorForecastPv
-                                        pFactorBaseImports
-                                        fixSinglePhaseLoads
-                                        maxSinglePhaseLoad
-                                        fixOverloadingConsumers
-                                        maxLoadTxRatio
-                                        maxGenTxRatio
-                                        fixUndersizedServiceLines
-                                        maxLoadServiceLineRatio
-                                        maxLoadLvLineRatio
-                                        collapseLvNetworks
-                                        feederScenarioAllocationStrategy
-                                        closedLoopVRegEnabled
-                                        closedLoopVRegReplaceAll
-                                        closedLoopVRegSetPoint
-                                        closedLoopVBand
-                                        closedLoopTimeDelay
-                                        closedLoopVLimit
-                                        defaultTapChangerTimeDelay
-                                        defaultTapChangerSetPointPu
-                                        defaultTapChangerBand
-                                        splitPhaseDefaultLoadLossPercentage
-                                        splitPhaseLVKV
-                                        swerVoltageToLineVoltage
-                                        loadPlacement
-                                        loadIntervalLengthHours
-                                        meterPlacementConfig {
-                                            feederHead
-                                            distTransformers
-                                            switchMeterPlacementConfigs {
-                                              meterSwitchClass
-                                              namePattern
-                                            }
-                                            energyConsumerMeterGroup
-                                        }
-                                        seed
-                                        defaultLoadWatts
-                                        defaultGenWatts
-                                        defaultLoadVar
-                                        defaultGenVar
-                                        transformerTapSettings
-                                        ctPrimScalingFactor
-                                    }
-                                    solve {
-                                        normVMinPu
-                                        normVMaxPu
-                                        emergVMinPu
-                                        emergVMaxPu
-                                        baseFrequency
-                                        voltageBases
-                                        maxIter
-                                        maxControlIter
-                                        mode
-                                        stepSizeMinutes
-                                    }
-                                    rawResults {
-                                        energyMeterVoltagesRaw
-                                        energyMetersRaw
-                                        resultsPerMeter
-                                        overloadsRaw
-                                        voltageExceptionsRaw
-                                    }
+                                    """ + GeneratorConfig.build_gql_query_object_model() + """
                                 }
                             }
                         }

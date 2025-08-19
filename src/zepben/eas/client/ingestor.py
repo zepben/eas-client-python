@@ -5,8 +5,13 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 __all__ = [
-    "IngestorConfigInput", "IngestorRuntimeKind", "IngestorRunState", "IngestorRun", "IngestorRunsFilterInput", "Order",
-    "IngestorRunsSortCriteriaInput"
+    "IngestorConfigInput",
+    "IngestorRuntimeKind",
+    "IngestorRunState",
+    "IngestorRun",
+    "IngestorRunsFilterInput",
+    "Order",
+    "IngestorRunsSortCriteriaInput",
 ]
 
 from dataclasses import dataclass
@@ -14,7 +19,7 @@ from enum import Enum
 from typing import Optional, List
 from datetime import datetime
 
-from zepben.eas.client.work_package import HostingCapacityDataclass
+from zepben.eas.client.util import HostingCapacityDataclass
 
 
 @dataclass

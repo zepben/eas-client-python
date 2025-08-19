@@ -1,11 +1,10 @@
-#  Copyright 2020 Zeppelin Bend Pty Ltd
+#  Copyright 2025 Zeppelin Bend Pty Ltd
 #
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 __all__ = [
-    "HostingCapacityDataclass",
     "SwitchClass",
     "SwitchMeterPlacementConfig",
     "CandidateGenerationConfig",
@@ -42,39 +41,13 @@ __all__ = [
     "FeederConfigs",
 ]
 
-from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union, Dict, Any, Generator, Tuple
-from zepben.eas.client.util import snake_to_camel
+from typing import List, Optional, Union, Dict, Any
 
+from zepben.eas.client.util import HostingCapacityDataclass
 
-class HostingCapacityDataclass(ABC):  # TODO: Another terrible name
-    def to_json(self) -> Any:
-        def _process_value(_value):
-            if isinstance(_value, HostingCapacityDataclass):
-                return _value.to_json()
-            elif isinstance(_value, Enum):
-                return _value.value
-            elif isinstance(_value, datetime):
-                return _value.isoformat()
-            elif isinstance(_value, list):
-                return [_process_value(i) for i in _value]
-            elif isinstance(_value, dict):
-                return {k: _process_value(v) for k, v in _value.items()}
-            elif isinstance(_value, (str, int, float)):
-                return _value
-            elif _value is None:
-                return None
-            else:
-                raise TypeError(f"Unsupported value type: {_value}")
-        return {snake_to_camel(k): _process_value(v) for k, v in self.public_attrs()}
-
-    def public_attrs(self) -> Generator[Tuple[str, Any], None, None]:
-        for k, v in self.__dict__.items():
-            if not k.startswith("_"):
-                yield k, v
 
 class SwitchClass(Enum):
     BREAKER = "BREAKER"
@@ -174,7 +147,7 @@ class TimePeriodLoadOverride(HostingCapacityDataclass):
         _json = super().to_json()
         return {f'{k}Override': v for k, v in _json.items()}
 
-
+@dataclass
 class OverrideModel(HostingCapacityDataclass):
     def to_json(self):
         _json = super().to_json()
@@ -185,23 +158,30 @@ class OverrideModel(HostingCapacityDataclass):
         return _json
 
 
+@dataclass
 class FixedTime(OverrideModel):
     """
     A single point in time to model. Should be precise to the minute, and load data must be
     present for the provided time in the load database for accurate results.
     """
+    load_time: datetime
+    load_overrides: Optional[Dict[str, FixedTimeLoadOverride]]
 
     def __init__(self, load_time: datetime, load_overrides: Optional[Dict[str, FixedTimeLoadOverride]] = None):
         self.load_time = load_time.replace(tzinfo=None)
         self.load_overrides = load_overrides
 
 
+@dataclass
 class TimePeriod(OverrideModel):
     """
     A time period to model, from a start time to an end time. Maximum of 1 year.
 
     Load data must be available in the load database between the provided start and end time for accurate results.
     """
+    start_time: datetime
+    end_time: datetime
+    load_overrides: Optional[Dict[str, TimePeriodLoadOverride]] = None
 
     def __init__(
         self,
@@ -497,22 +477,6 @@ class ModelConfig(HostingCapacityDataclass):
     Optional setting for scaling factor of calculated CTPrim for zone sub transformers.
     """
 
-    def to_json(self) -> dict:
-        _json = super().to_json()
-        for _from, _to in (
-            ('collapseSwer', 'collapseSWER'),
-            ('genVmaxPu', 'genVMaxPu'),
-            ('genVminPu', 'genVMinPu'),
-            ('loadVmaxPu', 'loadVMaxPu'),
-            ('loadVminPu', 'loadVMinPu'),
-            ('splitPhaseLvKv', 'splitPhaseLVKV'),
-        ):
-            try:
-                _json[_to] = _json.pop(_from)
-            except KeyError:
-                continue
-        return _json
-
 
 class SolveMode(Enum):
     YEARLY = "YEARLY"
@@ -539,20 +503,6 @@ class SolveConfig(HostingCapacityDataclass):
 
     step_size_minutes: Optional[float] = None
     """The step size to solve"""
-
-    def to_json(self) -> dict:
-        _json = super().to_json()
-        for _from, _to in (
-            ('emergVmaxPu', 'emergVMaxPu'),
-            ('emergVminPu', 'emergVMinPu'),
-            ('normVmaxPu', 'normVMaxPu'),
-            ('normVminPu', 'normVMinPu'),
-        ):
-            try:
-                _json[_to] = _json.pop(_from)
-            except KeyError:
-                continue
-        return _json
 
 
 @dataclass
@@ -638,7 +588,6 @@ class GeneratorConfig(HostingCapacityDataclass):
     Configuration settings for the OpenDSS model.
     These settings make changes to the network and specific OpenDSS settings prior to model execution.
     """
-
     model: Optional[ModelConfig] = None
     solve: Optional[SolveConfig] = None
     raw_results: Optional[RawResultsConfig] = None
@@ -656,11 +605,6 @@ class EnhancedMetricsConfig(HostingCapacityDataclass):
     calculate_normal_for_gen_thermal: Optional[bool] = None
     calculate_emerg_for_gen_thermal: Optional[bool] = None
     calculate_co2: Optional[bool] = None
-
-    def to_json(self) -> dict:
-        _json = super().to_json()
-        _json['calculateCO2'] = _json.pop('calculateCo2')
-        return _json
 
 
 class WriterType(Enum):
