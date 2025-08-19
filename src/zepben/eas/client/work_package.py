@@ -467,6 +467,18 @@ class ModelConfig:
     Optional setting for scaling factor of calculated CTPrim for zone sub transformers.
     """
 
+    span_level_threshold: Optional[float] = None
+    """
+    Optional setting to include designedRating of conductor being considered during network simplification and also replace
+    Wireinfo.ratedCurrent for normAmps and emergAmps assignment in LineCode. (if threshold is 50%, set as 50.0)
+    """
+
+    simplify_plsi: Optional[bool] = None
+    """
+    Optional setting to indicate if per length sequence impedance should be normalized during network simplification.
+    Must also provide a valid span_level_threshold for this to take effect.
+    """
+
 
 class SolveMode(Enum):
     YEARLY = "YEARLY"
