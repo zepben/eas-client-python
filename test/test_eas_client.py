@@ -7,7 +7,7 @@ import json
 import random
 import ssl
 import string
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from http import HTTPStatus
 from unittest import mock
 
@@ -1023,6 +1023,7 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
+
 def get_hosting_capacity_calibration_sets_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
@@ -1152,7 +1153,9 @@ def run_opendss_export_request_handler(request):
                             "defaultLoadVar": [10.0, 20.0, 30.0],
                             "defaultGenVar": [5.0, 15.0, 25.0],
                             "transformerTapSettings": "tap-3",
-                            "ctPrimScalingFactor": 2.0
+                            "ctPrimScalingFactor": 2.0,
+                            "spanLevelThreshold": 50.0,
+                            "simplifyPLSI": True
                         },
                         "solve": {
                             "normVMinPu": 0.9,
@@ -1261,7 +1264,9 @@ OPENDSS_CONFIG = OpenDssConfig(
             default_load_var=[10.0, 20.0, 30.0],
             default_gen_var=[5.0, 15.0, 25.0],
             transformer_tap_settings="tap-3",
-            ct_prim_scaling_factor=2.0
+            ct_prim_scaling_factor=2.0,
+            span_level_threshold=50.0,
+            simplify_plsi=True
         ),
         SolveConfig(
             norm_vmin_pu=0.9,
