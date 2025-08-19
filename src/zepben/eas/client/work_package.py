@@ -46,7 +46,7 @@ from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union, Dict, Any
+from typing import List, Optional, Union, Dict, Any, Generator, Tuple
 from zepben.eas.client.util import snake_to_camel
 
 
@@ -204,10 +204,10 @@ class TimePeriod(OverrideModel):
     """
 
     def __init__(
-            self,
-            start_time: datetime,
-            end_time: datetime,
-            load_overrides: Optional[Dict[str, TimePeriodLoadOverride]] = None
+        self,
+        start_time: datetime,
+        end_time: datetime,
+        load_overrides: Optional[Dict[str, TimePeriodLoadOverride]] = None
     ):
         self._validate(start_time, end_time)
         self.start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
