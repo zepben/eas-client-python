@@ -1,13 +1,16 @@
 # EAS Python client
 ## [0.23.0] - UNRELEASED
 ### Breaking Changes
-* None.
+* EasClient will now need `auth=` passed with an auth object. either `BaseAuthMethod` or `TokenAuth`, this allows
+  cleaner documenting of accepted constructor arguments.
 
 ### New Features
 * None.
 
 ### Enhancements
-* None.
+* Internal: query bodys are now mostly self generating with `to_json` and `build_gql_query_object_model` methods.
+* All request handling logic has been refactored into a single method.
+* `catch_warnings` wrapper func to handle standard warning catching.
 
 ### Fixes
 * None.
