@@ -1,0 +1,55 @@
+#  Copyright 2025 Zeppelin Bend Pty Ltd
+#
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+[build-system]
+requires = [
+    "setuptools",
+    "wheel",
+    "build>=1.2.0"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zepben.eas"
+version = "0.23.0b1"
+description = "Python SDK for interacting with the Evolve App Server"
+readme = {file = "README.md", content-type = "test/markdown"}
+license = "MPL-2.0"
+requires-python = '>=3.10'
+authors = [
+    {name = "Ramon Bouckaert", email = "ramon.bouckaert@zepben.com"},
+    {name = "Max Chesterfield", email = "max.chesterfield@zepben.com"}
+]
+dependencies = [
+    "geojson==2.5.0",
+    "requests<3.0.0,>=2.26.0",
+    "urllib3==1.26.6",
+    "zepben.auth==0.12.1",
+    "aiohttp[speedups]==3.9.0",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent"
+]
+
+[project.urls]
+Repository = "https://github.com/zepben/eas-python-client"
+Homepage = "https://zepben.com"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-httpserver==1.0.8",
+    "trustme==0.9.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["src/"]
