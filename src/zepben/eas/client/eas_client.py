@@ -162,7 +162,9 @@ class EasClient:
             self.build_request("""
                 mutation cancelWorkPackage($workPackageId: ID!) {
                     cancelWorkPackage(workPackageId: $workPackageId)
-                }""",{'workPackageId': work_package_id}
+                }""",{
+                    "workPackageId": work_package_id
+                }
             )
         )
 
@@ -183,8 +185,8 @@ class EasClient:
         return await self._do_post_request(
             self.build_request("""
                 query getWorkPackageProgress {
-                    """ + WorkPackageProgress.build_gql_query_object_model() + """
-                }"""
+                    %s
+                }""" % WorkPackageProgress.build_gql_query_object_model()
             )
         )
 
@@ -211,8 +213,7 @@ class EasClient:
             self.build_request("""
                 mutation runFeederLoadAnalysis($input: FeederLoadAnalysisInput!) {
                     runFeederLoadAnalysis(input: $input)
-                }
-                """,{
+                }""",{
                     "input": _json
                 }
             )
@@ -285,9 +286,9 @@ class EasClient:
             self.build_request("""
                 query getIngestorRun($id: Int!) {
                     getIngestorRun(id: $id) {
-                        """ + IngestorRun.build_gql_query_object_model() + """
+                        %s
                     }
-                }""", {
+                }""" % IngestorRun.build_gql_query_object_model(), {
                     "id": ingestor_run_id,
                 }
             )
@@ -330,9 +331,9 @@ class EasClient:
             self.build_request("""
                 query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
                     listIngestorRuns(filter: $filter, sort: $sort) {
-                        """ + IngestorRun.build_gql_query_object_model() + """
+                        %s
                     }
-                }""", _json
+                }""" % IngestorRun.build_gql_query_object_model(), _json
             )
         )
 
@@ -603,14 +604,14 @@ class EasClient:
                                     }
                                 }
                                 generator {
-                                    """ + GeneratorConfig.build_gql_query_object_model() + """
+                                    %s
                                 }
                             }
                         }
                     }
                 }
             }
-            """,
+            """ % GeneratorConfig.build_gql_query_object_model(),
             "variables": {}
         }
 
