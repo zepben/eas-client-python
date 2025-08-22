@@ -241,6 +241,10 @@ class EasClient:
                 "defaultGenVar": generator_config.model.default_gen_var,
                 "transformerTapSettings": generator_config.model.transformer_tap_settings,
                 "ctPrimScalingFactor": generator_config.model.ct_prim_scaling_factor,
+                "useSpanLevelThreshold": work_package.generator_config.model.use_span_level_threshold,
+                "ratingThreshold": work_package.generator_config.model.rating_threshold,
+                "simplifyPLSIThreshold": work_package.generator_config.model.simplify_plsi_threshold,
+                "emergAmpScaling": work_package.generator_config.model.emerg_amp_scaling
             },
             "solve": generator_config.solve and {
                 "normVMinPu": generator_config.solve.norm_vmin_pu,
@@ -1310,6 +1314,10 @@ class EasClient:
                                             defaultGenVar
                                             transformerTapSettings
                                             ctPrimScalingFactor
+                                            useSpanLevelThreshold
+                                            ratingThreshold
+                                            simplifyPLSIThreshold
+                                            emergAmpScaling
                                         }
                                         solve {
                                             normVMinPu
