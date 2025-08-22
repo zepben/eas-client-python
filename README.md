@@ -1,3 +1,5 @@
+from zepben.eas.client.auth_method import TokenAuth
+
 # Evolve App Server Python Client #
 
 This library provides a wrapper to the Evolve App Server's API, allowing users of the evolve SDK to authenticate with
@@ -7,16 +9,18 @@ the Evolve App Server and upload studies.
 
 ```python
 from geojson import FeatureCollection
-from zepben.eas import EasClient, Study, Result, Section, GeoJsonOverlay
+from zepben.eas import EasClient, Study, Result, Section, GeoJsonOverlay, TokenAuth
 
 eas_client = EasClient(
-    host="<host>",
-    port=1234,
-    access_token="<access_token>",
-    client_id="<client_id>",
-    username="<username>",
-    password="<password>",
-    client_secret="<client_secret>"
+    TokenAuth(
+        host="<host>",
+        port=1234,
+        access_token="<access_token>",
+        client_id="<client_id>",
+        username="<username>",
+        password="<password>",
+        client_secret="<client_secret>"
+    )
 )
 
 eas_client.upload_study(
@@ -66,17 +70,19 @@ To use the asyncio API use `async_upload_study` like so:
 ```python
 from aiohttp import ClientSession
 from geojson import FeatureCollection
-from zepben.eas import EasClient, Study, Result, Section, GeoJsonOverlay
+from zepben.eas import EasClient, Study, Result, Section, GeoJsonOverlay, TokenAuth
 
 async def upload():
     eas_client = EasClient(
-        host="<host>",
-        port=1234,
-        access_token="<access_token>",
-        client_id="<client_id>",
-        username="<username>",
-        password="<password>",
-        client_secret="<client_secret>",
+        TokenAuth(
+            host="<host>",
+            port=1234,
+            access_token="<access_token>",
+            client_id="<client_id>",
+            username="<username>",
+            password="<password>",
+            client_secret="<client_secret>",
+        ),
         session=ClientSession(...)
     )
 

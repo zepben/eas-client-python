@@ -3,12 +3,6 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-from dataclasses import dataclass
-from datetime import tzinfo
-from enum import Enum
-from typing import Union, Optional, List
-
-from zepben.eas.client.work_package import GeneratorConfig, TimePeriod, FixedTime
 
 __all__ = [
     "OpenDssConfig",
@@ -18,9 +12,16 @@ __all__ = [
     "GetOpenDssModelsSortCriteriaInput"
 ]
 
+from dataclasses import dataclass
+from enum import Enum
+from typing import Union, Optional, List
+
+from zepben.eas.client.work_package import GeneratorConfig, TimePeriod, FixedTime
+from zepben.eas.client.util import HostingCapacityDataclass
+
 
 @dataclass
-class OpenDssConfig:
+class OpenDssConfig(HostingCapacityDataclass):
     """ A data class representing the configuration for an opendss export """
     scenario: str
     year: int
@@ -29,6 +30,25 @@ class OpenDssConfig:
     generator_config: Optional[GeneratorConfig] = None
     model_name: Optional[str] = None
     is_public: Optional[bool] = None
+
+    def to_json(self) -> dict:
+        _json = super().to_json()
+        _json["generationSpec"] = {
+            "modelOptions": {
+                "feeder": _json.pop('feeder'),
+                "scenario": _json.pop('scenario'),
+                "year": _json.pop('year'),
+            },
+            "modulesConfiguration": {
+                "common": {},
+                "generator": _json.pop('generatorConfig'),
+            }
+        }
+        if isinstance(self.load_time, TimePeriod):
+            _json["generationSpec"]["modulesConfiguration"]["common"]["timePeriod"] = _json.pop('loadTime')
+        elif isinstance(self.load_time, FixedTime):
+            _json["generationSpec"]["modulesConfiguration"]["common"]["fixedTime"] = _json.pop('loadTime')
+        return _json
 
 
 class OpenDssModelState(Enum):
@@ -39,7 +59,7 @@ class OpenDssModelState(Enum):
 
 
 @dataclass
-class GetOpenDssModelsFilterInput:
+class GetOpenDssModelsFilterInput(HostingCapacityDataclass):
     """ A data class representing the filter to apply to the opendss export run paginated query """
     name: Optional[str] = None
     is_public: Optional[int] = None
@@ -52,7 +72,7 @@ class Order(Enum):
 
 
 @dataclass
-class GetOpenDssModelsSortCriteriaInput:
+class GetOpenDssModelsSortCriteriaInput(HostingCapacityDataclass):
     """ A data class representing the sort criteria to apply to the opendss export run paginated query """
     name: Optional[Order] = None
     created_at: Optional[Order] = None
