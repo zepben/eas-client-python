@@ -467,16 +467,29 @@ class ModelConfig:
     Optional setting for scaling factor of calculated CTPrim for zone sub transformers.
     """
 
-    span_level_threshold: Optional[float] = None
+    use_span_level_threshold: bool = False
     """
-    Optional setting to include designedRating of conductor being considered during network simplification and also replace
-    Wireinfo.ratedCurrent for normAmps and emergAmps assignment in LineCode. (if threshold is 50%, set as 50.0)
+    set to true if designRating is to be used for current comparison during collapse of CommonImpedance AcLineSegment.
     """
 
-    simplify_plsi: Optional[bool] = None
+    rating_threshold: Optional[float] = None
+    """
+    Optional setting to loosen current comparison between conductors during network simplification by providing a threshold
+    of allowed differences.
+    Set as a % value, i.e put as 50.0 if threshold is 50%
+    """
+
+    simplify_plsi_threshold: Optional[float] = None
     """
     Optional setting to indicate if per length sequence impedance should be normalized during network simplification.
-    Must also provide a valid span_level_threshold for this to take effect.
+    Connected AcLineSegment with Per Length Sequence Impedance value difference within the threshold will be normalized.
+    Set as a % value, i.e put as 50.0 if threshold is 50%
+    """
+
+    emerg_amp_scaling: Optional[float] = None
+    """
+    Scaling factor for emergency current rating in lineCodes.
+    Set as a factor value, i.e put as 1.5 if scaling is 150%
     """
 
 
