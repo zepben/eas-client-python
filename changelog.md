@@ -4,7 +4,8 @@
 * None.
 
 ### New Features
-* None.
+* Added optional fields to `ModelConfig` to control network simplification: `simplify_network`, `collapse_negligible_impedances`, and `combine_common_impedances`.
+* Added optional `node_level_results` field to `GeneratorConfig`. This `NodeLevelResultsConfig` allows the configuration of node level power flow results from OpenDss.
 
 ### Enhancements
 * None.
@@ -17,12 +18,11 @@
 
 ## [0.22.0] - 2025-08-14
 ### Breaking Changes
-* TODO: new generatorConfig fields.
+* None.
 
 ### New Features
 * Added basic client method `run_ingestor` to run ingestors via EAS's `executeIngestor` graphql mutation. 
 * Added basic client methods `get_ingestor_run` and `get_ingestor_run_list` to retrieve the records of previous ingestor runs.
-* Support node level results
 
 ### Enhancements
 
