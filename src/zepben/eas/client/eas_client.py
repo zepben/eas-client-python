@@ -73,6 +73,15 @@ class EasClient:
     def close(self):
         return get_event_loop().run_until_complete(self.aclose())
 
+    def __del__(self):
+        self.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
     async def aclose(self):
         await self.session.close()
 
