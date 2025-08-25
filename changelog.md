@@ -4,7 +4,8 @@
 * None.
 
 ### New Features
-* None.
+* Added optional fields to `ModelConfig` to control network simplification: `simplify_network`, `collapse_negligible_impedances`, and `combine_common_impedances`.
+* Added optional `node_level_results` field to `GeneratorConfig`. This `NodeLevelResultsConfig` allows the configuration of node level power flow results from OpenDss.
 
 ### Enhancements
 * None.
