@@ -3,13 +3,17 @@
 ### Breaking Changes
 * Renamed the parameter `calibration_id` to `calibration_name` for the following methods `get_transformer_tap_settings` and `async_get_transformer_tap_settings`. This better reflects that
   this parameter is the user supplied calibration name rather than EAS's internal calibration run ID. 
+* EasClient will now need `auth=` passed with an auth object. either `BaseAuthMethod` or `TokenAuth`, this allows
+  cleaner documenting of accepted constructor arguments.
 
 ### New Features
 * Added optional fields to `ModelConfig` to control network simplification: `simplify_network`, `collapse_negligible_impedances`, and `combine_common_impedances`.
 * Added optional `node_level_results` field to `GeneratorConfig`. This `NodeLevelResultsConfig` allows the configuration of node level power flow results from OpenDss.
 
 ### Enhancements
-* None.
+* Internal: query bodys are now mostly self generating with `to_json` and `build_gql_query_object_model` methods.
+* All request handling logic has been refactored into a single method.
+* `catch_warnings` wrapper func to handle standard warning catching.
 
 ### Fixes
 * None.
