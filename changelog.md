@@ -1,7 +1,8 @@
 # EAS Python client
 ## [0.23.0] - UNRELEASED
 ### Breaking Changes
-* None.
+* Renamed the parameter `calibration_id` to `calibration_name` for the following methods `get_transformer_tap_settings` and `async_get_transformer_tap_settings`. This better reflects that
+  this parameter is the user supplied calibration name rather than EAS's internal calibration run ID. 
 
 ### New Features
 * Added optional fields to `ModelConfig` to control network simplification: `simplify_network`, `collapse_negligible_impedances`, and `combine_common_impedances`.

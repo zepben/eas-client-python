@@ -871,8 +871,7 @@ class EasClient:
                                          transformer_tap_settings: Optional[str] = None,
                                          generator_config: Optional[GeneratorConfig] = None):
         """
-        Send request to run hosting capacity calibration
-        :param calibration_name: A string representation of the calibration name
+        Send request to run hosting capacity calibrationbration name
         :param local_calibration_time: A datetime representation of the calibration time, in the timezone of your pqv data ("model time").
         :param feeders: A list of feeder ID's to run the calibration over. If not supplied then the calibration is run over all feeders in the network.
         :param transformer_tap_settings: A set of transformer tap settings to apply before running the calibration work package.
@@ -953,7 +952,7 @@ class EasClient:
     def get_hosting_capacity_calibration_run(self, id: str):
         """
         Retrieve information of a hosting capacity calibration run
-        :param id: The calibration ID
+        :param id: The calibration run ID
         :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
         return get_event_loop().run_until_complete(self.async_get_hosting_capacity_calibration_run(id))
@@ -961,7 +960,7 @@ class EasClient:
     async def async_get_hosting_capacity_calibration_run(self, id: str):
         """
         Retrieve information of a hosting capacity calibration run
-        :param id: The calibration ID
+        :param id: The calibration run ID
         :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
         with warnings.catch_warnings():
@@ -1038,19 +1037,25 @@ class EasClient:
                 else:
                     response.raise_for_status()
 
-    def get_transformer_tap_settings(self, calibration_id: str, feeder: Optional[str] = None,
+    def get_transformer_tap_settings(self, calibration_name: str, feeder: Optional[str] = None,
                                      transformer_mrid: Optional[str] = None):
         """
-        Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database.
+        Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database
+        :param calibration_name: The (user supplied)name of the calibration run to retrieve transformer tap settings from
+        :param feeder: An optional filter to apply to the returned list of transformer tap settings
+        :param transformer_mrid: An optional filter to return only the transformer tap settings for a particular transfomer mrid
         :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
         """
         return get_event_loop().run_until_complete(
-            self.async_get_transformer_tap_settings(calibration_id, feeder, transformer_mrid))
+            self.async_get_transformer_tap_settings(calibration_name, feeder, transformer_mrid))
 
-    async def async_get_transformer_tap_settings(self, calibration_id: str, feeder: Optional[str] = None,
+    async def async_get_transformer_tap_settings(self, calibration_name: str, feeder: Optional[str] = None,
                                                  transformer_mrid: Optional[str] = None):
         """
-        Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database.
+        Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database
+        :param calibration_name: The (user supplied)name of the calibration run to retrieve transformer tap settings from
+        :param feeder: An optional filter to apply to the returned list of transformer tap settings
+        :param transformer_mrid: An optional filter to return only the transformer tap settings for a particular transfomer mrid
         :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
         """
         with warnings.catch_warnings():
@@ -1071,7 +1076,7 @@ class EasClient:
                      }
                 """,
                 "variables": {
-                    "calibrationName": calibration_id,
+                    "calibrationName": calibration_name,
                     "feeder": feeder,
                     "transformerMrid": transformer_mrid
                 }
