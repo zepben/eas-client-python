@@ -1,19 +1,21 @@
-#  Copyright 2020 Zeppelin Bend Pty Ltd
+#  Copyright 2025 Zeppelin Bend Pty Ltd
 #
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+__all__ = ["GeoJsonOverlay", "StateOverlay", "Section", "Result", "Study"]
 
 from dataclasses import dataclass, field
 from typing import List, Any
 
 from geojson import GeoJSON
 
-__all__ = ["GeoJsonOverlay", "StateOverlay", "Section", "Result", "Study"]
+from zepben.eas.client.util import HostingCapacityDataclass
 
 
 @dataclass
-class GeoJsonOverlay:
+class GeoJsonOverlay(HostingCapacityDataclass):
     """ A data class representing an Evolve App Server study result GeoJSON overlay """
     data: GeoJSON
     styles: List[str]
@@ -21,14 +23,14 @@ class GeoJsonOverlay:
 
 
 @dataclass
-class StateOverlay:
+class StateOverlay(HostingCapacityDataclass):
     """ A data class representing an Evolve App Server study result state overlay """
     data: None
     styles: List[str]
 
 
 @dataclass
-class Section:
+class Section(HostingCapacityDataclass):
     """ A data class representing an Evolve App Server study result data section """
     type: str
     name: str
@@ -38,7 +40,7 @@ class Section:
 
 
 @dataclass
-class Result:
+class Result(HostingCapacityDataclass):
     """ A data class representing an Evolve App Server study result """
     name: str
     geo_json_overlay: GeoJsonOverlay = None
@@ -47,7 +49,7 @@ class Result:
 
 
 @dataclass
-class Study:
+class Study(HostingCapacityDataclass):
     """ A data class representing an Evolve App Server study """
     name: str
     description: str
