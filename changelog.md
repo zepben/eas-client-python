@@ -77,6 +77,8 @@ and are now `before_cut_off_profile` and `after_cut_off_profile` respectively.
 ### Breaking Changes
 * Renamed the parameter `calibration_id` to `calibration_name` for the following methods `get_transformer_tap_settings` and `async_get_transformer_tap_settings`. This better reflects that
   this parameter is the user supplied calibration name rather than EAS's internal calibration run ID. 
+* EasClient will now need `auth=` passed with an auth object. either `BaseAuthMethod` or `TokenAuth`, this allows
+  cleaner documenting of accepted constructor arguments.
 
 ### New Features
 * Added optional fields to `ModelConfig` to control network simplification: `simplify_network`, `collapse_negligible_impedances`, and `combine_common_impedances`.
@@ -90,7 +92,9 @@ and are now `before_cut_off_profile` and `after_cut_off_profile` respectively.
 * Added optional field `inverterControlConfig` to `ModelConfig`. This `PVVoltVARVoltWattConfig` allows the configuration of advanced inverter control profiles.
 
 ### Enhancements
-* None.
+* Internal: query bodys are now mostly self generating with `to_json` and `build_gql_query_object_model` methods.
+* All request handling logic has been refactored into a single method.
+* `catch_warnings` wrapper func to handle standard warning catching.
 
 ### Fixes
 * `TimePeriod` no longer truncates the `start_time` and `end_time` to midnight(`00:00:00`). `TimePeriod` will now preserve arbitrary start and end times to minute precision.

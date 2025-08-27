@@ -1,4 +1,4 @@
-#  Copyright 2020 Zeppelin Bend Pty Ltd
+#  Copyright 2025 Zeppelin Bend Pty Ltd
 #
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,7 +17,6 @@ __all__ = [
     "BASIC_RESULTS_CONFIG",
 ]
 
-from build.lib.zepben.eas.client.work_package import ResultsConfig
 from zepben.eas import StoredResultsConfig, RawResultsConfig, MetricsResultsConfig
 
 STORED_RESULTS_CONFIG_STORE_NONE = StoredResultsConfig(
@@ -61,19 +60,19 @@ METRICS_RESULTS_CONFIG_CALCULATE_PERFORMANCE_METRICS = MetricsResultsConfig(
     calculate_performance_metrics=True
 )
 
-RESULTS_CONFIG_DEFAULT_RESULTS_CONFIG = ResultsConfig(
+RESULTS_CONFIG_DEFAULT_RESULTS_CONFIG = ResultsConfig(  # FIXME: unused, but also undefined
     raw_config=RawResultsConfig(energy_meters_raw=True, energy_meter_voltages_raw=True),
     metrics_config=METRICS_RESULTS_CONFIG_CALCULATE_PERFORMANCE_METRICS,
     stored_results_config=STORED_RESULTS_CONFIG_STORE_NONE
 )
 
-STANDARD_RESULTS_CONFIG = ResultsConfig(
+STANDARD_RESULTS_CONFIG = ResultsConfig(  # FIXME: unused, but also undefined
     raw_config=RAW_RESULTS_CONFIG_STANDARD,
     metrics_config=METRICS_RESULTS_CONFIG_CALCULATE_PERFORMANCE_METRICS,
     stored_results_config=StoredResultsConfig(voltage_exceptions_raw=True, overloads_raw=True)
 )
 
-BASIC_RESULTS_CONFIG = ResultsConfig(
+BASIC_RESULTS_CONFIG = ResultsConfig(  # FIXME: unused, but also undefined
     raw_config=RAW_RESULTS_CONFIG_BASIC,
     metrics_config=METRICS_RESULTS_CONFIG_CALCULATE_PERFORMANCE_METRICS,
     stored_results_config=STORED_RESULTS_CONFIG_STORE_NONE

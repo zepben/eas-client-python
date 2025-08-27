@@ -6,5 +6,6 @@
 #
 
 from zepben.eas.client.eas_client import EasClient
+from zepben.eas.client.auth_method import *
 from zepben.eas.client.study import *
 from zepben.eas.client.work_package import *
