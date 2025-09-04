@@ -469,26 +469,26 @@ class ModelConfig:
 
     use_span_level_threshold: bool = False
     """
-    set to true if designRating is to be used for current comparison during collapse of CommonImpedance AcLineSegment.
+    Set to true if `AcLineSegment.designRating` is to be used for conductor rated current in the model.
     """
 
     rating_threshold: Optional[float] = None
     """
-    Optional setting to loosen current comparison between conductors during network simplification by providing a threshold
-    of allowed differences.
+    Optional setting to loosen rated current comparison between conductors during network simplification by providing a threshold
+    of allowed differences. Neighbouring conductors within this threshold and matching impedance's will be collapsed.
     Set as a % value, i.e put as 50.0 if threshold is 50%
     """
 
     simplify_plsi_threshold: Optional[float] = None
     """
-    Optional setting to indicate if per length sequence impedance should be normalized during network simplification.
-    Connected AcLineSegment with Per Length Sequence Impedance value difference within the threshold will be normalized.
+    Optional setting to indicate if sequence impedance's should be normalized during network simplification.
+    Connected AcLineSegments with PerLengthSequenceImpedance value differences within the threshold will be normalized.
     Set as a % value, i.e put as 50.0 if threshold is 50%
     """
 
     emerg_amp_scaling: Optional[float] = None
     """
-    Scaling factor for emergency current rating in lineCodes.
+    Scaling factor for emergency current rating for conductors.
     Set as a factor value, i.e put as 1.5 if scaling is 150%
     """
 
