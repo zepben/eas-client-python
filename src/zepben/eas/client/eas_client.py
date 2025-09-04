@@ -241,6 +241,10 @@ class EasClient:
                 "defaultGenVar": generator_config.model.default_gen_var,
                 "transformerTapSettings": generator_config.model.transformer_tap_settings,
                 "ctPrimScalingFactor": generator_config.model.ct_prim_scaling_factor,
+                "useSpanLevelThreshold": generator_config.model.use_span_level_threshold,
+                "ratingThreshold": generator_config.model.rating_threshold,
+                "simplifyPLSIThreshold": generator_config.model.simplify_plsi_threshold,
+                "emergAmpScaling": generator_config.model.emerg_amp_scaling
             },
             "solve": generator_config.solve and {
                 "normVMinPu": generator_config.solve.norm_vmin_pu,
@@ -316,15 +320,27 @@ class EasClient:
                             "timePeriod": {
                                 "startTime": work_package.syf_config.load_time.start_time.isoformat(),
                                 "endTime": work_package.syf_config.load_time.end_time.isoformat(),
-                                "overrides": work_package.syf_config.load_time.load_overrides and {
-                                    key: value.__dict__
-                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
+                                "overrides": work_package.syf_config.load_time.load_overrides and [
+                                            {
+                                                "loadId": key,
+                                                "loadWattsOverride": value.load_watts,
+                                                "genWattsOverride": value.gen_watts,
+                                                "loadVarOverride": value.load_var,
+                                                "genVarOverride": value.gen_var,
+                                            } for key, value in work_package.syf_config.load_time.load_overrides.items()
+                                        ]
                             } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
                             "fixedTime": work_package.syf_config.load_time and {
                                 "loadTime": work_package.syf_config.load_time.load_time.isoformat(),
-                                "overrides": work_package.syf_config.load_time.load_overrides and {
-                                    key: value.__dict__
-                                    for key, value in work_package.syf_config.load_time.load_overrides.items()}
+                                "overrides": work_package.syf_config.load_time.load_overrides and [
+                                            {
+                                                "loadId": key,
+                                                "loadWattsOverride": value.load_watts,
+                                                "genWattsOverride": value.gen_watts,
+                                                "loadVarOverride": value.load_var,
+                                                "genVarOverride": value.gen_var,
+                                            } for key, value in work_package.syf_config.load_time.load_overrides.items()
+                                        ]
                             } if isinstance(work_package.syf_config.load_time, FixedTime) else None
                         } if isinstance(work_package.syf_config, ForecastConfig) else None,
                         "qualityAssuranceProcessing": work_package.quality_assurance_processing,
@@ -1310,6 +1326,10 @@ class EasClient:
                                             defaultGenVar
                                             transformerTapSettings
                                             ctPrimScalingFactor
+                                            useSpanLevelThreshold
+                                            ratingThreshold
+                                            simplifyPLSIThreshold
+                                            emergAmpScaling
                                         }
                                         solve {
                                             normVMinPu

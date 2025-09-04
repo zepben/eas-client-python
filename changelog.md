@@ -7,6 +7,12 @@
 ### New Features
 * Added optional fields to `ModelConfig` to control network simplification: `simplify_network`, `collapse_negligible_impedances`, and `combine_common_impedances`.
 * Added optional `node_level_results` field to `GeneratorConfig`. This `NodeLevelResultsConfig` allows the configuration of node level power flow results from OpenDss.
+* Introduce `span_level_threshold` and `simplify_plsi` into `work_package` so it can be passed through for hosting capacity studies.
+* Introduce new variables into `work_package` so it can be passed through for hosting capacity studies.
+  * `use_span_level_threshold`
+  * `rating_threshold`
+  * `simplify_plsi_threshold`
+  * `emerg_amp_scaling`
 
 ### Enhancements
 * None.

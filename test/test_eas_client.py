@@ -7,7 +7,7 @@ import json
 import random
 import ssl
 import string
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from http import HTTPStatus
 from unittest import mock
 
@@ -769,6 +769,10 @@ def hosting_capacity_run_calibration_with_calibration_time_request_handler(reque
                                                 'pFactorForecastPv': None,
                                                 'seed': None,
                                                 'simplifyNetwork': None,
+                                                'useSpanLevelThreshold': False,
+                                                'ratingThreshold': None,
+                                                'simplifyPLSIThreshold': None,
+                                                'emergAmpScaling': None,
                                                 'splitPhaseDefaultLoadLossPercentage': None,
                                                 'splitPhaseLVKV': None,
                                                 'swerVoltageToLineVoltage': None,
@@ -872,6 +876,10 @@ def hosting_capacity_run_calibration_with_generator_config_request_handler(reque
                                                 'pFactorForecastPv': None,
                                                 'seed': None,
                                                 'simplifyNetwork': None,
+                                                'useSpanLevelThreshold': False,
+                                                'ratingThreshold': None,
+                                                'simplifyPLSIThreshold': None,
+                                                'emergAmpScaling': None,
                                                 'splitPhaseDefaultLoadLossPercentage': None,
                                                 'splitPhaseLVKV': None,
                                                 'swerVoltageToLineVoltage': None,
@@ -969,6 +977,10 @@ def hosting_capacity_run_calibration_with_partial_model_config_request_handler(r
                                                 'pFactorForecastPv': None,
                                                 'seed': None,
                                                 'simplifyNetwork': None,
+                                                'useSpanLevelThreshold': False,
+                                                'ratingThreshold': None,
+                                                'simplifyPLSIThreshold': None,
+                                                'emergAmpScaling': None,
                                                 'splitPhaseDefaultLoadLossPercentage': None,
                                                 'splitPhaseLVKV': None,
                                                 'swerVoltageToLineVoltage': None,
@@ -1022,6 +1034,7 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
                                                       )
     httpserver.check_assertions()
     assert res == {"result": "success"}
+
 
 def get_hosting_capacity_calibration_sets_request_handler(request):
     actual_body = json.loads(request.data.decode())
@@ -1152,7 +1165,11 @@ def run_opendss_export_request_handler(request):
                             "defaultLoadVar": [10.0, 20.0, 30.0],
                             "defaultGenVar": [5.0, 15.0, 25.0],
                             "transformerTapSettings": "tap-3",
-                            "ctPrimScalingFactor": 2.0
+                            "ctPrimScalingFactor": 2.0,
+                            "useSpanLevelThreshold": True,
+                            "ratingThreshold": 20.0,
+                            "simplifyPLSIThreshold": 20.0,
+                            "emergAmpScaling": 1.8
                         },
                         "solve": {
                             "normVMinPu": 0.9,
@@ -1261,7 +1278,11 @@ OPENDSS_CONFIG = OpenDssConfig(
             default_load_var=[10.0, 20.0, 30.0],
             default_gen_var=[5.0, 15.0, 25.0],
             transformer_tap_settings="tap-3",
-            ct_prim_scaling_factor=2.0
+            ct_prim_scaling_factor=2.0,
+            use_span_level_threshold=True,
+            rating_threshold=20.0,
+            simplify_plsi_threshold=20.0,
+            emerg_amp_scaling= 1.8
         ),
         SolveConfig(
             norm_vmin_pu=0.9,
@@ -1333,8 +1354,7 @@ def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver
         )
 
         OPENDSS_CONFIG.load_time = FixedTime(datetime(2022, 4, 1), {"meter1": FixedTimeLoadOverride([1.0], [2.0], [3.0], [4.0])})
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-            run_opendss_export_request_handler)
+        httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(run_opendss_export_request_handler)
         res = eas_client.run_opendss_export(OPENDSS_CONFIG)
         httpserver.check_assertions()
         assert res == {"result": "success"}
@@ -1440,6 +1460,10 @@ get_paged_opendss_models_query = """
                                     defaultGenVar
                                     transformerTapSettings
                                     ctPrimScalingFactor
+                                    useSpanLevelThreshold
+                                    ratingThreshold
+                                    simplifyPLSIThreshold
+                                    emergAmpScaling
                                 }
                                 solve {
                                     normVMinPu
