@@ -4,7 +4,12 @@
 * None.
 
 ### New Features
-* None.
+* Added `fla_forecast_config` to `FeederLoadAnalysisInput` which holds the config for forecast portion of feeder-load-analysis studies.
+  * `scenario_id` : The id of forecast scenario
+  * `year`: The year for forecast model
+  * `pv_upgrade_threshold`: Watts threshold to indicate if a customer site will gain additional pv during scenario application (Default to 5000).
+  * `bess_upgrade_threshold`: Watts threshold to indicate if a customer site will gain additional battery during scenario application (Default to 5000).
+  * `seed`: Seed for scenario application (Default to 123).
 
 ### Enhancements
 * None.
