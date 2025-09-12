@@ -10,22 +10,12 @@ __all__ = [
     "FeederLoadAnalysisInput"
 ]
 
+from zepben.eas.client.fla_forecast_config import FlaForecastConfig
+
 
 @dataclass
 class FeederLoadAnalysisInput:
     """ A data class representing the configuration for a feeder load analysis study """
-
-    feeders: Optional[List[str]]
-    """The mRIDs of feeders to solve for feeder load analysis"""
-
-    substations: Optional[List[str]]
-    """The mRIDs of substations to solve for feeder load analysis"""
-
-    sub_geographical_regions: Optional[List[str]]
-    """The mRIDs of sub-Geographical Region to solve for feeder load analysis"""
-
-    geographical_regions: Optional[List[str]]
-    """The mRIDs of Geographical Region to solve for feeder load analysis"""
 
     start_date: str
     """Start date for this analysis"""
@@ -47,3 +37,18 @@ class FeederLoadAnalysisInput:
 
     output: str
     """The file name of the resulting study"""
+
+    feeders: Optional[List[str]] = None
+    """The mRIDs of feeders to solve for feeder load analysis"""
+
+    substations: Optional[List[str]] = None
+    """The mRIDs of substations to solve for feeder load analysis"""
+
+    sub_geographical_regions: Optional[List[str]] = None
+    """The mRIDs of sub-Geographical Region to solve for feeder load analysis"""
+
+    geographical_regions: Optional[List[str]] = None
+    """The mRIDs of Geographical Region to solve for feeder load analysis"""
+
+    fla_forecast_config: Optional[FlaForecastConfig] = None
+    """The forecast configuration for this fla study"""
