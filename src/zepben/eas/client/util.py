@@ -40,7 +40,8 @@ class HostingCapacityDataclass(ABC):  # TODO: Another terrible name
         norm_vmax_pu = 'normVMaxPu',
         emerg_vmin_pu = 'emergVMinPu',
         emerg_vmax_pu = 'emergVMaxPu',
-        calculate_co2 = 'calculateCO2'
+        calculate_co2 = 'calculateCO2',
+        simplify_plsi_threshold = "simplifyPLSIThreshold",
     )
 
     def to_json(self) -> Any:
