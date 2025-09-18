@@ -1256,151 +1256,142 @@ def test_work_package_config_to_json():
         quality_assurance_processing=True
     )
 
-    expected = {'input': {'executorConfig': {},
-                          'feederConfigs': None,
-                          'forecastConfig': {'feeders': ['MS1112'],
-                                             'fixedTime': None,
-                                             'scenarios': ['test_central_with_transfers_feeder_poe50'],
-                                             'timePeriod': {'endTime': '2025-06-01T00:00:00',
-                                                            'overrides': None,
-                                                            'startTime': '2024-06-01T00:00:00'},
-                                             'years': [2025, 2026]},
-                          'generatorConfig': {'model': {'calibration': None,
-                                                        'closedLoopTimeDelay': None,
-                                                        'closedLoopVBand': None,
-                                                        'closedLoopVLimit': None,
-                                                        'closedLoopVRegEnabled': False,
-                                                        'closedLoopVRegReplaceAll': None,
-                                                        'closedLoopVRegSetPoint': 0.9925,
-                                                        'collapseLvNetworks': None,
-                                                        'collapseNegligibleImpedances': None,
-                                                        'collapseSWER': None,
-                                                        'combineCommonImpedances': None,
-                                                        'ctPrimScalingFactor': None,
-                                                        'defaultGenVar': None,
-                                                        'defaultGenWatts': None,
-                                                        'defaultLoadVar': None,
-                                                        'defaultLoadWatts': [920,
-                                                                             910,
-                                                                             820,
-                                                                             690,
-                                                                             600,
-                                                                             530,
-                                                                             490,
-                                                                             470,
-                                                                             450,
-                                                                             450,
-                                                                             470,
-                                                                             490,
-                                                                             540,
-                                                                             600,
-                                                                             620,
-                                                                             680,
-                                                                             700,
-                                                                             700,
-                                                                             710,
-                                                                             720,
-                                                                             720,
-                                                                             730,
-                                                                             730,
-                                                                             730,
-                                                                             730,
-                                                                             730,
-                                                                             710,
-                                                                             710,
-                                                                             720,
-                                                                             730,
-                                                                             740,
-                                                                             780,
-                                                                             830,
-                                                                             890,
-                                                                             930,
-                                                                             1000,
-                                                                             1020,
-                                                                             1020,
-                                                                             1000,
-                                                                             970,
-                                                                             940,
-                                                                             900,
-                                                                             860,
-                                                                             800,
-                                                                             830,
-                                                                             870,
-                                                                             900,
-                                                                             920],
-                                                        'defaultTapChangerBand': None,
-                                                        'defaultTapChangerSetPointPu': None,
-                                                        'defaultTapChangerTimeDelay': None,
-                                                        'feederScenarioAllocationStrategy': 'ADDITIVE',
-                                                        'fixOverloadingConsumers': True,
-                                                        'fixSinglePhaseLoads': False,
-                                                        'fixUndersizedServiceLines': True,
-                                                        'genVMaxPu': None,
-                                                        'genVMinPu': None,
-                                                        'loadIntervalLengthHours': 0.5,
-                                                        'loadModel': None,
-                                                        'loadPlacement': None,
-                                                        'loadVMaxPu': 1.2,
-                                                        'loadVMinPu': 0.8,
-                                                        'maxGenTxRatio': 4.0,
-                                                        'maxLoadLvLineRatio': 2.0,
-                                                        'maxLoadServiceLineRatio': 1.0,
-                                                        'maxLoadTxRatio': 2.0,
-                                                        'maxSinglePhaseLoad': 15000.0,
-                                                        'meterPlacementConfig': None,
-                                                        'pFactorBaseExports': -1,
-                                                        'pFactorBaseImports': 1,
-                                                        'pFactorForecastPv': 1,
-                                                        'seed': 123,
-                                                        'simplifyNetwork': None,
-                                                        'splitPhaseDefaultLoadLossPercentage': None,
-                                                        'splitPhaseLVKV': None,
-                                                        'swerVoltageToLineVoltage': None,
-                                                        'transformerTapSettings': None,
-                                                        'vmPu': None},
-                                              'nodeLevelResults': {'collectAllConductors': False,
-                                                                   'collectAllEnergyConsumers': True,
-                                                                   'collectAllSwitches': False,
-                                                                   'collectAllTransformers': True,
-                                                                   'collectCurrent': False,
-                                                                   'collectPower': True,
-                                                                   'collectVoltage': True,
-                                                                   'mridsToCollect': ['mrid_one',
-                                                                                      'mrid_two']},
-                                              'rawResults': {'energyMeterVoltagesRaw': True,
-                                                             'energyMetersRaw': True,
-                                                             'overloadsRaw': True,
-                                                             'resultsPerMeter': True,
-                                                             'voltageExceptionsRaw': True},
-                                              'solve': {'baseFrequency': None,
-                                                        'emergVMaxPu': None,
-                                                        'emergVMinPu': None,
-                                                        'maxControlIter': None,
-                                                        'maxIter': None,
-                                                        'mode': None,
-                                                        'normVMaxPu': None,
-                                                        'normVMinPu': None,
-                                                        'stepSizeMinutes': 30.0,
-                                                        'voltageBases': None}},
-                          'intervention': None,
-                          'qualityAssuranceProcessing': True,
-                          'resultProcessorConfig': {'metrics': {'calculatePerformanceMetrics': True},
-                                                    'storedResults': {'energyMeterVoltagesRaw': False,
-                                                                      'energyMetersRaw': False,
-                                                                      'overloadsRaw': True,
-                                                                      'voltageExceptionsRaw': False},
-                                                    'writerConfig': {'outputWriterConfig': {'enhancedMetricsConfig': {'calculateCO2': True,
-                                                                                                                      'calculateEmergForGenThermal': True,
-                                                                                                                      'calculateEmergForLoadThermal': True,
-                                                                                                                      'calculateNormalForGenThermal': True,
-                                                                                                                      'calculateNormalForLoadThermal': True,
-                                                                                                                      'populateConstraints': True,
-                                                                                                                      'populateDurationCurves': True,
-                                                                                                                      'populateEnhancedMetrics': True,
-                                                                                                                      'populateEnhancedMetricsProfile': False,
-                                                                                                                      'populateWeeklyReports': True}},
-                                                                     'writerType': None}}},
-                'workPackageName': 'test_default_load_work_package'}
+    expected = {
+        'input': {
+            'executorConfig': {},
+            'feederConfigs': None,
+            'forecastConfig': {
+                'feeders': ['MS1112'],
+                'fixedTime': None,
+                'scenarios': ['test_central_with_transfers_feeder_poe50'],
+                'timePeriod': {
+                    'endTime': '2025-06-01T00:00:00',
+                    'overrides': None,
+                    'startTime': '2024-06-01T00:00:00'
+                },
+                'years': [2025, 2026],
+            },
+            'generatorConfig': {
+                'model': {
+                    'calibration': None,
+                    'closedLoopTimeDelay': None,
+                    'closedLoopVBand': None,
+                    'closedLoopVLimit': None,
+                    'closedLoopVRegEnabled': False,
+                    'closedLoopVRegReplaceAll': None,
+                    'closedLoopVRegSetPoint': 0.9925,
+                    'collapseLvNetworks': None,
+                    'collapseNegligibleImpedances': None,
+                    'collapseSWER': None,
+                    'combineCommonImpedances': None,
+                    'ctPrimScalingFactor': None,
+                    'defaultGenVar': None,
+                    'defaultGenWatts': None,
+                    'defaultLoadVar': None,
+                    'defaultLoadWatts': [920, 910, 820, 690, 600, 530, 490, 470, 450, 450, 470, 490, 540, 600, 620, 680, 700, 700, 710, 720, 720, 730, 730, 730, 730, 730, 710, 710, 720, 730, 740, 780, 830, 890, 930, 1000, 1020, 1020, 1000, 970, 940, 900, 860, 800, 830, 870, 900, 920],
+                    'defaultTapChangerBand': None,
+                    'defaultTapChangerSetPointPu': None,
+                    'defaultTapChangerTimeDelay': None,
+                    'feederScenarioAllocationStrategy': 'ADDITIVE',
+                    'fixOverloadingConsumers': True,
+                    'fixSinglePhaseLoads': False,
+                    'fixUndersizedServiceLines': True,
+                    'genVMaxPu': None,
+                    'genVMinPu': None,
+                    'loadIntervalLengthHours': 0.5,
+                    'loadModel': None,
+                    'loadPlacement': None,
+                    'loadVMaxPu': 1.2,
+                    'loadVMinPu': 0.8,
+                    'maxGenTxRatio': 4.0,
+                    'maxLoadLvLineRatio': 2.0,
+                    'maxLoadServiceLineRatio': 1.0,
+                    'maxLoadTxRatio': 2.0,
+                    'maxSinglePhaseLoad': 15000.0,
+                    'meterPlacementConfig': None,
+                    'pFactorBaseExports': -1,
+                    'pFactorBaseImports': 1,
+                    'pFactorForecastPv': 1,
+                    'seed': 123,
+                    'simplifyNetwork': None,
+                    'useSpanLevelThreshold': False,
+                    'ratingThreshold': None,
+                    'simplifyPLSIThreshold': None,
+                    'emergAmpScaling': None,
+                    'splitPhaseDefaultLoadLossPercentage': None,
+                    'splitPhaseLVKV': None,
+                    'swerVoltageToLineVoltage': None,
+                    'transformerTapSettings': None,
+                    'vmPu': None,
+                },
+                'nodeLevelResults': {
+                    'collectAllConductors': False,
+                    'collectAllEnergyConsumers': True,
+                    'collectAllSwitches': False,
+                    'collectAllTransformers': True,
+                    'collectCurrent': False,
+                    'collectPower': True,
+                    'collectVoltage': True,
+                    'mridsToCollect': ['mrid_one', 'mrid_two'],
+                },
+                'rawResults': {
+                    'energyMeterVoltagesRaw': True,
+                    'energyMetersRaw': True,
+                    'overloadsRaw': True,
+                    'resultsPerMeter': True,
+                    'voltageExceptionsRaw': True,
+                },
+                'solve': {
+                    'baseFrequency': None,
+                    'emergVMaxPu': None,
+                    'emergVMinPu': None,
+                    'maxControlIter': None,
+                    'maxIter': None,
+                    'mode': None,
+                    'normVMaxPu': None,
+                    'normVMinPu': None,
+                    'stepSizeMinutes': 30.0,
+                    'voltageBases': None,
+                },
+            },
+            'intervention': None,
+            'qualityAssuranceProcessing': True,
+            'resultProcessorConfig': {
+                'metrics': {
+                    'calculatePerformanceMetrics': True
+                },
+                'storedResults': {
+                    'energyMeterVoltagesRaw': False,
+                    'energyMetersRaw': False,
+                    'overloadsRaw': True,
+                    'voltageExceptionsRaw': False,
+                },
+                'writerConfig': {
+                    'outputWriterConfig': {
+                        'enhancedMetricsConfig': {
+                            'calculateCO2': True,
+                            'calculateEmergForGenThermal': True,
+                            'calculateEmergForLoadThermal': True,
+                            'calculateNormalForGenThermal': True,
+                            'calculateNormalForLoadThermal': True,
+                            'populateConstraints': True,
+                            'populateDurationCurves': True,
+                            'populateEnhancedMetrics': True,
+                            'populateEnhancedMetricsProfile': False,
+                            'populateWeeklyReports': True
+                        }
+                    },
+                    'writerType': None
+                }
+            }
+        },
+        'workPackageName': 'test_default_load_work_package'
+    }
+
+
+
+
+
 
     assert work_package.to_json() == expected
 
@@ -1413,7 +1404,7 @@ def test_open_dss_config_to_json():
             "modelOptions": {
                 "feeder": "feeder1",
                 "scenario": "scenario1",
-                "year": 2024
+                "year": 2024,
             },
             "modulesConfiguration": {
                 "common": {
@@ -1424,7 +1415,7 @@ def test_open_dss_config_to_json():
                             'loadWattsOverride': [1.0],
                             'genWattsOverride': [2.0],
                             'loadVarOverride': [3.0],
-                            'genVarOverride': [4.0]
+                            'genVarOverride': [4.0],
                         }]
                     }} if isinstance(OPENDSS_CONFIG.load_time, FixedTime) else
                        {"timePeriod": {
@@ -1435,9 +1426,9 @@ def test_open_dss_config_to_json():
                                'loadWattsOverride': [1.0],
                                'genWattsOverride': [2.0],
                                'loadVarOverride': [3.0],
-                               'genVarOverride': [4.0]
-                           }]
-                       }})
+                               'genVarOverride': [4.0],
+                           }],
+                       }}),
                 },
                 "generator": {
                     "model": {
@@ -1482,7 +1473,7 @@ def test_open_dss_config_to_json():
                             [6350, 11000],
                             [6400, 11000],
                             [12700, 22000],
-                            [19100, 33000]
+                            [19100, 33000],
                         ],
                         "loadPlacement": "PER_USAGE_POINT",
                         "loadIntervalLengthHours": 0.5,
@@ -1492,10 +1483,10 @@ def test_open_dss_config_to_json():
                             "switchMeterPlacementConfigs": [
                                 {
                                     "meterSwitchClass": "LOAD_BREAK_SWITCH",
-                                    "namePattern": ".*"
-                                }
+                                    "namePattern": ".*",
+                                },
                             ],
-                            "energyConsumerMeterGroup": "meter group 1"
+                            "energyConsumerMeterGroup": "meter group 1",
                         },
                         "seed": 42,
                         "simplifyNetwork": False,
@@ -1504,7 +1495,11 @@ def test_open_dss_config_to_json():
                         "defaultLoadVar": [10.0, 20.0, 30.0],
                         "defaultGenVar": [5.0, 15.0, 25.0],
                         "transformerTapSettings": "tap-3",
-                        "ctPrimScalingFactor": 2.0
+                        "ctPrimScalingFactor": 2.0,
+                        'useSpanLevelThreshold': True,
+                        'ratingThreshold': 20.0,
+                        'simplifyPLSIThreshold': 20.0,
+                        'emergAmpScaling': 1.8,
                     },
                     'nodeLevelResults': {
                         'collectAllConductors': False,
@@ -1516,7 +1511,7 @@ def test_open_dss_config_to_json():
                         'collectVoltage': True,
                         'mridsToCollect': [
                             'mrid_one',
-                            'mrid_two'
+                            'mrid_two',
                         ]
                     },
                     "solve": {
@@ -1529,15 +1524,15 @@ def test_open_dss_config_to_json():
                         "maxIter": 25,
                         "maxControlIter": 20,
                         "mode": "YEARLY",
-                        "stepSizeMinutes": 60
+                        "stepSizeMinutes": 60,
                     },
                     "rawResults": {
                         "energyMeterVoltagesRaw": True,
                         "energyMetersRaw": True,
                         "resultsPerMeter": True,
                         "overloadsRaw": True,
-                        "voltageExceptionsRaw": True
-                    }
+                        "voltageExceptionsRaw": True,
+                    },
                 }
             }
         }
