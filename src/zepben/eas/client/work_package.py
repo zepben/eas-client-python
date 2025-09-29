@@ -216,7 +216,6 @@ class PVVoltVARVoltWattConfig:
     If supplied, the "commissionedDate" of the equipment is compared against this date, equipment that do not have a
     "commissionedDate" will receive the [beforeCutOffProfile]. If null, the [afterCutOffProfile] profile is applied to all equipment."""
 
-
     beforeCutOffProfile: Optional[str] = None,
     """Optional name of the profile to apply to equipment with a "commissionDate" before [cutOffDate].
     If null the equipment will be translated into a regular Generator the rather a PVSystem."""
@@ -510,7 +509,7 @@ class ModelConfig:
     Set as a factor value, i.e put as 1.5 if scaling is 150%
     """
 
-    inverterControlConfig: Optional[PVVoltVARVoltWattConfig] = None
+    inverter_control_config: Optional[PVVoltVARVoltWattConfig] = None
     """
     Optional configuration object to enable modelling generation equipment as PVSystems controlled by InvControls rather than Generators.
     """
