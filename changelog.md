@@ -13,6 +13,7 @@
   * `rating_threshold`
   * `simplify_plsi_threshold`
   * `emerg_amp_scaling`
+* Added optional field `inverterControlConfig` to `ModelConfig`. This `PVVoltVARVoltWattConfig` allows the configuration of advanced inverter control profiles.
 
 ### Enhancements
 * None.

@@ -246,7 +246,7 @@ class EasClient:
                 "simplifyPLSIThreshold": generator_config.model.simplify_plsi_threshold,
                 "emergAmpScaling": generator_config.model.emerg_amp_scaling,
                 "inverterControlConfig": generator_config.model.inverter_control_config and {
-                    "cutOffDate": generator_config.model.inverter_control_config.cut_off_date.replace(microsecond=0, tzinfo=None).isoformat(),  # remove any timezone information
+                    "cutOffDate": generator_config.model.inverter_control_config.cut_off_date and generator_config.model.inverter_control_config.cut_off_date.isoformat(),
                     "beforeCutOffProfile": generator_config.model.inverter_control_config.beforeCutOffProfile,
                     "afterCutOffProfile": generator_config.model.inverter_control_config.afterCutOffProfile
                 }
