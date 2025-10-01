@@ -753,6 +753,7 @@ def hosting_capacity_run_calibration_with_calibration_time_request_handler(reque
                                                 'fixUndersizedServiceLines': None,
                                                 'genVMaxPu': None,
                                                 'genVMinPu': None,
+                                                'inverterControlConfig': None,
                                                 'loadIntervalLengthHours': None,
                                                 'loadModel': None,
                                                 'loadPlacement': None,
@@ -860,6 +861,7 @@ def hosting_capacity_run_calibration_with_generator_config_request_handler(reque
                                                 'fixUndersizedServiceLines': None,
                                                 'genVMaxPu': None,
                                                 'genVMinPu': None,
+                                                'inverterControlConfig': None,
                                                 'loadIntervalLengthHours': None,
                                                 'loadModel': None,
                                                 'loadPlacement': None,
@@ -961,6 +963,7 @@ def hosting_capacity_run_calibration_with_partial_model_config_request_handler(r
                                                 'fixUndersizedServiceLines': None,
                                                 'genVMaxPu': None,
                                                 'genVMinPu': None,
+                                                'inverterControlConfig': None,
                                                 'loadIntervalLengthHours': None,
                                                 'loadModel': None,
                                                 'loadPlacement': None,
@@ -1169,7 +1172,8 @@ def run_opendss_export_request_handler(request):
                             "useSpanLevelThreshold": True,
                             "ratingThreshold": 20.0,
                             "simplifyPLSIThreshold": 20.0,
-                            "emergAmpScaling": 1.8
+                            "emergAmpScaling": 1.8,
+                            'inverterControlConfig': None
                         },
                         "solve": {
                             "normVMinPu": 0.9,
@@ -1464,6 +1468,11 @@ get_paged_opendss_models_query = """
                                     ratingThreshold
                                     simplifyPLSIThreshold
                                     emergAmpScaling
+                                    inverterControlConfig { 
+                                        cutOffDate
+                                        beforeCutOffProfile
+                                        afterCutOffProfile
+                                    }
                                 }
                                 solve {
                                     normVMinPu
