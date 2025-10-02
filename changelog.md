@@ -13,12 +13,13 @@
   * `rating_threshold`
   * `simplify_plsi_threshold`
   * `emerg_amp_scaling`
+* Added optional field `inverterControlConfig` to `ModelConfig`. This `PVVoltVARVoltWattConfig` allows the configuration of advanced inverter control profiles.
 
 ### Enhancements
 * None.
 
 ### Fixes
-* None.
+* `TimePeriod` no longer truncates the `start_time` and `end_time` to midnight(`00:00:00`). `TimePeriod` will now preserve arbitrary start and end times to minute precision.
 
 ### Notes
 * None.

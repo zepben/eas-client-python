@@ -21,6 +21,7 @@ __all__ = [
     "LoadPlacement",
     "FeederScenarioAllocationStrategy",
     "MeterPlacementConfig",
+    "PVVoltVARVoltWattConfig",
     "ModelConfig",
     "SolveMode",
     "SolveConfig",
@@ -147,7 +148,7 @@ class FixedTime:
     """
 
     def __init__(self, load_time: datetime, load_overrides: Optional[Dict[str, FixedTimeLoadOverride]] = None):
-        self.load_time = load_time.replace(tzinfo=None)
+        self.load_time = load_time.replace(second=0, microsecond=0, tzinfo=None)
         self.load_overrides = load_overrides
 
 
@@ -165,8 +166,8 @@ class TimePeriod:
             load_overrides: Optional[Dict[str, TimePeriodLoadOverride]] = None
     ):
         self._validate(start_time, end_time)
-        self.start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
-        self.end_time = end_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+        self.start_time = start_time.replace(second=0, microsecond=0, tzinfo=None)
+        self.end_time = end_time.replace(second=0, microsecond=0, tzinfo=None)
         self.load_overrides = load_overrides
 
     @staticmethod
@@ -206,6 +207,22 @@ class MeterPlacementConfig:
 
     energy_consumer_meter_group: Optional[str] = None
     """The ID of the meter group to use for populating EnergyMeters at EnergyConsumers."""
+
+
+@dataclass
+class PVVoltVARVoltWattConfig:
+    cut_off_date: Optional[datetime] = None
+    """Optional cut-off date to determine which profile to apply to equipment during translation to the OpenDss model.
+    If supplied, the "commissionedDate" of the equipment is compared against this date, equipment that do not have a
+    "commissionedDate" will receive the [beforeCutOffProfile]. If null, the [afterCutOffProfile] profile is applied to all equipment."""
+
+    beforeCutOffProfile: Optional[str] = None
+    """Optional name of the profile to apply to equipment with a "commissionDate" before [cutOffDate].
+    If null the equipment will be translated into a regular Generator the rather a PVSystem."""
+
+    afterCutOffProfile: Optional[str] = None
+    """Optional name of the profile to apply to equipment with a "commissionDate" after [cutOffDate].
+    If null the equipment will be translated into a regular Generator the rather a PVSystem."""
 
 
 @dataclass
@@ -490,6 +507,11 @@ class ModelConfig:
     """
     Scaling factor for emergency current rating for conductors.
     Set as a factor value, i.e put as 1.5 if scaling is 150%
+    """
+
+    inverter_control_config: Optional[PVVoltVARVoltWattConfig] = None
+    """
+    Optional configuration object to enable modelling generation equipment as PVSystems controlled by InvControls rather than Generators.
     """
 
 

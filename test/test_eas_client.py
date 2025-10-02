@@ -26,7 +26,7 @@ from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput
     Order
 from zepben.eas.client.study import Result
 from zepben.eas.client.work_package import FeederConfigs, TimePeriodLoadOverride, \
-    FixedTime, NodeLevelResultsConfig
+    FixedTime, NodeLevelResultsConfig, PVVoltVARVoltWattConfig
 from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, GeneratorConfig, ModelConfig, \
     FeederScenarioAllocationStrategy, LoadPlacement, MeterPlacementConfig, SwitchMeterPlacementConfig, SwitchClass, \
     SolveMode, RawResultsConfig
@@ -195,8 +195,8 @@ def test_get_work_package_cost_estimation_no_verify_success(httpserver: HTTPServ
                 [1],
                 ["scenario"],
                 TimePeriod(
-                    datetime(2022, 1, 1),
-                    datetime(2022, 1, 2),
+                    datetime(2022, 1, 1, 10),
+                    datetime(2022, 1, 2, 12),
                     None
                 )
             )
@@ -753,6 +753,7 @@ def hosting_capacity_run_calibration_with_calibration_time_request_handler(reque
                                                 'fixUndersizedServiceLines': None,
                                                 'genVMaxPu': None,
                                                 'genVMinPu': None,
+                                                'inverterControlConfig': None,
                                                 'loadIntervalLengthHours': None,
                                                 'loadModel': None,
                                                 'loadPlacement': None,
@@ -860,6 +861,7 @@ def hosting_capacity_run_calibration_with_generator_config_request_handler(reque
                                                 'fixUndersizedServiceLines': None,
                                                 'genVMaxPu': None,
                                                 'genVMinPu': None,
+                                                'inverterControlConfig': None,
                                                 'loadIntervalLengthHours': None,
                                                 'loadModel': None,
                                                 'loadPlacement': None,
@@ -961,6 +963,7 @@ def hosting_capacity_run_calibration_with_partial_model_config_request_handler(r
                                                 'fixUndersizedServiceLines': None,
                                                 'genVMaxPu': None,
                                                 'genVMinPu': None,
+                                                'inverterControlConfig': None,
                                                 'loadIntervalLengthHours': None,
                                                 'loadModel': None,
                                                 'loadPlacement': None,
@@ -1089,8 +1092,8 @@ def run_opendss_export_request_handler(request):
                             }]
                         }} if isinstance(OPENDSS_CONFIG.load_time, FixedTime) else
                            {"timePeriod": {
-                               "startTime": "2022-04-01T00:00:00",
-                               "endTime": "2023-04-01T00:00:00",
+                               "startTime": "2022-04-01T10:13:00",
+                               "endTime": "2023-04-01T12:14:00",
                                "overrides": [{
                                    'loadId': 'meter1',
                                    'loadWattsOverride': [1.0],
@@ -1169,7 +1172,12 @@ def run_opendss_export_request_handler(request):
                             "useSpanLevelThreshold": True,
                             "ratingThreshold": 20.0,
                             "simplifyPLSIThreshold": 20.0,
-                            "emergAmpScaling": 1.8
+                            "emergAmpScaling": 1.8,
+                            'inverterControlConfig': {
+                                'afterCutOffProfile': 'afterProfile',
+                                'beforeCutOffProfile': 'beforeProfile',
+                                'cutOffDate': '2024-04-12T11:42:00'
+                            },
                         },
                         "solve": {
                             "normVMinPu": 0.9,
@@ -1214,8 +1222,8 @@ OPENDSS_CONFIG = OpenDssConfig(
     year=2024,
     feeder="feeder1",
     load_time=TimePeriod(
-        datetime(2022, 4, 1),
-        datetime(2023, 4, 1),
+        datetime(2022, 4, 1, 10, 13),
+        datetime(2023, 4, 1, 12, 14),
         {"meter1": TimePeriodLoadOverride([1.0], [2.0], [3.0], [4.0])}
     ),
     model_name="TEST OPENDSS MODEL 1",
@@ -1282,7 +1290,12 @@ OPENDSS_CONFIG = OpenDssConfig(
             use_span_level_threshold=True,
             rating_threshold=20.0,
             simplify_plsi_threshold=20.0,
-            emerg_amp_scaling= 1.8
+            emerg_amp_scaling=1.8,
+            inverter_control_config=PVVoltVARVoltWattConfig(
+                cut_off_date=datetime(2024, 4, 12, 11,  42),
+                beforeCutOffProfile="beforeProfile",
+                afterCutOffProfile="afterProfile"
+            )
         ),
         SolveConfig(
             norm_vmin_pu=0.9,
@@ -1464,6 +1477,11 @@ get_paged_opendss_models_query = """
                                     ratingThreshold
                                     simplifyPLSIThreshold
                                     emergAmpScaling
+                                    inverterControlConfig { 
+                                        cutOffDate
+                                        beforeCutOffProfile
+                                        afterCutOffProfile
+                                    }
                                 }
                                 solve {
                                     normVMinPu
