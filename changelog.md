@@ -19,7 +19,7 @@
 * None.
 
 ### Fixes
-* None.
+* `TimePeriod` no longer truncates the `start_time` and `end_time` to midnight(`00:00:00`). `TimePeriod` will now preserve arbitrary start and end times to minute precision.
 
 ### Notes
 * None.

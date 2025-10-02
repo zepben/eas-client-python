@@ -148,7 +148,7 @@ class FixedTime:
     """
 
     def __init__(self, load_time: datetime, load_overrides: Optional[Dict[str, FixedTimeLoadOverride]] = None):
-        self.load_time = load_time.replace(tzinfo=None)
+        self.load_time = load_time.replace(second=0, microsecond=0, tzinfo=None)
         self.load_overrides = load_overrides
 
 
@@ -166,8 +166,8 @@ class TimePeriod:
             load_overrides: Optional[Dict[str, TimePeriodLoadOverride]] = None
     ):
         self._validate(start_time, end_time)
-        self.start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
-        self.end_time = end_time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+        self.start_time = start_time.replace(second=0, microsecond=0, tzinfo=None)
+        self.end_time = end_time.replace(second=0, microsecond=0, tzinfo=None)
         self.load_overrides = load_overrides
 
     @staticmethod
