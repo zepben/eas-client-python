@@ -1,5 +1,21 @@
 # EAS Python client
-## [0.23.0] - UNRELEASED
+## [0.24.0] - UNRELEASED
+### Breaking Changes
+* None.
+
+### New Features
+* Added optional field `inverterControlConfig` to `ModelConfig`. This `PVVoltVARVoltWattConfig` allows the configuration of advanced inverter control profiles.
+
+### Enhancements
+* None.
+
+### Fixes
+* `TimePeriod` no longer truncates the `start_time` and `end_time` to midnight(`00:00:00`). `TimePeriod` will now preserve arbitrary start and end times to minute precision.
+
+### Notes
+* None.
+
+## [0.23.0] - 2025-09-10
 ### Breaking Changes
 * Renamed the parameter `calibration_id` to `calibration_name` for the following methods `get_transformer_tap_settings` and `async_get_transformer_tap_settings`. This better reflects that
   this parameter is the user supplied calibration name rather than EAS's internal calibration run ID. 
