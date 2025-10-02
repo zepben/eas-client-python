@@ -1,5 +1,5 @@
 # EAS Python client
-## [0.23.0] - UNRELEASED
+## [0.23.0] - 2025-09-10
 ### Breaking Changes
 * Renamed the parameter `calibration_id` to `calibration_name` for the following methods `get_transformer_tap_settings` and `async_get_transformer_tap_settings`. This better reflects that
   this parameter is the user supplied calibration name rather than EAS's internal calibration run ID. 
