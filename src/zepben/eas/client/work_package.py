@@ -217,11 +217,11 @@ class PVVoltVARVoltWattConfig:
     "commissionedDate" will receive the [before_cut_off_profile]. If null, the [after_cut_off_profile] profile is applied to all equipment."""
 
     before_cut_off_profile: Optional[str] = None
-    """Optional name of the profile to apply to equipment with a "commissionDate" before [cut_off_date].
+    """Optional name of the profile to apply to equipment with a "commissionedDate" before [cut_off_date].
     If null the equipment will be translated into a regular Generator the rather a PVSystem."""
 
     after_cut_off_profile: Optional[str] = None
-    """Optional name of the profile to apply to equipment with a "commissionDate" after [cut_off_date].
+    """Optional name of the profile to apply to equipment with a "commissionedDate" after [cut_off_date].
     If null the equipment will be translated into a regular Generator the rather a PVSystem."""
 
 

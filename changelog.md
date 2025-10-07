@@ -1,7 +1,8 @@
 # EAS Python client
 ## [0.25.0] - UNRELEASED
 ### Breaking Changes
-* None.
+*  The `beforeCutOffProfile` and `afterCutOffProfile` fields in `PVVoltVARVoltWattConfig` have been renamed to snake case
+and are now `before_cut_off_profile` and `after_cut_off_profile` respectively.
 
 ### New Features
 * None.
