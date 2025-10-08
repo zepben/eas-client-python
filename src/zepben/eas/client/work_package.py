@@ -214,14 +214,14 @@ class PVVoltVARVoltWattConfig:
     cut_off_date: Optional[datetime] = None
     """Optional cut-off date to determine which profile to apply to equipment during translation to the OpenDss model.
     If supplied, the "commissionedDate" of the equipment is compared against this date, equipment that do not have a
-    "commissionedDate" will receive the [beforeCutOffProfile]. If null, the [afterCutOffProfile] profile is applied to all equipment."""
+    "commissionedDate" will receive the [before_cut_off_profile]. If null, the [after_cut_off_profile] profile is applied to all equipment."""
 
-    beforeCutOffProfile: Optional[str] = None
-    """Optional name of the profile to apply to equipment with a "commissionDate" before [cutOffDate].
+    before_cut_off_profile: Optional[str] = None
+    """Optional name of the profile to apply to equipment with a "commissionedDate" before [cut_off_date].
     If null the equipment will be translated into a regular Generator the rather a PVSystem."""
 
-    afterCutOffProfile: Optional[str] = None
-    """Optional name of the profile to apply to equipment with a "commissionDate" after [cutOffDate].
+    after_cut_off_profile: Optional[str] = None
+    """Optional name of the profile to apply to equipment with a "commissionedDate" after [cut_off_date].
     If null the equipment will be translated into a regular Generator the rather a PVSystem."""
 
 

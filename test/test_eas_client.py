@@ -1293,8 +1293,8 @@ OPENDSS_CONFIG = OpenDssConfig(
             emerg_amp_scaling=1.8,
             inverter_control_config=PVVoltVARVoltWattConfig(
                 cut_off_date=datetime(2024, 4, 12, 11,  42),
-                beforeCutOffProfile="beforeProfile",
-                afterCutOffProfile="afterProfile"
+                before_cut_off_profile="beforeProfile",
+                after_cut_off_profile="afterProfile"
             )
         ),
         SolveConfig(
