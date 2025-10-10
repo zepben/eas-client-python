@@ -642,7 +642,7 @@ class EasClient:
                         "flaForecastConfig":
                             ({
                                  "scenarioID": feeder_load_analysis_input.fla_forecast_config.scenario_id,
-                                 "years": [feeder_load_analysis_input.fla_forecast_config.year],
+                                 "year": feeder_load_analysis_input.fla_forecast_config.year,
                                  "pvUpgradeThreshold": feeder_load_analysis_input.fla_forecast_config.pv_upgrade_threshold,
                                  "bessUpgradeThreshold": feeder_load_analysis_input.fla_forecast_config.bess_upgrade_threshold,
                                  "seed": feeder_load_analysis_input.fla_forecast_config.seed
