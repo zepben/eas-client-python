@@ -638,7 +638,8 @@ class EasClient:
                         "processCoincidentLoads": feeder_load_analysis_input.process_coincident_loads,
                         "produceConductorReport": True, # We currently only support conductor report
                         "aggregateAtFeederLevel": feeder_load_analysis_input.aggregate_at_feeder_level,
-                        "output": feeder_load_analysis_input.output
+                        "output": feeder_load_analysis_input.output,
+                        "flaForecastConfig": feeder_load_analysis_input.fla_forecast_config
                     }
                 }
             }
