@@ -6,12 +6,12 @@
 import ssl
 import warnings
 from asyncio import get_event_loop
+from dataclasses import asdict
 from datetime import datetime
 from hashlib import sha256
 from http import HTTPStatus
 from json import dumps
 from typing import Optional, List
-from dataclasses import asdict
 
 import aiohttp
 from aiohttp import ClientSession
@@ -19,9 +19,9 @@ from urllib3.exceptions import InsecureRequestWarning
 from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, create_token_fetcher_managed_identity
 
 from zepben.eas.client.feeder_load_analysis_input import FeederLoadAnalysisInput
+from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput
 from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
 from zepben.eas.client.study import Study
-from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput
 from zepben.eas.client.util import construct_url
 from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod, ForecastConfig, FeederConfigs, \
     GeneratorConfig, ModelConfig
@@ -35,20 +35,20 @@ class EasClient:
     """
 
     def __init__(
-        self,
-        host: str,
-        port: int,
-        protocol: str = "https",
-        client_id: Optional[str] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        access_token: Optional[str] = None,
-        client_secret: Optional[str] = None,
-        token_fetcher: Optional[ZepbenTokenFetcher] = None,
-        verify_certificate: bool = True,
-        ca_filename: Optional[str] = None,
-        session: ClientSession = None,
-        json_serialiser=None
+            self,
+            host: str,
+            port: int,
+            protocol: str = "https",
+            client_id: Optional[str] = None,
+            username: Optional[str] = None,
+            password: Optional[str] = None,
+            access_token: Optional[str] = None,
+            client_secret: Optional[str] = None,
+            token_fetcher: Optional[ZepbenTokenFetcher] = None,
+            verify_certificate: bool = True,
+            ca_filename: Optional[str] = None,
+            session: ClientSession = None,
+            json_serialiser=None
     ):
         """
         Construct a client for the Evolve App Server. If the server is HTTPS, authentication may be configured.
@@ -284,140 +284,140 @@ class EasClient:
 
     def work_package_config_to_json(self, work_package: Optional[WorkPackageConfig]) -> Optional[dict]:
         return {
-                        "feederConfigs": {
-                            "configs": [
+            "feederConfigs": {
+                "configs": [
+                    {
+                        "feeder": config.feeder,
+                        "years": config.years,
+                        "scenarios": config.scenarios,
+                        "timePeriod": {
+                            "startTime": config.load_time.start_time.isoformat(),
+                            "endTime": config.load_time.end_time.isoformat(),
+                            "overrides": config.load_time.load_overrides and [
                                 {
-                                    "feeder": config.feeder,
-                                    "years": config.years,
-                                    "scenarios": config.scenarios,
-                                    "timePeriod": {
-                                        "startTime": config.load_time.start_time.isoformat(),
-                                        "endTime": config.load_time.end_time.isoformat(),
-                                        "overrides": config.load_time.load_overrides and [
-                                            {
-                                                "loadId": key,
-                                                "loadWattsOverride": value.load_watts,
-                                                "genWattsOverride": value.gen_watts,
-                                                "loadVarOverride": value.load_var,
-                                                "genVarOverride": value.gen_var,
-                                            } for key, value in config.load_time.load_overrides.items()
-                                        ]
-                                    } if isinstance(config.load_time, TimePeriod) else None,
-                                    "fixedTime": config.load_time and {
-                                        "loadTime": config.load_time.load_time.isoformat(),
-                                        "overrides": config.load_time.load_overrides and [
-                                            {
-                                                "loadId": key,
-                                                "loadWattsOverride": value.load_watts,
-                                                "genWattsOverride": value.gen_watts,
-                                                "loadVarOverride": value.load_var,
-                                                "genVarOverride": value.gen_var,
-                                            } for key, value in config.load_time.load_overrides.items()
-                                        ]
-                                    } if isinstance(config.load_time, FixedTime) else None,
-                                } for config in work_package.syf_config.configs
+                                    "loadId": key,
+                                    "loadWattsOverride": value.load_watts,
+                                    "genWattsOverride": value.gen_watts,
+                                    "loadVarOverride": value.load_var,
+                                    "genVarOverride": value.gen_var,
+                                } for key, value in config.load_time.load_overrides.items()
                             ]
-                        } if isinstance(work_package.syf_config, FeederConfigs) else None,
-                        "forecastConfig": {
-                            "feeders": work_package.syf_config.feeders,
-                            "years": work_package.syf_config.years,
-                            "scenarios": work_package.syf_config.scenarios,
-                            "timePeriod": {
-                                "startTime": work_package.syf_config.load_time.start_time.isoformat(),
-                                "endTime": work_package.syf_config.load_time.end_time.isoformat(),
-                                "overrides": work_package.syf_config.load_time.load_overrides and [
-                                            {
-                                                "loadId": key,
-                                                "loadWattsOverride": value.load_watts,
-                                                "genWattsOverride": value.gen_watts,
-                                                "loadVarOverride": value.load_var,
-                                                "genVarOverride": value.gen_var,
-                                            } for key, value in work_package.syf_config.load_time.load_overrides.items()
-                                        ]
-                            } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
-                            "fixedTime": work_package.syf_config.load_time and {
-                                "loadTime": work_package.syf_config.load_time.load_time.isoformat(),
-                                "overrides": work_package.syf_config.load_time.load_overrides and [
-                                            {
-                                                "loadId": key,
-                                                "loadWattsOverride": value.load_watts,
-                                                "genWattsOverride": value.gen_watts,
-                                                "loadVarOverride": value.load_var,
-                                                "genVarOverride": value.gen_var,
-                                            } for key, value in work_package.syf_config.load_time.load_overrides.items()
-                                        ]
-                            } if isinstance(work_package.syf_config.load_time, FixedTime) else None
-                        } if isinstance(work_package.syf_config, ForecastConfig) else None,
-                        "qualityAssuranceProcessing": work_package.quality_assurance_processing,
-                        "generatorConfig": self.generator_config_to_json(work_package.generator_config),
-                        "executorConfig": {},
-                        "resultProcessorConfig": work_package.result_processor_config and {
-                            "storedResults": work_package.result_processor_config.stored_results and {
-                                "energyMeterVoltagesRaw": work_package.result_processor_config.stored_results.energy_meter_voltages_raw,
-                                "energyMetersRaw": work_package.result_processor_config.stored_results.energy_meters_raw,
-                                "overloadsRaw": work_package.result_processor_config.stored_results.overloads_raw,
-                                "voltageExceptionsRaw": work_package.result_processor_config.stored_results.voltage_exceptions_raw,
-                            },
-                            "metrics": work_package.result_processor_config.metrics and {
-                                "calculatePerformanceMetrics": work_package.result_processor_config.metrics.calculate_performance_metrics
-                            },
-                            "writerConfig": work_package.result_processor_config.writer_config and {
-                                "writerType": work_package.result_processor_config.writer_config.writer_type and work_package.result_processor_config.writer_config.writer_type.name,
-                                "outputWriterConfig": work_package.result_processor_config.writer_config.output_writer_config and {
-                                    "enhancedMetricsConfig": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config and {
-                                        "populateEnhancedMetrics": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_enhanced_metrics,
-                                        "populateEnhancedMetricsProfile": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_enhanced_metrics_profile,
-                                        "populateDurationCurves": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_duration_curves,
-                                        "populateConstraints": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_constraints,
-                                        "populateWeeklyReports": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_weekly_reports,
-                                        "calculateNormalForLoadThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_normal_for_load_thermal,
-                                        "calculateEmergForLoadThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_emerg_for_load_thermal,
-                                        "calculateNormalForGenThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_normal_for_gen_thermal,
-                                        "calculateEmergForGenThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_emerg_for_gen_thermal,
-                                        "calculateCO2": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_co2
-                                    }
-                                }
-                            }
-                        },
-                        "intervention": work_package.intervention and {
-                            "baseWorkPackageId": work_package.intervention.base_work_package_id,
-                            "yearRange": {
-                                "maxYear": work_package.intervention.year_range.max_year,
-                                "minYear": work_package.intervention.year_range.min_year
-                            },
-                            "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year,
-                            "interventionType": work_package.intervention.intervention_type.name,
-                            "candidateGeneration": work_package.intervention.candidate_generation and {
-                                "type": work_package.intervention.candidate_generation.type.name,
-                                "interventionCriteriaName": work_package.intervention.candidate_generation.intervention_criteria_name,
-                                "voltageDeltaAvgThreshold": work_package.intervention.candidate_generation.voltage_delta_avg_threshold,
-                                "voltageUnderLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_under_limit_hours_threshold,
-                                "voltageOverLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_over_limit_hours_threshold,
-                                "tapWeightingFactorLowerThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_lower_threshold,
-                                "tapWeightingFactorUpperThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_upper_threshold,
-                            },
-                            "allocationCriteria": work_package.intervention.allocation_criteria,
-                            "specificAllocationInstance": work_package.intervention.specific_allocation_instance,
-                            "phaseRebalanceProportions": work_package.intervention.phase_rebalance_proportions and {
-                                "a": work_package.intervention.phase_rebalance_proportions.a,
-                                "b": work_package.intervention.phase_rebalance_proportions.b,
-                                "c": work_package.intervention.phase_rebalance_proportions.c
-                            },
-                            "dvms": work_package.intervention.dvms and {
-                                "lowerLimit": work_package.intervention.dvms.lower_limit,
-                                "upperLimit": work_package.intervention.dvms.upper_limit,
-                                "lowerPercentile": work_package.intervention.dvms.lower_percentile,
-                                "upperPercentile": work_package.intervention.dvms.upper_percentile,
-                                "maxIterations": work_package.intervention.dvms.max_iterations,
-                                "regulatorConfig": {
-                                    "puTarget": work_package.intervention.dvms.regulator_config.pu_target,
-                                    "puDeadbandPercent": work_package.intervention.dvms.regulator_config.pu_deadband_percent,
-                                    "maxTapChangePerStep": work_package.intervention.dvms.regulator_config.max_tap_change_per_step,
-                                    "allowPushToLimit": work_package.intervention.dvms.regulator_config.allow_push_to_limit
-                                }
-                            }
+                        } if isinstance(config.load_time, TimePeriod) else None,
+                        "fixedTime": config.load_time and {
+                            "loadTime": config.load_time.load_time.isoformat(),
+                            "overrides": config.load_time.load_overrides and [
+                                {
+                                    "loadId": key,
+                                    "loadWattsOverride": value.load_watts,
+                                    "genWattsOverride": value.gen_watts,
+                                    "loadVarOverride": value.load_var,
+                                    "genVarOverride": value.gen_var,
+                                } for key, value in config.load_time.load_overrides.items()
+                            ]
+                        } if isinstance(config.load_time, FixedTime) else None,
+                    } for config in work_package.syf_config.configs
+                ]
+            } if isinstance(work_package.syf_config, FeederConfigs) else None,
+            "forecastConfig": {
+                "feeders": work_package.syf_config.feeders,
+                "years": work_package.syf_config.years,
+                "scenarios": work_package.syf_config.scenarios,
+                "timePeriod": {
+                    "startTime": work_package.syf_config.load_time.start_time.isoformat(),
+                    "endTime": work_package.syf_config.load_time.end_time.isoformat(),
+                    "overrides": work_package.syf_config.load_time.load_overrides and [
+                        {
+                            "loadId": key,
+                            "loadWattsOverride": value.load_watts,
+                            "genWattsOverride": value.gen_watts,
+                            "loadVarOverride": value.load_var,
+                            "genVarOverride": value.gen_var,
+                        } for key, value in work_package.syf_config.load_time.load_overrides.items()
+                    ]
+                } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
+                "fixedTime": work_package.syf_config.load_time and {
+                    "loadTime": work_package.syf_config.load_time.load_time.isoformat(),
+                    "overrides": work_package.syf_config.load_time.load_overrides and [
+                        {
+                            "loadId": key,
+                            "loadWattsOverride": value.load_watts,
+                            "genWattsOverride": value.gen_watts,
+                            "loadVarOverride": value.load_var,
+                            "genVarOverride": value.gen_var,
+                        } for key, value in work_package.syf_config.load_time.load_overrides.items()
+                    ]
+                } if isinstance(work_package.syf_config.load_time, FixedTime) else None
+            } if isinstance(work_package.syf_config, ForecastConfig) else None,
+            "qualityAssuranceProcessing": work_package.quality_assurance_processing,
+            "generatorConfig": self.generator_config_to_json(work_package.generator_config),
+            "executorConfig": {},
+            "resultProcessorConfig": work_package.result_processor_config and {
+                "storedResults": work_package.result_processor_config.stored_results and {
+                    "energyMeterVoltagesRaw": work_package.result_processor_config.stored_results.energy_meter_voltages_raw,
+                    "energyMetersRaw": work_package.result_processor_config.stored_results.energy_meters_raw,
+                    "overloadsRaw": work_package.result_processor_config.stored_results.overloads_raw,
+                    "voltageExceptionsRaw": work_package.result_processor_config.stored_results.voltage_exceptions_raw,
+                },
+                "metrics": work_package.result_processor_config.metrics and {
+                    "calculatePerformanceMetrics": work_package.result_processor_config.metrics.calculate_performance_metrics
+                },
+                "writerConfig": work_package.result_processor_config.writer_config and {
+                    "writerType": work_package.result_processor_config.writer_config.writer_type and work_package.result_processor_config.writer_config.writer_type.name,
+                    "outputWriterConfig": work_package.result_processor_config.writer_config.output_writer_config and {
+                        "enhancedMetricsConfig": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config and {
+                            "populateEnhancedMetrics": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_enhanced_metrics,
+                            "populateEnhancedMetricsProfile": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_enhanced_metrics_profile,
+                            "populateDurationCurves": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_duration_curves,
+                            "populateConstraints": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_constraints,
+                            "populateWeeklyReports": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_weekly_reports,
+                            "calculateNormalForLoadThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_normal_for_load_thermal,
+                            "calculateEmergForLoadThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_emerg_for_load_thermal,
+                            "calculateNormalForGenThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_normal_for_gen_thermal,
+                            "calculateEmergForGenThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_emerg_for_gen_thermal,
+                            "calculateCO2": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_co2
                         }
                     }
+                }
+            },
+            "intervention": work_package.intervention and {
+                "baseWorkPackageId": work_package.intervention.base_work_package_id,
+                "yearRange": {
+                    "maxYear": work_package.intervention.year_range.max_year,
+                    "minYear": work_package.intervention.year_range.min_year
+                },
+                "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year,
+                "interventionType": work_package.intervention.intervention_type.name,
+                "candidateGeneration": work_package.intervention.candidate_generation and {
+                    "type": work_package.intervention.candidate_generation.type.name,
+                    "interventionCriteriaName": work_package.intervention.candidate_generation.intervention_criteria_name,
+                    "voltageDeltaAvgThreshold": work_package.intervention.candidate_generation.voltage_delta_avg_threshold,
+                    "voltageUnderLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_under_limit_hours_threshold,
+                    "voltageOverLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_over_limit_hours_threshold,
+                    "tapWeightingFactorLowerThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_lower_threshold,
+                    "tapWeightingFactorUpperThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_upper_threshold,
+                },
+                "allocationCriteria": work_package.intervention.allocation_criteria,
+                "specificAllocationInstance": work_package.intervention.specific_allocation_instance,
+                "phaseRebalanceProportions": work_package.intervention.phase_rebalance_proportions and {
+                    "a": work_package.intervention.phase_rebalance_proportions.a,
+                    "b": work_package.intervention.phase_rebalance_proportions.b,
+                    "c": work_package.intervention.phase_rebalance_proportions.c
+                },
+                "dvms": work_package.intervention.dvms and {
+                    "lowerLimit": work_package.intervention.dvms.lower_limit,
+                    "upperLimit": work_package.intervention.dvms.upper_limit,
+                    "lowerPercentile": work_package.intervention.dvms.lower_percentile,
+                    "upperPercentile": work_package.intervention.dvms.upper_percentile,
+                    "maxIterations": work_package.intervention.dvms.max_iterations,
+                    "regulatorConfig": {
+                        "puTarget": work_package.intervention.dvms.regulator_config.pu_target,
+                        "puDeadbandPercent": work_package.intervention.dvms.regulator_config.pu_deadband_percent,
+                        "maxTapChangePerStep": work_package.intervention.dvms.regulator_config.max_tap_change_per_step,
+                        "allowPushToLimit": work_package.intervention.dvms.regulator_config.allow_push_to_limit
+                    }
+                }
+            }
+        }
 
     def run_hosting_capacity_work_package(self, work_package: WorkPackageConfig):
         """
@@ -462,10 +462,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -497,10 +497,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -538,10 +538,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -589,10 +589,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -636,9 +636,17 @@ class EasClient:
                         "fetchLvNetwork": feeder_load_analysis_input.fetch_lv_network,
                         "processFeederLoads": feeder_load_analysis_input.process_feeder_loads,
                         "processCoincidentLoads": feeder_load_analysis_input.process_coincident_loads,
-                        "produceConductorReport": True, # We currently only support conductor report
+                        "produceConductorReport": True,  # We currently only support conductor report
                         "aggregateAtFeederLevel": feeder_load_analysis_input.aggregate_at_feeder_level,
-                        "output": feeder_load_analysis_input.output
+                        "output": feeder_load_analysis_input.output,
+                        "flaForecastConfig":
+                            ({
+                                 "scenarioID": feeder_load_analysis_input.fla_forecast_config.scenario_id,
+                                 "year": feeder_load_analysis_input.fla_forecast_config.year,
+                                 "pvUpgradeThreshold": feeder_load_analysis_input.fla_forecast_config.pv_upgrade_threshold,
+                                 "bessUpgradeThreshold": feeder_load_analysis_input.fla_forecast_config.bess_upgrade_threshold,
+                                 "seed": feeder_load_analysis_input.fla_forecast_config.seed
+                             } if feeder_load_analysis_input.fla_forecast_config else None)
                     }
                 }
             }
@@ -646,10 +654,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -753,10 +761,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -960,10 +968,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -1012,10 +1020,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -1048,10 +1056,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -1106,10 +1114,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -1152,16 +1160,16 @@ class EasClient:
                             "modulesConfiguration": {
                                 "common": {
                                     **({"fixedTime": {"loadTime": config.load_time.load_time.isoformat(),
-                                          "overrides": config.load_time.load_overrides and [
-                                               {
-                                                   "loadId": key,
-                                                   "loadWattsOverride": value.load_watts,
-                                                   "genWattsOverride": value.gen_watts,
-                                                   "loadVarOverride": value.load_var,
-                                                   "genVarOverride": value.gen_var,
-                                               } for key, value in config.load_time.load_overrides.items()
-                                           ]
-                                       }} if isinstance(config.load_time, FixedTime) else {}),
+                                                      "overrides": config.load_time.load_overrides and [
+                                                          {
+                                                              "loadId": key,
+                                                              "loadWattsOverride": value.load_watts,
+                                                              "genWattsOverride": value.gen_watts,
+                                                              "loadVarOverride": value.load_var,
+                                                              "genVarOverride": value.gen_var,
+                                                          } for key, value in config.load_time.load_overrides.items()
+                                                      ]
+                                                      }} if isinstance(config.load_time, FixedTime) else {}),
                                     **({"timePeriod": {
                                         "startTime": config.load_time.start_time.isoformat(),
                                         "endTime": config.load_time.end_time.isoformat(),
@@ -1186,10 +1194,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -1197,11 +1205,11 @@ class EasClient:
                     response.raise_for_status()
 
     def get_paged_opendss_models(
-        self,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        query_filter: Optional[GetOpenDssModelsFilterInput] = None,
-        query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
+            self,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None,
+            query_filter: Optional[GetOpenDssModelsFilterInput] = None,
+            query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
         """
         Retrieve a paginated opendss export run information
         :param limit: The number of opendss export runs to retrieve
@@ -1214,11 +1222,11 @@ class EasClient:
             self.async_get_paged_opendss_models(limit, offset, query_filter, query_sort))
 
     async def async_get_paged_opendss_models(
-        self,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        query_filter: Optional[GetOpenDssModelsFilterInput] = None,
-        query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
+            self,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None,
+            query_filter: Optional[GetOpenDssModelsFilterInput] = None,
+            query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
         """
         Retrieve a paginated opendss export run information
         :param limit: The number of opendss export runs to retrieve
@@ -1397,10 +1405,10 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
             ) as response:
                 if response.ok:
                     return await response.json()
@@ -1429,11 +1437,11 @@ class EasClient:
                 sslcontext = ssl.create_default_context(cafile=self._ca_filename)
 
             async with self.session.get(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port,
-                              path=f"/api/opendss-model/{run_id}"),
-                headers=self._get_request_headers(),
-                ssl=sslcontext if self._verify_certificate else False,
-                allow_redirects=False
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port,
+                                  path=f"/api/opendss-model/{run_id}"),
+                    headers=self._get_request_headers(),
+                    ssl=sslcontext if self._verify_certificate else False,
+                    allow_redirects=False
             ) as response:
                 if response.status == HTTPStatus.FOUND:
                     return response.headers["Location"]
