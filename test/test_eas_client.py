@@ -627,7 +627,8 @@ def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServ
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(hosting_capacity_run_calibration_request_handler)
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        hosting_capacity_run_calibration_request_handler)
     res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
     httpserver.check_assertions()
     assert res == {"result": "success"}
@@ -807,7 +808,8 @@ def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_succes
     assert res == {"result": "success"}
 
 
-def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_no_generator_config(httpserver: HTTPServer):
+def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_no_generator_config(
+        httpserver: HTTPServer):
     eas_client = EasClient(
         LOCALHOST,
         httpserver.port,
@@ -901,14 +903,15 @@ def hosting_capacity_run_calibration_with_generator_config_request_handler(reque
                                                 'normVMinPu': None,
                                                 'stepSizeMinutes': None,
                                                 'voltageBases': None
-                                                }
                                             }
+                                        }
                                         }
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
 
-def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_generator_config(httpserver: HTTPServer):
+def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_generator_config(
+        httpserver: HTTPServer):
     eas_client = EasClient(
         LOCALHOST,
         httpserver.port,
@@ -921,7 +924,8 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
                                                       datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
                                                       ["one", "two"],
                                                       transformer_tap_settings="test_tap_settings",
-                                                      generator_config=GeneratorConfig(solve=SolveConfig(norm_vmax_pu=23.9))
+                                                      generator_config=GeneratorConfig(
+                                                          solve=SolveConfig(norm_vmax_pu=23.9))
                                                       )
     httpserver.check_assertions()
     assert res == {"result": "success"}
@@ -989,17 +993,18 @@ def hosting_capacity_run_calibration_with_partial_model_config_request_handler(r
                                                 'swerVoltageToLineVoltage': None,
                                                 'transformerTapSettings': 'test_tap_settings',
                                                 'vmPu': 123.4
-                                                },
+                                            },
                                             'nodeLevelResults': None,
                                             'rawResults': None,
                                             'solve': None
-                                            }
+                                        }
                                         }
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
 
-def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_model_config(httpserver: HTTPServer):
+def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_model_config(
+        httpserver: HTTPServer):
     eas_client = EasClient(
         LOCALHOST,
         httpserver.port,
@@ -1292,7 +1297,7 @@ OPENDSS_CONFIG = OpenDssConfig(
             simplify_plsi_threshold=20.0,
             emerg_amp_scaling=1.8,
             inverter_control_config=PVVoltVARVoltWattConfig(
-                cut_off_date=datetime(2024, 4, 12, 11,  42),
+                cut_off_date=datetime(2024, 4, 12, 11, 42),
                 before_cut_off_profile="beforeProfile",
                 after_cut_off_profile="afterProfile"
             )
@@ -1366,7 +1371,8 @@ def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver
             ca_filename=ca_filename
         )
 
-        OPENDSS_CONFIG.load_time = FixedTime(datetime(2022, 4, 1), {"meter1": FixedTimeLoadOverride([1.0], [2.0], [3.0], [4.0])})
+        OPENDSS_CONFIG.load_time = FixedTime(datetime(2022, 4, 1),
+                                             {"meter1": FixedTimeLoadOverride([1.0], [2.0], [3.0], [4.0])})
         httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(run_opendss_export_request_handler)
         res = eas_client.run_opendss_export(OPENDSS_CONFIG)
         httpserver.check_assertions()
@@ -1387,134 +1393,7 @@ get_paged_opendss_models_query = """
                     downloadUrl
                     isPublic
                     errors
-                    generationSpec {
-                        modelOptions{
-                            scenario
-                            year
-                            feeder
-                        }
-                        modulesConfiguration {
-                            common {
-                                fixedTime{
-                                    loadTime
-                                    overrides {
-                                        loadId
-                                        loadWattsOverride
-                                        genWattsOverride
-                                        loadVarOverride
-                                        genVarOverride
-                                    }
-                                }
-                                timePeriod {
-                                    startTime
-                                    endTime
-                                    overrides {
-                                        loadId
-                                        loadWattsOverride
-                                        genWattsOverride
-                                        loadVarOverride
-                                        genVarOverride
-                                    }
-                                }
-                            }
-                            generator {
-                                model {
-                                    vmPu
-                                    loadVMinPu
-                                    loadVMaxPu
-                                    genVMinPu
-                                    genVMaxPu
-                                    loadModel
-                                    collapseSWER
-                                    calibration
-                                    pFactorBaseExports
-                                    pFactorForecastPv
-                                    pFactorBaseImports
-                                    fixSinglePhaseLoads
-                                    maxSinglePhaseLoad
-                                    fixOverloadingConsumers
-                                    maxLoadTxRatio
-                                    maxGenTxRatio
-                                    fixUndersizedServiceLines
-                                    maxLoadServiceLineRatio
-                                    maxLoadLvLineRatio
-                                    simplifyNetwork
-                                    collapseLvNetworks
-                                    collapseNegligibleImpedances
-                                    combineCommonImpedances
-                                    feederScenarioAllocationStrategy
-                                    closedLoopVRegEnabled
-                                    closedLoopVRegReplaceAll
-                                    closedLoopVRegSetPoint
-                                    closedLoopVBand
-                                    closedLoopTimeDelay
-                                    closedLoopVLimit
-                                    defaultTapChangerTimeDelay
-                                    defaultTapChangerSetPointPu
-                                    defaultTapChangerBand
-                                    splitPhaseDefaultLoadLossPercentage
-                                    splitPhaseLVKV
-                                    swerVoltageToLineVoltage
-                                    loadPlacement
-                                    loadIntervalLengthHours
-                                    meterPlacementConfig {
-                                        feederHead
-                                        distTransformers
-                                        switchMeterPlacementConfigs {
-                                          meterSwitchClass
-                                          namePattern
-                                        }
-                                        energyConsumerMeterGroup
-                                    }
-                                    seed
-                                    defaultLoadWatts
-                                    defaultGenWatts
-                                    defaultLoadVar
-                                    defaultGenVar
-                                    transformerTapSettings
-                                    ctPrimScalingFactor
-                                    useSpanLevelThreshold
-                                    ratingThreshold
-                                    simplifyPLSIThreshold
-                                    emergAmpScaling
-                                    inverterControlConfig { 
-                                        cutOffDate
-                                        beforeCutOffProfile
-                                        afterCutOffProfile
-                                    }
-                                }
-                                solve {
-                                    normVMinPu
-                                    normVMaxPu
-                                    emergVMinPu
-                                    emergVMaxPu
-                                    baseFrequency
-                                    voltageBases
-                                    maxIter
-                                    maxControlIter
-                                    mode
-                                    stepSizeMinutes
-                                }
-                                rawResults {
-                                    energyMeterVoltagesRaw
-                                    energyMetersRaw
-                                    resultsPerMeter
-                                    overloadsRaw
-                                    voltageExceptionsRaw
-                                }
-                                nodeLevelResults {
-                                    collectVoltage
-                                    collectCurrent
-                                    collectPower
-                                    mridsToCollect
-                                    collectAllSwitches
-                                    collectAllTransformers
-                                    collectAllConductors
-                                    collectAllEnergyConsumers
-                                }
-                            }
-                        }
-                    }
+                    generationSpec
                 }
             }
         }
@@ -1783,7 +1662,8 @@ def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPSer
         verify_certificate=False
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_list_request_complete_handler)
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        get_ingestor_run_list_request_complete_handler)
     res = eas_client.get_ingestor_run_list(
         query_filter=IngestorRunsFilterInput(
             id=4,
