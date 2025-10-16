@@ -19,14 +19,17 @@ from zepben.auth import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study, SolveConfig
 from zepben.eas import FeederConfig, ForecastConfig, FixedTimeLoadOverride
-from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsSortCriteriaInput, IngestorRunsFilterInput, \
-    IngestorRunState, IngestorRuntimeKind
+from zepben.eas.client.auth_method import BaseAuthMethod, TokenAuth
+from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsFilterInput, IngestorRunState, \
+    IngestorRuntimeKind, IngestorRunsSortCriteriaInput
 from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, OpenDssModelState, \
     GetOpenDssModelsSortCriteriaInput, \
     Order
 from zepben.eas.client.study import Result
 from zepben.eas.client.work_package import FeederConfigs, TimePeriodLoadOverride, \
-    FixedTime, NodeLevelResultsConfig, PVVoltVARVoltWattConfig
+    FixedTime, NodeLevelResultsConfig, ResultProcessorConfig, WriterConfig, WriterOutputConfig, EnhancedMetricsConfig, \
+    StoredResultsConfig, \
+    MetricsResultsConfig, PVVoltVARVoltWattConfig
 from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, GeneratorConfig, ModelConfig, \
     FeederScenarioAllocationStrategy, LoadPlacement, MeterPlacementConfig, SwitchMeterPlacementConfig, SwitchClass, \
     SolveMode, RawResultsConfig
@@ -62,37 +65,43 @@ class MockResponse:
 
 def test_create_eas_client_success():
     eas_client = EasClient(
-        mock_host,
-        mock_port,
-        protocol=mock_protocol,
-        verify_certificate=mock_verify_certificate
+        BaseAuthMethod(
+            mock_host,
+            mock_port,
+            protocol=mock_protocol,
+            verify_certificate=mock_verify_certificate
+        )
     )
 
     assert eas_client is not None
-    assert eas_client._host == mock_host
-    assert eas_client._port == mock_port
-    assert eas_client._protocol == mock_protocol
+    assert eas_client._auth._host == mock_host
+    assert eas_client._auth._port == mock_port
+    assert eas_client._auth.protocol == mock_protocol
     assert eas_client._verify_certificate == mock_verify_certificate
 
 
 def test_create_eas_client_with_access_token_success():
     eas_client = EasClient(
-        mock_host,
-        mock_port,
-        access_token=mock_access_token,
+        TokenAuth(
+            mock_host,
+            mock_port,
+            access_token=mock_access_token,
+        )
     )
 
     assert eas_client is not None
-    assert eas_client._host == mock_host
-    assert eas_client._port == mock_port
-    assert eas_client._access_token == mock_access_token
+    assert eas_client._auth._host == mock_host
+    assert eas_client._auth._port == mock_port
+    assert eas_client._auth.token.split()[1] == mock_access_token
 
 
 def test_get_request_headers_adds_access_token_in_auth_header():
     eas_client = EasClient(
-        mock_host,
-        mock_port,
-        access_token=mock_access_token,
+        TokenAuth(
+            mock_host,
+            mock_port,
+            access_token=mock_access_token,
+        )
     )
 
     headers = eas_client._get_request_headers()
@@ -102,13 +111,15 @@ def test_get_request_headers_adds_access_token_in_auth_header():
 @mock.patch("zepben.auth.client.zepben_token_fetcher.ZepbenTokenFetcher.fetch_token", return_value="test_token3")
 def test_get_request_headers_adds_token_from_token_fetcher_in_auth_header(_):
     eas_client = EasClient(
-        mock_host,
-        mock_port,
-        token_fetcher=ZepbenTokenFetcher(audience="fake", token_endpoint="unused")
+        TokenAuth(
+            mock_host,
+            mock_port,
+            token_fetcher=ZepbenTokenFetcher(audience="fake", token_endpoint="unused")
+        )
     )
 
     assert eas_client is not None
-    assert eas_client._token_fetcher is not None
+    assert eas_client._auth._token_fetcher is not None
     headers = eas_client._get_request_headers()
     assert headers["authorization"] == "test_token3"
 
@@ -117,22 +128,24 @@ def test_get_request_headers_adds_token_from_token_fetcher_in_auth_header(_):
     {"authType": "AUTH0", "audience": mock_audience, "issuer": "test_issuer"}, 200))
 def test_create_eas_client_with_password_success(_):
     eas_client = EasClient(
-        mock_host,
-        mock_port,
-        client_id=mock_client_id,
-        username=mock_username,
-        password=mock_password,
-        verify_certificate=mock_verify_certificate
+        TokenAuth(
+            mock_host,
+            mock_port,
+            client_id=mock_client_id,
+            username=mock_username,
+            password=mock_password,
+            verify_certificate=mock_verify_certificate
+        )
     )
 
     assert eas_client is not None
-    assert eas_client._token_fetcher is not None
-    assert eas_client._token_fetcher.token_request_data["grant_type"] == "password"
-    assert eas_client._token_fetcher.token_request_data["client_id"] == mock_client_id
-    assert eas_client._token_fetcher.token_request_data["username"] == mock_username
-    assert eas_client._token_fetcher.token_request_data["password"] == mock_password
-    assert eas_client._host == mock_host
-    assert eas_client._port == mock_port
+    assert eas_client._auth._token_fetcher is not None
+    assert eas_client._auth._token_fetcher.token_request_data["grant_type"] == "password"
+    assert eas_client._auth._token_fetcher.token_request_data["client_id"] == mock_client_id
+    assert eas_client._auth._token_fetcher.token_request_data["username"] == mock_username
+    assert eas_client._auth._token_fetcher.token_request_data["password"] == mock_password
+    assert eas_client._auth._host == mock_host
+    assert eas_client._auth._port == mock_port
     assert eas_client._verify_certificate == mock_verify_certificate
 
 
@@ -140,19 +153,21 @@ def test_create_eas_client_with_password_success(_):
     {"authType": "AUTH0", "audience": mock_audience, "issuer": "test_issuer"}, 200))
 def test_create_eas_client_with_client_secret_success(_):
     eas_client = EasClient(
-        mock_host,
-        mock_port,
-        client_id=mock_client_id,
-        client_secret=mock_client_secret,
-        verify_certificate=mock_verify_certificate
+        TokenAuth(
+            mock_host,
+            mock_port,
+            client_id=mock_client_id,
+            client_secret=mock_client_secret,
+            verify_certificate=mock_verify_certificate
+        )
     )
 
     assert eas_client is not None
-    assert eas_client._token_fetcher is not None
-    assert eas_client._token_fetcher.token_request_data["grant_type"] == "client_credentials"
-    assert eas_client._token_fetcher.token_request_data["client_secret"] == mock_client_secret
-    assert eas_client._host == mock_host
-    assert eas_client._port == mock_port
+    assert eas_client._auth._token_fetcher is not None
+    assert eas_client._auth._token_fetcher.token_request_data["grant_type"] == "client_credentials"
+    assert eas_client._auth._token_fetcher.token_request_data["client_secret"] == mock_client_secret
+    assert eas_client._auth._host == mock_host
+    assert eas_client._auth._port == mock_port
     assert eas_client._verify_certificate == mock_verify_certificate
 
 
@@ -180,9 +195,11 @@ def httpserver_ssl_context(localhost_cert):
 
 def test_get_work_package_cost_estimation_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
@@ -209,9 +226,11 @@ def test_get_work_package_cost_estimation_no_verify_success(httpserver: HTTPServ
 def test_get_work_package_cost_estimation_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -238,9 +257,11 @@ def test_get_work_package_cost_estimation_invalid_certificate_failure(ca: trustm
 def test_get_work_package_cost_estimation_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
     with ca.cert_pem.tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -256,7 +277,7 @@ def test_get_work_package_cost_estimation_valid_certificate_success(ca: trustme.
                         ["scenario"],
                         FixedTime(
                             datetime(2022, 1, 1),
-                            {"meter": FixedTimeLoadOverride(1, 2, 3, 4)}
+                            {"meter": FixedTimeLoadOverride(1.1, 2.1, 3.1, 4.1)}  # FIXME: is this test data wrong, or is it the type hinting?
                         )
                     )]
                 )
@@ -268,9 +289,11 @@ def test_get_work_package_cost_estimation_valid_certificate_success(ca: trustme.
 
 def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runWorkPackage": "workPackageId"}})
@@ -296,9 +319,11 @@ def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPSer
 def test_run_hosting_capacity_work_package_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -325,9 +350,11 @@ def test_run_hosting_capacity_work_package_invalid_certificate_failure(ca: trust
 def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
     with ca.cert_pem.tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -354,9 +381,11 @@ def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme
 
 def test_cancel_hosting_capacity_work_package_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
@@ -370,9 +399,11 @@ def test_cancel_hosting_capacity_work_package_no_verify_success(httpserver: HTTP
 def test_cancel_hosting_capacity_work_package_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -385,9 +416,11 @@ def test_cancel_hosting_capacity_work_package_invalid_certificate_failure(ca: tr
 def test_cancel_hosting_capacity_work_package_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
     with ca.cert_pem.tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -400,9 +433,11 @@ def test_cancel_hosting_capacity_work_package_valid_certificate_success(ca: trus
 
 def test_get_hosting_capacity_work_package_progress_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
@@ -416,9 +451,11 @@ def test_get_hosting_capacity_work_package_progress_no_verify_success(httpserver
 def test_get_hosting_capacity_work_package_progress_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -431,9 +468,11 @@ def test_get_hosting_capacity_work_package_progress_invalid_certificate_failure(
 def test_get_hosting_capacity_work_package_progress_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
     with ca.cert_pem.tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -446,9 +485,11 @@ def test_get_hosting_capacity_work_package_progress_valid_certificate_success(ca
 
 def test_upload_study_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
@@ -460,9 +501,11 @@ def test_upload_study_no_verify_success(httpserver: HTTPServer):
 def test_upload_study_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -474,9 +517,11 @@ def test_upload_study_invalid_certificate_failure(ca: trustme.CA, httpserver: HT
 def test_upload_study_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
     with ca.cert_pem.tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -489,35 +534,43 @@ def test_upload_study_valid_certificate_success(ca: trustme.CA, httpserver: HTTP
 def test_raises_error_if_auth_configured_with_http_server(httpserver: HTTPServer):
     with pytest.raises(ValueError):
         EasClient(
-            LOCALHOST,
-            httpserver.port,
-            protocol="http",
-            client_id=mock_client_id,
-            username=mock_username,
-            password=mock_password
+            TokenAuth(
+                LOCALHOST,
+                httpserver.port,
+                protocol="http",
+                client_id=mock_client_id,
+                username=mock_username,
+                password=mock_password
+            )
         )
 
 
 def test_raises_error_if_token_fetcher_and_creds_configured(httpserver: HTTPServer):
-    with pytest.raises(ValueError, match="You cannot provide both a token_fetcher and credentials"):
+    with pytest.raises(ValueError, match="Incompatible arguments passed to connect to secured Evolve App Server."):
+        # noinspection PyArgumentList
         EasClient(
-            LOCALHOST,
-            httpserver.port,
-            protocol="https",
-            client_id=mock_client_id,
-            username=mock_username,
-            password=mock_password,
-            token_fetcher=ZepbenTokenFetcher(audience="test", auth_method="test", token_endpoint="some-endpoint")
+            TokenAuth(
+                LOCALHOST,
+                httpserver.port,
+                protocol="https",
+                client_id=mock_client_id,
+                username=mock_username,
+                password=mock_password,
+                token_fetcher=ZepbenTokenFetcher(audience="test", auth_method="test", token_endpoint="some-endpoint")
+            )
         )
 
-    with pytest.raises(ValueError, match="You cannot provide both a token_fetcher and credentials"):
+    with pytest.raises(ValueError, match="Incompatible arguments passed to connect to secured Evolve App Server."):
+        # noinspection PyArgumentList
         EasClient(
-            LOCALHOST,
-            httpserver.port,
-            protocol="https",
-            client_id=mock_client_id,
-            client_secret=mock_client_secret,
-            token_fetcher=ZepbenTokenFetcher(audience="test", auth_method="test", token_endpoint="test")
+            TokenAuth(
+                LOCALHOST,
+                httpserver.port,
+                protocol="https",
+                client_id=mock_client_id,
+                client_secret=mock_client_secret,
+                token_fetcher=ZepbenTokenFetcher(audience="test", auth_method="test", token_endpoint="test")
+            )
         )
 
 
@@ -525,85 +578,102 @@ def test_raises_error_if_token_fetcher_and_creds_configured(httpserver: HTTPServ
     {"authType": "AUTH0", "audience": mock_audience, "issuer": "test_issuer"}, 200))
 def test_allows_secret_and_creds_configured(httpserver: HTTPServer):
     eas_client = EasClient(
-        mock_host,
-        mock_port,
-        protocol="https",
-        client_id=mock_client_id,
-        client_secret=mock_client_secret,
-        username=mock_username,
-        password=mock_password
+        TokenAuth(
+            mock_host,
+            mock_port,
+            protocol="https",
+            client_id=mock_client_id,
+            client_secret=mock_client_secret,
+            username=mock_username,
+            password=mock_password
+        )
     )
     assert eas_client is not None
-    assert eas_client._token_fetcher is not None
-    assert eas_client._token_fetcher.token_request_data["grant_type"] == "password"
-    assert eas_client._token_fetcher.token_request_data["client_id"] == mock_client_id
-    assert eas_client._token_fetcher.token_request_data["username"] == mock_username
-    assert eas_client._token_fetcher.token_request_data["password"] == mock_password
-    assert eas_client._token_fetcher.token_request_data["client_secret"] == mock_client_secret
-    assert eas_client._host == mock_host
-    assert eas_client._port == mock_port
+    assert eas_client._auth._token_fetcher is not None
+    assert eas_client._auth._token_fetcher.token_request_data["grant_type"] == "password"
+    assert eas_client._auth._token_fetcher.token_request_data["client_id"] == mock_client_id
+    assert eas_client._auth._token_fetcher.token_request_data["username"] == mock_username
+    assert eas_client._auth._token_fetcher.token_request_data["password"] == mock_password
+    assert eas_client._auth._token_fetcher.token_request_data["client_secret"] == mock_client_secret
+    assert eas_client._auth._host == mock_host
+    assert eas_client._auth._port == mock_port
 
 
 def test_raises_error_if_access_token_and_creds_configured(httpserver: HTTPServer):
     with pytest.raises(ValueError) as error_message_for_username:
+        # noinspection PyArgumentList
         EasClient(
-            LOCALHOST,
-            httpserver.port,
-            protocol="https",
-            access_token=mock_access_token,
-            username=mock_username,
+            TokenAuth(
+                LOCALHOST,
+                httpserver.port,
+                protocol="https",
+                access_token=mock_access_token,
+                username=mock_username,
+            )
         )
-    assert "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide multiple types of authentication. When using an access_token, do not provide client_id, client_secret, username, password, or token_fetcher." in str(
+    assert "Incompatible arguments passed to connect to secured Evolve App Server." in str(
         error_message_for_username.value)
 
     with pytest.raises(ValueError) as error_message_for_password:
+        # noinspection PyArgumentList
         EasClient(
-            LOCALHOST,
-            httpserver.port,
-            protocol="https",
-            access_token=mock_access_token,
-            password=mock_password,
+            TokenAuth(
+                LOCALHOST,
+                httpserver.port,
+                protocol="https",
+                access_token=mock_access_token,
+                password=mock_password,
+            )
         )
-    assert "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide multiple types of authentication. When using an access_token, do not provide client_id, client_secret, username, password, or token_fetcher." in str(
+    assert "Incompatible arguments passed to connect to secured Evolve App Server." in str(
         error_message_for_password.value)
 
 
 def test_raises_error_if_access_token_and_token_fetcher_configured(httpserver: HTTPServer):
     with pytest.raises(ValueError) as error_message_for_username:
+        # noinspection PyArgumentList
         EasClient(
-            LOCALHOST,
-            httpserver.port,
-            protocol="https",
-            access_token=mock_access_token,
-            token_fetcher=ZepbenTokenFetcher(audience="test", auth_method="test", token_endpoint="test")
+            TokenAuth(
+                LOCALHOST,
+                httpserver.port,
+                protocol="https",
+                access_token=mock_access_token,
+                token_fetcher=ZepbenTokenFetcher(audience="test", auth_method="test", token_endpoint="test")
+            )
         )
-    assert "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide multiple types of authentication. When using an access_token, do not provide client_id, client_secret, username, password, or token_fetcher." in str(
+    assert "Incompatible arguments passed to connect to secured Evolve App Server." in str(
         error_message_for_username.value)
 
 
 def test_raises_error_if_access_token_and_client_id_configured(httpserver: HTTPServer):
     with pytest.raises(ValueError) as error_message_for_username:
+        # noinspection PyArgumentList
         EasClient(
-            LOCALHOST,
-            httpserver.port,
-            protocol="https",
-            access_token=mock_access_token,
-            client_id=mock_client_id
+            TokenAuth(
+                LOCALHOST,
+                httpserver.port,
+                protocol="https",
+                access_token=mock_access_token,
+                client_id=mock_client_id
+            )
         )
-    assert "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide multiple types of authentication. When using an access_token, do not provide client_id, client_secret, username, password, or token_fetcher." in str(
+    assert "Incompatible arguments passed to connect to secured Evolve App Server." in str(
         error_message_for_username.value)
 
 
 def test_raises_error_if_access_token_and_client_secret_configured(httpserver: HTTPServer):
     with pytest.raises(ValueError) as error_message_for_username:
+        # noinspection PyArgumentList
         EasClient(
-            LOCALHOST,
-            httpserver.port,
-            protocol="https",
-            access_token=mock_access_token,
-            client_secret=mock_client_secret
+            TokenAuth(
+                LOCALHOST,
+                httpserver.port,
+                protocol="https",
+                access_token=mock_access_token,
+                client_secret=mock_client_secret
+            )
         )
-    assert "Incompatible arguments passed to connect to secured Evolve App Server. You cannot provide multiple types of authentication. When using an access_token, do not provide client_id, client_secret, username, password, or token_fetcher." in str(
+    assert "Incompatible arguments passed to connect to secured Evolve App Server." in str(
         error_message_for_username.value)
 
 
@@ -622,9 +692,11 @@ def hosting_capacity_run_calibration_request_handler(request):
 
 def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -637,9 +709,11 @@ def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServ
 def test_run_hosting_capacity_calibration_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -651,9 +725,11 @@ def test_run_hosting_capacity_calibration_invalid_certificate_failure(ca: trustm
 def test_run_hosting_capacity_calibration_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
     with ca.cert_pem.tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -676,9 +752,11 @@ def get_hosting_capacity_run_calibration_request_handler(request):
 
 def test_get_hosting_capacity_calibration_run_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -691,9 +769,11 @@ def test_get_hosting_capacity_calibration_run_no_verify_success(httpserver: HTTP
 def test_get_hosting_capacity_calibration_run_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -705,9 +785,11 @@ def test_get_hosting_capacity_calibration_run_invalid_certificate_failure(ca: tr
 def test_get_hosting_capacity_calibration_run_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
     with ca.cert_pem.tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -790,9 +872,11 @@ def hosting_capacity_run_calibration_with_calibration_time_request_handler(reque
 
 def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -811,9 +895,11 @@ def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_succes
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_no_generator_config(
         httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -913,9 +999,11 @@ def hosting_capacity_run_calibration_with_generator_config_request_handler(reque
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_generator_config(
         httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -1006,9 +1094,11 @@ def hosting_capacity_run_calibration_with_partial_model_config_request_handler(r
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_model_config(
         httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -1025,9 +1115,11 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
 
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -1057,9 +1149,11 @@ def get_hosting_capacity_calibration_sets_request_handler(request):
 
 def test_get_hosting_capacity_calibration_sets_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -1068,6 +1162,387 @@ def test_get_hosting_capacity_calibration_sets_no_verify_success(httpserver: HTT
     httpserver.check_assertions()
     assert res == ["one", "two", "three"]
 
+def test_work_package_config_to_json():
+    config = {
+        "work_package_name": "test_default_load_work_package",
+        "feeders": ["MS1112"],
+        "load_time": {
+            "start1": "2024-06-01T00:00:00",
+            "end1": "2025-06-01T00:00:00",
+            "start2": "2023-07-22T00:00:00",
+            "end2": "2024-01-22T00:00:00"
+        },
+        "forecast_years": [
+            2025, 2026
+        ],
+        "scenarios": [
+            "test_central_with_transfers_feeder_poe50"
+        ],
+        "default_load_watts": [920, 910, 820, 690, 600, 530, 490, 470, 450, 450, 470, 490, 540, 600, 620, 680, 700, 700, 710, 720, 720, 730, 730, 730, 730, 730, 710, 710, 720, 730, 740, 780, 830, 890, 930, 1000, 1020, 1020, 1000, 970, 940, 900, 860, 800, 830, 870, 900, 920],
+        "default_gen_watts": None,
+        "default_load_var": None,
+        "default_gen_var": None
+    }
+
+    forecast_config = ForecastConfig(
+        feeders=config["feeders"],
+        years=config["forecast_years"],
+        scenarios=config["scenarios"],
+        load_time=TimePeriod(
+            start_time=datetime.fromisoformat(config["load_time"]["start1"]),
+            end_time=datetime.fromisoformat(config["load_time"]["end1"]),
+        )
+    )
+
+    work_package = WorkPackageConfig(
+        name=config["work_package_name"],
+        syf_config=forecast_config,
+        generator_config=GeneratorConfig(
+            model=ModelConfig(
+                load_vmax_pu=1.2,
+                load_vmin_pu=0.8,
+                p_factor_base_exports=-1,
+                p_factor_base_imports=1,
+                p_factor_forecast_pv=1,
+                fix_single_phase_loads=False,
+                max_single_phase_load=15000.0,
+                max_load_service_line_ratio=1.0,
+                max_load_lv_line_ratio=2.0,
+                max_load_tx_ratio=2.0,
+                max_gen_tx_ratio=4.0,
+                fix_overloading_consumers=True,
+                fix_undersized_service_lines=True,
+                feeder_scenario_allocation_strategy=FeederScenarioAllocationStrategy.ADDITIVE,
+                closed_loop_v_reg_enabled=False,
+                closed_loop_v_reg_set_point=0.9925,
+                seed=123,
+                load_interval_length_hours = 0.5,
+                default_load_watts=config['default_load_watts'],
+                default_gen_watts=config['default_gen_watts'],
+                default_load_var=config['default_load_var'],
+                default_gen_var=config['default_gen_var'],
+            ),
+            solve=SolveConfig(step_size_minutes=30.0),
+            node_level_results=NodeLevelResultsConfig(
+                collect_all_conductors=False,
+                collect_all_energy_consumers=True,
+                collect_all_switches=False,
+                collect_all_transformers=True,
+                collect_current=False,
+                collect_power=True,
+                collect_voltage=True,
+                mrids_to_collect=['mrid_one', 'mrid_two'],
+            ),
+            raw_results=RawResultsConfig(True, True, True, True, True)
+        ),
+
+        result_processor_config=ResultProcessorConfig(
+            writer_config=WriterConfig(
+                output_writer_config=WriterOutputConfig(
+                    enhanced_metrics_config=EnhancedMetricsConfig(
+                        True,
+                        False,
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                    ))),
+            stored_results=StoredResultsConfig(False, False, True, False),
+            metrics=MetricsResultsConfig(True)
+        ),
+        quality_assurance_processing=True
+    )
+
+    expected = {
+        'input': {
+            'executorConfig': {},
+            'feederConfigs': None,
+            'forecastConfig': {
+                'feeders': ['MS1112'],
+                'fixedTime': None,
+                'scenarios': ['test_central_with_transfers_feeder_poe50'],
+                'timePeriod': {
+                    'endTime': '2025-06-01T00:00:00',
+                    'overrides': None,
+                    'startTime': '2024-06-01T00:00:00'
+                },
+                'years': [2025, 2026],
+            },
+            'generatorConfig': {
+                'model': {
+                    'calibration': None,
+                    'closedLoopTimeDelay': None,
+                    'closedLoopVBand': None,
+                    'closedLoopVLimit': None,
+                    'closedLoopVRegEnabled': False,
+                    'closedLoopVRegReplaceAll': None,
+                    'closedLoopVRegSetPoint': 0.9925,
+                    'collapseLvNetworks': None,
+                    'collapseNegligibleImpedances': None,
+                    'collapseSWER': None,
+                    'combineCommonImpedances': None,
+                    'ctPrimScalingFactor': None,
+                    'defaultGenVar': None,
+                    'defaultGenWatts': None,
+                    'defaultLoadVar': None,
+                    'defaultLoadWatts': [920, 910, 820, 690, 600, 530, 490, 470, 450, 450, 470, 490, 540, 600, 620, 680, 700, 700, 710, 720, 720, 730, 730, 730, 730, 730, 710, 710, 720, 730, 740, 780, 830, 890, 930, 1000, 1020, 1020, 1000, 970, 940, 900, 860, 800, 830, 870, 900, 920],
+                    'defaultTapChangerBand': None,
+                    'defaultTapChangerSetPointPu': None,
+                    'defaultTapChangerTimeDelay': None,
+                    'feederScenarioAllocationStrategy': 'ADDITIVE',
+                    'fixOverloadingConsumers': True,
+                    'fixSinglePhaseLoads': False,
+                    'fixUndersizedServiceLines': True,
+                    'genVMaxPu': None,
+                    'genVMinPu': None,
+                    'inverterControlConfig': None,
+                    'loadIntervalLengthHours': 0.5,
+                    'loadModel': None,
+                    'loadPlacement': None,
+                    'loadVMaxPu': 1.2,
+                    'loadVMinPu': 0.8,
+                    'maxGenTxRatio': 4.0,
+                    'maxLoadLvLineRatio': 2.0,
+                    'maxLoadServiceLineRatio': 1.0,
+                    'maxLoadTxRatio': 2.0,
+                    'maxSinglePhaseLoad': 15000.0,
+                    'meterPlacementConfig': None,
+                    'pFactorBaseExports': -1,
+                    'pFactorBaseImports': 1,
+                    'pFactorForecastPv': 1,
+                    'seed': 123,
+                    'simplifyNetwork': None,
+                    'useSpanLevelThreshold': False,
+                    'ratingThreshold': None,
+                    'simplifyPLSIThreshold': None,
+                    'emergAmpScaling': None,
+                    'splitPhaseDefaultLoadLossPercentage': None,
+                    'splitPhaseLVKV': None,
+                    'swerVoltageToLineVoltage': None,
+                    'transformerTapSettings': None,
+                    'vmPu': None,
+                },
+                'nodeLevelResults': {
+                    'collectAllConductors': False,
+                    'collectAllEnergyConsumers': True,
+                    'collectAllSwitches': False,
+                    'collectAllTransformers': True,
+                    'collectCurrent': False,
+                    'collectPower': True,
+                    'collectVoltage': True,
+                    'mridsToCollect': ['mrid_one', 'mrid_two'],
+                },
+                'rawResults': {
+                    'energyMeterVoltagesRaw': True,
+                    'energyMetersRaw': True,
+                    'overloadsRaw': True,
+                    'resultsPerMeter': True,
+                    'voltageExceptionsRaw': True,
+                },
+                'solve': {
+                    'baseFrequency': None,
+                    'emergVMaxPu': None,
+                    'emergVMinPu': None,
+                    'maxControlIter': None,
+                    'maxIter': None,
+                    'mode': None,
+                    'normVMaxPu': None,
+                    'normVMinPu': None,
+                    'stepSizeMinutes': 30.0,
+                    'voltageBases': None,
+                },
+            },
+            'intervention': None,
+            'qualityAssuranceProcessing': True,
+            'resultProcessorConfig': {
+                'metrics': {
+                    'calculatePerformanceMetrics': True
+                },
+                'storedResults': {
+                    'energyMeterVoltagesRaw': False,
+                    'energyMetersRaw': False,
+                    'overloadsRaw': True,
+                    'voltageExceptionsRaw': False,
+                },
+                'writerConfig': {
+                    'outputWriterConfig': {
+                        'enhancedMetricsConfig': {
+                            'calculateCO2': True,
+                            'calculateEmergForGenThermal': True,
+                            'calculateEmergForLoadThermal': True,
+                            'calculateNormalForGenThermal': True,
+                            'calculateNormalForLoadThermal': True,
+                            'populateConstraints': True,
+                            'populateDurationCurves': True,
+                            'populateEnhancedMetrics': True,
+                            'populateEnhancedMetricsProfile': False,
+                            'populateWeeklyReports': True
+                        }
+                    },
+                    'writerType': None
+                }
+            }
+        },
+        'workPackageName': 'test_default_load_work_package'
+    }
+
+
+
+
+
+
+    assert work_package.to_json() == expected
+
+
+def test_open_dss_config_to_json():
+    expected = {
+        "modelName": "TEST OPENDSS MODEL 1",
+        "isPublic": True,
+        "generationSpec": {
+            "modelOptions": {
+                "feeder": "feeder1",
+                "scenario": "scenario1",
+                "year": 2024,
+            },
+            "modulesConfiguration": {
+                "common": {
+                    **({"fixedTime": {
+                        "loadTime": "2022-04-01T00:00:00",
+                        "overrides": [{
+                            'loadId': 'meter1',
+                            'loadWattsOverride': [1.0],
+                            'genWattsOverride': [2.0],
+                            'loadVarOverride': [3.0],
+                            'genVarOverride': [4.0],
+                        }]
+                    }} if isinstance(OPENDSS_CONFIG.load_time, FixedTime) else
+                       {"timePeriod": {
+                           "startTime": "2022-04-01T10:13:00",
+                           "endTime": "2023-04-01T12:14:00",
+                           "overrides": [{
+                               'loadId': 'meter1',
+                               'loadWattsOverride': [1.0],
+                               'genWattsOverride': [2.0],
+                               'loadVarOverride': [3.0],
+                               'genVarOverride': [4.0],
+                           }],
+                       }}),
+                },
+                "generator": {
+                    "model": {
+                        "vmPu": 1.0,
+                        "loadVMinPu": 0.80,
+                        "loadVMaxPu": 1.15,
+                        "genVMinPu": 0.50,
+                        'inverterControlConfig': {'afterCutOffProfile': 'afterProfile',
+                                                  'beforeCutOffProfile': 'beforeProfile',
+                                                  'cutOffDate': '2024-04-12T11:42:00'},
+                        "genVMaxPu": 2.00,
+                        "loadModel": 1,
+                        "calibration": False,
+                        "pFactorBaseExports": 0.95,
+                        "pFactorBaseImports": 0.90,
+                        "pFactorForecastPv": 1.0,
+                        "fixSinglePhaseLoads": True,
+                        "maxSinglePhaseLoad": 30000.0,
+                        "fixOverloadingConsumers": True,
+                        "maxLoadTxRatio": 3.0,
+                        "maxGenTxRatio": 10.0,
+                        "fixUndersizedServiceLines": True,
+                        "maxLoadServiceLineRatio": 1.5,
+                        "maxLoadLvLineRatio": 2.0,
+                        "collapseLvNetworks": False,
+                        "collapseNegligibleImpedances": False,
+                        "collapseSWER": False,
+                        "combineCommonImpedances": False,
+                        "feederScenarioAllocationStrategy": "ADDITIVE",
+                        "closedLoopVRegEnabled": True,
+                        "closedLoopVRegReplaceAll": True,
+                        "closedLoopVRegSetPoint": 0.985,
+                        "closedLoopVBand": 2.0,
+                        "closedLoopTimeDelay": 100,
+                        "closedLoopVLimit": 1.1,
+                        "defaultTapChangerTimeDelay": 100,
+                        "defaultTapChangerSetPointPu": 1.0,
+                        "defaultTapChangerBand": 2.0,
+                        "splitPhaseDefaultLoadLossPercentage": 0.4,
+                        "splitPhaseLVKV": 0.25,
+                        "swerVoltageToLineVoltage": [
+                            [230, 400],
+                            [240, 415],
+                            [250, 433],
+                            [6350, 11000],
+                            [6400, 11000],
+                            [12700, 22000],
+                            [19100, 33000],
+                        ],
+                        "loadPlacement": "PER_USAGE_POINT",
+                        "loadIntervalLengthHours": 0.5,
+                        "meterPlacementConfig": {
+                            "feederHead": True,
+                            "distTransformers": True,
+                            "switchMeterPlacementConfigs": [
+                                {
+                                    "meterSwitchClass": "LOAD_BREAK_SWITCH",
+                                    "namePattern": ".*",
+                                },
+                            ],
+                            "energyConsumerMeterGroup": "meter group 1",
+                        },
+                        "seed": 42,
+                        "simplifyNetwork": False,
+                        "defaultLoadWatts": [100.0, 200.0, 300.0],
+                        "defaultGenWatts": [50.0, 150.0, 250.0],
+                        "defaultLoadVar": [10.0, 20.0, 30.0],
+                        "defaultGenVar": [5.0, 15.0, 25.0],
+                        "transformerTapSettings": "tap-3",
+                        "ctPrimScalingFactor": 2.0,
+                        'useSpanLevelThreshold': True,
+                        'ratingThreshold': 20.0,
+                        'simplifyPLSIThreshold': 20.0,
+                        'emergAmpScaling': 1.8,
+                    },
+                    'nodeLevelResults': {
+                        'collectAllConductors': False,
+                        'collectAllEnergyConsumers': True,
+                        'collectAllSwitches': False,
+                        'collectAllTransformers': True,
+                        'collectCurrent': False,
+                        'collectPower': True,
+                        'collectVoltage': True,
+                        'mridsToCollect': [
+                            'mrid_one',
+                            'mrid_two',
+                        ]
+                    },
+                    "solve": {
+                        "normVMinPu": 0.9,
+                        "normVMaxPu": 1.054,
+                        "emergVMinPu": 0.8,
+                        "emergVMaxPu": 1.1,
+                        "baseFrequency": 50,
+                        "voltageBases": [0.4, 0.433, 6.6, 11.0, 22.0, 33.0, 66.0, 132.0],
+                        "maxIter": 25,
+                        "maxControlIter": 20,
+                        "mode": "YEARLY",
+                        "stepSizeMinutes": 60,
+                    },
+                    "rawResults": {
+                        "energyMeterVoltagesRaw": True,
+                        "energyMetersRaw": True,
+                        "resultsPerMeter": True,
+                        "overloadsRaw": True,
+                        "voltageExceptionsRaw": True,
+                    },
+                }
+            }
+        }
+    }
+    assert OPENDSS_CONFIG.to_json() == expected
 
 def run_opendss_export_request_handler(request):
     actual_body = json.loads(request.data.decode())
@@ -1337,9 +1812,11 @@ OPENDSS_CONFIG = OpenDssConfig(
 
 def test_run_opendss_export_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(run_opendss_export_request_handler)
@@ -1351,9 +1828,11 @@ def test_run_opendss_export_no_verify_success(httpserver: HTTPServer):
 def test_run_opendss_export_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -1365,9 +1844,11 @@ def test_run_opendss_export_invalid_certificate_failure(ca: trustme.CA, httpserv
 def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
     with ca.cert_pem.tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -1378,6 +1859,20 @@ def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver
         httpserver.check_assertions()
         assert res == {"result": "success"}
 
+get_ingestor_run_list_query = """
+                query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
+                    listIngestorRuns(filter: $filter, sort: $sort) {
+                    id
+                    containerRuntimeType
+                    payload
+                    token
+                    status
+                    startedAt
+                    statusLastUpdatedAt
+                    completedAt
+                    }
+                }
+        """
 
 get_paged_opendss_models_query = """
         query pagedOpenDssModels($limit: Int, $offset: Long, $filter: GetOpenDssModelsFilterInput, $sort: GetOpenDssModelsSortCriteriaInput) {
@@ -1426,9 +1921,11 @@ def get_paged_opendss_models_request_handler(request):
 
 def test_get_paged_opendss_models_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -1443,9 +1940,11 @@ def test_get_paged_opendss_models_no_verify_success(httpserver: HTTPServer):
 def test_get_paged_opendss_models_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -1467,9 +1966,11 @@ def get_paged_opendss_models_no_param_request_handler(request):
 def test_get_paged_opendss_models_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
     with ca.cert_pem.tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -1482,9 +1983,11 @@ def test_get_paged_opendss_models_valid_certificate_success(ca: trustme.CA, http
 
 def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
@@ -1499,9 +2002,11 @@ def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer
 def test_get_opendss_model_download_url_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -1516,9 +2021,11 @@ def test_get_opendss_model_download_url_invalid_certificate_failure(ca: trustme.
 def test_get_opendss_model_download_url_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
     with ca.cert_pem.tempfile() as ca_filename:
         eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
+            BaseAuthMethod(
+                LOCALHOST,
+                httpserver.port,
+                verify_certificate=True,
+            ),
             ca_filename=ca_filename
         )
 
@@ -1544,9 +2051,11 @@ def run_ingestor_request_handler(request):
 
 def test_run_ingestor_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -1561,7 +2070,7 @@ def get_ingestor_run_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == "query getIngestorRun($id: Int!) { getIngestorRun(id: $id) { id containerRuntimeType, payload, token, status, startedAt, statusLastUpdatedAt, completedAt } }"
+    assert query == "query getIngestorRun($id: Int!) { getIngestorRun(id: $id) { id containerRuntimeType payload token status startedAt statusLastUpdatedAt completedAt } }"
     assert actual_body['variables'] == {"id": 1}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
@@ -1569,9 +2078,11 @@ def get_ingestor_run_request_handler(request):
 
 def test_get_ingestor_run_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_request_handler)
@@ -1584,20 +2095,6 @@ def get_ingestor_run_list_request_empty_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    get_ingestor_run_list_query = """
-                    query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
-                        listIngestorRuns(filter: $filter, sort: $sort) {
-                        id
-                        containerRuntimeType,
-                        payload,
-                        token,
-                        status,
-                        startedAt,
-                        statusLastUpdatedAt,
-                        completedAt
-                        }
-                    }
-            """
     assert query == " ".join(line.strip() for line in get_ingestor_run_list_query.strip().splitlines())
     assert actual_body['variables'] == {}
 
@@ -1606,9 +2103,11 @@ def get_ingestor_run_list_request_empty_handler(request):
 
 def test_get_ingestor_run_list_empty_filter_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_list_request_empty_handler)
@@ -1621,20 +2120,6 @@ def get_ingestor_run_list_request_complete_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    get_ingestor_run_list_query = """
-                    query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
-                        listIngestorRuns(filter: $filter, sort: $sort) {
-                        id
-                        containerRuntimeType,
-                        payload,
-                        token,
-                        status,
-                        startedAt,
-                        statusLastUpdatedAt,
-                        completedAt
-                        }
-                    }
-            """
     assert query == " ".join(line.strip() for line in get_ingestor_run_list_query.strip().splitlines())
     assert actual_body['variables'] == {
         "filter": {
@@ -1657,9 +2142,11 @@ def get_ingestor_run_list_request_complete_handler(request):
 
 def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
+        BaseAuthMethod(
+            LOCALHOST,
+            httpserver.port,
+            verify_certificate=False
+        )
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(

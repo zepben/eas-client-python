@@ -1,20 +1,21 @@
-#  Copyright 2020 Zeppelin Bend Pty Ltd
+#  Copyright 2025 Zeppelin Bend Pty Ltd
 #
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+__all__ = ["FeederLoadAnalysisInput"]
+
 from dataclasses import dataclass
 from typing import List, Optional
 
-__all__ = [
-    "FeederLoadAnalysisInput"
-]
+from zepben.eas.client.util import HostingCapacityDataclass
 
 from zepben.eas.client.fla_forecast_config import FlaForecastConfig
 
 
 @dataclass
-class FeederLoadAnalysisInput:
+class FeederLoadAnalysisInput(HostingCapacityDataclass):
     """ A data class representing the configuration for a feeder load analysis study """
 
     start_date: str
