@@ -17,7 +17,7 @@
 
 ## [0.26.0] - 2025-10-16
 ### Breaking Changes
-* The `generationSpec` property returned by the `get_paged_opendss_models` functions in the EAS client is now a string instead of an object.
+* None.
 
 ### New Features
 * Added `fla_forecast_config` to `FeederLoadAnalysisInput` which holds the config for forecast portion of feeder-load-analysis studies.
@@ -31,10 +31,14 @@
 * None.
 
 ### Fixes
-* None.
+* The `generationSpec` property returned by the `get_paged_opendss_models` functions in the EAS client is now a string instead of an object.
 
 ### Notes
 * None.
+
+## [0.25.1] - 2025-10-16
+### Fixes
+* The `generationSpec` property returned by the `get_paged_opendss_models` functions in the EAS client is now a string instead of an object.
 
 ## [0.25.0] - 2025-10-09
 ### Breaking Changes
