@@ -1,19 +1,7 @@
 # EAS Python client
 ## [0.25.1] - UNRELEASED
-### Breaking Changes
-* The `generationSpec` property returned by the `get_paged_opendss_models` functions in the EAS client is now a string instead of an object.
-
-### New Features
-* None.
-
-### Enhancements
-* None.
-
 ### Fixes
-* None.
-
-### Notes
-* None.
+* The `generationSpec` property returned by the `get_paged_opendss_models` functions in the EAS client is now a string instead of an object.
 
 ## [0.25.0] - 2025-10-16
 ### Breaking Changes
