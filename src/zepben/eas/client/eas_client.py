@@ -607,45 +607,11 @@ class EasClient:
                         downloadUrl
                         isPublic
                         errors
-                        generationSpec {
-                            modelOptions{
-                                scenario
-                                year
-                                feeder
-                            }
-                            modulesConfiguration {
-                                common {
-                                    fixedTime{
-                                        loadTime
-                                        overrides {
-                                            loadId
-                                            loadWattsOverride
-                                            genWattsOverride
-                                            loadVarOverride
-                                            genVarOverride
-                                        }
-                                    }
-                                    timePeriod {
-                                        startTime
-                                        endTime
-                                        overrides {
-                                            loadId
-                                            loadWattsOverride
-                                            genWattsOverride
-                                            loadVarOverride
-                                            genVarOverride
-                                        }
-                                    }
-                                }
-                                generator {
-                                    %s
-                                }
-                            }
-                        }
+                        generationSpec 
                     }
                 }
             }
-            """ % GeneratorConfig.build_gql_query_object_model(),
+            """,
             "variables": {}
         }
 

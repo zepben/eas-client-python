@@ -27,8 +27,9 @@ from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput
     Order
 from zepben.eas.client.study import Result
 from zepben.eas.client.work_package import FeederConfigs, TimePeriodLoadOverride, \
-    FixedTime, NodeLevelResultsConfig, ResultProcessorConfig, WriterConfig, WriterOutputConfig, EnhancedMetricsConfig, StoredResultsConfig, \
-    MetricsResultsConfig
+    FixedTime, NodeLevelResultsConfig, ResultProcessorConfig, WriterConfig, WriterOutputConfig, EnhancedMetricsConfig, \
+    StoredResultsConfig, \
+    MetricsResultsConfig, PVVoltVARVoltWattConfig
 from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, GeneratorConfig, ModelConfig, \
     FeederScenarioAllocationStrategy, LoadPlacement, MeterPlacementConfig, SwitchMeterPlacementConfig, SwitchClass, \
     SolveMode, RawResultsConfig
@@ -1298,6 +1299,7 @@ def test_work_package_config_to_json():
                     'fixUndersizedServiceLines': True,
                     'genVMaxPu': None,
                     'genVMinPu': None,
+                    'inverterControlConfig': None,
                     'loadIntervalLengthHours': 0.5,
                     'loadModel': None,
                     'loadPlacement': None,
@@ -1419,8 +1421,8 @@ def test_open_dss_config_to_json():
                         }]
                     }} if isinstance(OPENDSS_CONFIG.load_time, FixedTime) else
                        {"timePeriod": {
-                           "startTime": "2022-04-01T00:00:00",
-                           "endTime": "2023-04-01T00:00:00",
+                           "startTime": "2022-04-01T10:13:00",
+                           "endTime": "2023-04-01T12:14:00",
                            "overrides": [{
                                'loadId': 'meter1',
                                'loadWattsOverride': [1.0],
@@ -1436,6 +1438,9 @@ def test_open_dss_config_to_json():
                         "loadVMinPu": 0.80,
                         "loadVMaxPu": 1.15,
                         "genVMinPu": 0.50,
+                        'inverterControlConfig': {'afterCutOffProfile': 'afterProfile',
+                                                  'beforeCutOffProfile': 'beforeProfile',
+                                                  'cutOffDate': '2024-04-12T11:42:00'},
                         "genVMaxPu": 2.00,
                         "loadModel": 1,
                         "calibration": False,
