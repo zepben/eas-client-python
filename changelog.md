@@ -1,7 +1,7 @@
 # EAS Python client
 ## [0.26.0] - UNRELEASED
 ### Breaking Changes
-* None.
+* The `generationSpec` property returned by the `get_paged_opendss_models` functions in the EAS client is now a string instead of an object.
 
 ### New Features
 * Added `fla_forecast_config` to `FeederLoadAnalysisInput` which holds the config for forecast portion of feeder-load-analysis studies.
