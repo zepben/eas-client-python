@@ -1,7 +1,7 @@
 # EAS Python client
 ## [0.27.0] - UNRELEASED
 ### Breaking Changes
-* None.
+* Bumping `urllib3` to `v2.5.0`, and pulling in `zepben.auth` via the SDK.
 
 ### New Features
 * None.

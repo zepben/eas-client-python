@@ -16,7 +16,7 @@ from typing import Optional, List
 import aiohttp
 from aiohttp import ClientSession
 from urllib3.exceptions import InsecureRequestWarning
-from zepben.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, create_token_fetcher_managed_identity
+from zepben.ewb.auth import AuthMethod, ZepbenTokenFetcher, create_token_fetcher, create_token_fetcher_managed_identity
 
 from zepben.eas.client.feeder_load_analysis_input import FeederLoadAnalysisInput
 from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput
