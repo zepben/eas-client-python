@@ -15,7 +15,7 @@ import pytest
 import trustme
 from pytest_httpserver import HTTPServer
 from werkzeug import Response
-from zepben.auth import ZepbenTokenFetcher
+from zepben.ewb.auth import ZepbenTokenFetcher
 
 from zepben.eas import EasClient, Study, SolveConfig
 from zepben.eas import FeederConfig, ForecastConfig, FixedTimeLoadOverride
@@ -99,7 +99,7 @@ def test_get_request_headers_adds_access_token_in_auth_header():
     assert headers["authorization"] == f"Bearer {mock_access_token}"
 
 
-@mock.patch("zepben.auth.client.zepben_token_fetcher.ZepbenTokenFetcher.fetch_token", return_value="test_token3")
+@mock.patch("zepben.ewb.auth.client.zepben_token_fetcher.ZepbenTokenFetcher.fetch_token", return_value="test_token3")
 def test_get_request_headers_adds_token_from_token_fetcher_in_auth_header(_):
     eas_client = EasClient(
         mock_host,
@@ -113,7 +113,7 @@ def test_get_request_headers_adds_token_from_token_fetcher_in_auth_header(_):
     assert headers["authorization"] == "test_token3"
 
 
-@mock.patch("zepben.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
+@mock.patch("zepben.ewb.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
     {"authType": "AUTH0", "audience": mock_audience, "issuer": "test_issuer"}, 200))
 def test_create_eas_client_with_password_success(_):
     eas_client = EasClient(
@@ -136,7 +136,7 @@ def test_create_eas_client_with_password_success(_):
     assert eas_client._verify_certificate == mock_verify_certificate
 
 
-@mock.patch("zepben.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
+@mock.patch("zepben.ewb.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
     {"authType": "AUTH0", "audience": mock_audience, "issuer": "test_issuer"}, 200))
 def test_create_eas_client_with_client_secret_success(_):
     eas_client = EasClient(
@@ -521,7 +521,7 @@ def test_raises_error_if_token_fetcher_and_creds_configured(httpserver: HTTPServ
         )
 
 
-@mock.patch("zepben.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
+@mock.patch("zepben.ewb.auth.client.zepben_token_fetcher.requests.get", side_effect=lambda *args, **kwargs: MockResponse(
     {"authType": "AUTH0", "audience": mock_audience, "issuer": "test_issuer"}, 200))
 def test_allows_secret_and_creds_configured(httpserver: HTTPServer):
     eas_client = EasClient(
