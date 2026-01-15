@@ -379,44 +379,48 @@ class EasClient:
                     }
                 }
             },
-            "intervention": work_package.intervention and {
-                "baseWorkPackageId": work_package.intervention.base_work_package_id,
-                "yearRange": {
-                    "maxYear": work_package.intervention.year_range.max_year,
-                    "minYear": work_package.intervention.year_range.min_year
-                },
-                "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year,
-                "interventionType": work_package.intervention.intervention_type.name,
-                "candidateGeneration": work_package.intervention.candidate_generation and {
-                    "type": work_package.intervention.candidate_generation.type.name,
-                    "interventionCriteriaName": work_package.intervention.candidate_generation.intervention_criteria_name,
-                    "voltageDeltaAvgThreshold": work_package.intervention.candidate_generation.voltage_delta_avg_threshold,
-                    "voltageUnderLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_under_limit_hours_threshold,
-                    "voltageOverLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_over_limit_hours_threshold,
-                    "tapWeightingFactorLowerThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_lower_threshold,
-                    "tapWeightingFactorUpperThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_upper_threshold,
-                },
-                "allocationCriteria": work_package.intervention.allocation_criteria,
-                "specificAllocationInstance": work_package.intervention.specific_allocation_instance,
-                "phaseRebalanceProportions": work_package.intervention.phase_rebalance_proportions and {
-                    "a": work_package.intervention.phase_rebalance_proportions.a,
-                    "b": work_package.intervention.phase_rebalance_proportions.b,
-                    "c": work_package.intervention.phase_rebalance_proportions.c
-                },
-                "dvms": work_package.intervention.dvms and {
-                    "lowerLimit": work_package.intervention.dvms.lower_limit,
-                    "upperLimit": work_package.intervention.dvms.upper_limit,
-                    "lowerPercentile": work_package.intervention.dvms.lower_percentile,
-                    "upperPercentile": work_package.intervention.dvms.upper_percentile,
-                    "maxIterations": work_package.intervention.dvms.max_iterations,
-                    "regulatorConfig": {
-                        "puTarget": work_package.intervention.dvms.regulator_config.pu_target,
-                        "puDeadbandPercent": work_package.intervention.dvms.regulator_config.pu_deadband_percent,
-                        "maxTapChangePerStep": work_package.intervention.dvms.regulator_config.max_tap_change_per_step,
-                        "allowPushToLimit": work_package.intervention.dvms.regulator_config.allow_push_to_limit
+            "intervention": work_package.intervention and (
+                {
+                    "baseWorkPackageId": work_package.intervention.base_work_package_id,
+                    "yearRange": {
+                        "maxYear": work_package.intervention.year_range.max_year,
+                        "minYear": work_package.intervention.year_range.min_year
+                    },
+                    "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year,
+                    "interventionType": work_package.intervention.intervention_type.name,
+                    "candidateGeneration": work_package.intervention.candidate_generation and {
+                        "type": work_package.intervention.candidate_generation.type.name,
+                        "interventionCriteriaName": work_package.intervention.candidate_generation.intervention_criteria_name,
+                        "voltageDeltaAvgThreshold": work_package.intervention.candidate_generation.voltage_delta_avg_threshold,
+                        "voltageUnderLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_under_limit_hours_threshold,
+                        "voltageOverLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_over_limit_hours_threshold,
+                        "tapWeightingFactorLowerThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_lower_threshold,
+                        "tapWeightingFactorUpperThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_upper_threshold,
+                    },
+                    "allocationCriteria": work_package.intervention.allocation_criteria,
+                    "specificAllocationInstance": work_package.intervention.specific_allocation_instance,
+                    "phaseRebalanceProportions": work_package.intervention.phase_rebalance_proportions and {
+                        "a": work_package.intervention.phase_rebalance_proportions.a,
+                        "b": work_package.intervention.phase_rebalance_proportions.b,
+                        "c": work_package.intervention.phase_rebalance_proportions.c
+                    },
+                    "dvms": work_package.intervention.dvms and {
+                        "lowerLimit": work_package.intervention.dvms.lower_limit,
+                        "upperLimit": work_package.intervention.dvms.upper_limit,
+                        "lowerPercentile": work_package.intervention.dvms.lower_percentile,
+                        "upperPercentile": work_package.intervention.dvms.upper_percentile,
+                        "maxIterations": work_package.intervention.dvms.max_iterations,
+                        "regulatorConfig": {
+                            "puTarget": work_package.intervention.dvms.regulator_config.pu_target,
+                            "puDeadbandPercent": work_package.intervention.dvms.regulator_config.pu_deadband_percent,
+                            "maxTapChangePerStep": work_package.intervention.dvms.regulator_config.max_tap_change_per_step,
+                            "allowPushToLimit": work_package.intervention.dvms.regulator_config.allow_push_to_limit
+                        }
                     }
-                }
-            }
+                } | {
+                    "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year
+                } if work_package.intervention.allocation_limit_per_year is not None else {}
+            )
         }
 
     def run_hosting_capacity_work_package(self, work_package: WorkPackageConfig):

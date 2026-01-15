@@ -861,7 +861,7 @@ class InterventionConfig:
     All years within this range should be included in the work package.
     """
 
-    allocation_limit_per_year: int
+    allocation_limit_per_year: Optional[int] = None
     """The maximum number of interventions that can be applied per year."""
 
     intervention_type: InterventionClass
