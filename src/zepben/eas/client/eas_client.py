@@ -386,7 +386,6 @@ class EasClient:
                         "maxYear": work_package.intervention.year_range.max_year,
                         "minYear": work_package.intervention.year_range.min_year
                     },
-                    "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year,
                     "interventionType": work_package.intervention.intervention_type.name,
                     "candidateGeneration": work_package.intervention.candidate_generation and {
                         "type": work_package.intervention.candidate_generation.type.name,

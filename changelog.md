@@ -7,7 +7,7 @@
 * None.
 
 ### Enhancements
-* None.
+* `allocation_limit_per_year` is no longer a required field in `InterventionConfig`.
 
 ### Fixes
 * None.
