@@ -282,7 +282,7 @@ class EasClient:
             }
         }
 
-    def work_package_config_to_json(self, work_package: Optional[WorkPackageConfig]) -> Optional[dict]:
+    def work_package_config_to_json(self, work_package: WorkPackageConfig) -> dict:
         return {
             "feederConfigs": {
                 "configs": [
@@ -416,9 +416,9 @@ class EasClient:
                             "allowPushToLimit": work_package.intervention.dvms.regulator_config.allow_push_to_limit
                         }
                     }
-                } | {
+                } | ({
                     "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year
-                } if work_package.intervention.allocation_limit_per_year is not None else {}
+                } if work_package.intervention.allocation_limit_per_year is not None else {})
             )
         }
 
