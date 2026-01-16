@@ -855,14 +855,14 @@ class InterventionConfig:
     The new work package should process a subset of its feeders, scenarios, and years.
     """
 
-    year_range: YearRange
+    intervention_type: InterventionClass
+    """The class of intervention to apply."""
+
+    year_range: Optional[YearRange] = None
     """
     The range of years to search for and apply interventions.
     All years within this range should be included in the work package.
     """
-
-    intervention_type: InterventionClass
-    """The class of intervention to apply."""
 
     allocation_limit_per_year: Optional[int] = None
     """The maximum number of interventions that can be applied per year."""

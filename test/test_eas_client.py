@@ -1684,7 +1684,7 @@ def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPSer
     assert res == {"result": "success"}
 
 
-def test_work_package_config_to_json_omits_allocation_limit_per_year_if_unspecified(httpserver: HTTPServer):
+def test_work_package_config_to_json_omits_server_defaulted_fields_if_unspecified(httpserver: HTTPServer):
     eas_client = EasClient(
         LOCALHOST,
         httpserver.port,
@@ -1696,7 +1696,6 @@ def test_work_package_config_to_json_omits_allocation_limit_per_year_if_unspecif
         syf_config=FeederConfigs([]),
         intervention=InterventionConfig(
             base_work_package_id="abc",
-            year_range=YearRange(2020, 2025),
             intervention_type=InterventionClass.COMMUNITY_BESS
         )
     )
@@ -1704,10 +1703,6 @@ def test_work_package_config_to_json_omits_allocation_limit_per_year_if_unspecif
 
     assert json_config["intervention"] == {
         "baseWorkPackageId": "abc",
-        "yearRange": {
-            "maxYear": 2025,
-            "minYear": 2020
-        },
         "interventionType": "COMMUNITY_BESS",
         "candidateGeneration": None,
         "allocationCriteria": None,
@@ -1716,7 +1711,7 @@ def test_work_package_config_to_json_omits_allocation_limit_per_year_if_unspecif
         "dvms": None
     }
 
-def test_work_package_config_to_json_includes_allocation_limit_per_year_if_specified(httpserver: HTTPServer):
+def test_work_package_config_to_json_includes_server_defaulted_fields_if_specified(httpserver: HTTPServer):
     eas_client = EasClient(
         LOCALHOST,
         httpserver.port,

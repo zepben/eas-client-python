@@ -382,10 +382,6 @@ class EasClient:
             "intervention": work_package.intervention and (
                 {
                     "baseWorkPackageId": work_package.intervention.base_work_package_id,
-                    "yearRange": {
-                        "maxYear": work_package.intervention.year_range.max_year,
-                        "minYear": work_package.intervention.year_range.min_year
-                    },
                     "interventionType": work_package.intervention.intervention_type.name,
                     "candidateGeneration": work_package.intervention.candidate_generation and {
                         "type": work_package.intervention.candidate_generation.type.name,
@@ -416,9 +412,20 @@ class EasClient:
                             "allowPushToLimit": work_package.intervention.dvms.regulator_config.allow_push_to_limit
                         }
                     }
-                } | ({
-                    "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year
-                } if work_package.intervention.allocation_limit_per_year is not None else {})
+                } |
+                (
+                    { "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year }
+                    if work_package.intervention.allocation_limit_per_year is not None else {}
+                ) |
+                (
+                    {
+                        "yearRange": {
+                            "maxYear": work_package.intervention.year_range.max_year,
+                            "minYear": work_package.intervention.year_range.min_year
+                        }
+                    }
+                    if work_package.intervention.year_range is not None else {}
+                )
             )
         }
 
