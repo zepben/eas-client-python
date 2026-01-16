@@ -17,7 +17,7 @@ from pytest_httpserver import HTTPServer
 from werkzeug import Response
 from zepben.ewb.auth import ZepbenTokenFetcher
 
-from zepben.eas import EasClient, Study, SolveConfig
+from zepben.eas import EasClient, Study, SolveConfig, InterventionConfig, YearRange
 from zepben.eas import FeederConfig, ForecastConfig, FixedTimeLoadOverride
 from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsSortCriteriaInput, IngestorRunsFilterInput, \
     IngestorRunState, IngestorRuntimeKind
@@ -26,7 +26,7 @@ from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput
     Order
 from zepben.eas.client.study import Result
 from zepben.eas.client.work_package import FeederConfigs, TimePeriodLoadOverride, \
-    FixedTime, NodeLevelResultsConfig, PVVoltVARVoltWattConfig
+    FixedTime, NodeLevelResultsConfig, PVVoltVARVoltWattConfig, InterventionClass
 from zepben.eas.client.work_package import WorkPackageConfig, TimePeriod, GeneratorConfig, ModelConfig, \
     FeederScenarioAllocationStrategy, LoadPlacement, MeterPlacementConfig, SwitchMeterPlacementConfig, SwitchClass, \
     SolveMode, RawResultsConfig
@@ -1682,3 +1682,65 @@ def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPSer
     )
     httpserver.check_assertions()
     assert res == {"result": "success"}
+
+
+def test_work_package_config_to_json_omits_server_defaulted_fields_if_unspecified(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    wp_config = WorkPackageConfig(
+        name="wp",
+        syf_config=FeederConfigs([]),
+        intervention=InterventionConfig(
+            base_work_package_id="abc",
+            intervention_type=InterventionClass.COMMUNITY_BESS
+        )
+    )
+    json_config = eas_client.work_package_config_to_json(wp_config)
+
+    assert json_config["intervention"] == {
+        "baseWorkPackageId": "abc",
+        "interventionType": "COMMUNITY_BESS",
+        "candidateGeneration": None,
+        "allocationCriteria": None,
+        "specificAllocationInstance": None,
+        "phaseRebalanceProportions": None,
+        "dvms": None
+    }
+
+def test_work_package_config_to_json_includes_server_defaulted_fields_if_specified(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    wp_config = WorkPackageConfig(
+        name="wp",
+        syf_config=FeederConfigs([]),
+        intervention=InterventionConfig(
+            base_work_package_id="abc",
+            year_range=YearRange(2020, 2025),
+            intervention_type=InterventionClass.COMMUNITY_BESS,
+            allocation_limit_per_year=5
+        )
+    )
+    json_config = eas_client.work_package_config_to_json(wp_config)
+
+    assert json_config["intervention"] == {
+        "baseWorkPackageId": "abc",
+        "yearRange": {
+            "maxYear": 2025,
+            "minYear": 2020
+        },
+        "interventionType": "COMMUNITY_BESS",
+        "candidateGeneration": None,
+        "allocationCriteria": None,
+        "specificAllocationInstance": None,
+        "phaseRebalanceProportions": None,
+        "dvms": None,
+        "allocationLimitPerYear": 5
+    }
