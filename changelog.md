@@ -2,13 +2,16 @@
 ## [0.27.0] - UNRELEASED
 ### Breaking Changes
 * Bumping `urllib3` to `v2.5.0`, and pulling in `zepben.auth` via the SDK.
-* EAS must support unspecified `allocationLimitPerYear` in the intervention config.
+* EAS must support unspecified `allocationLimitPerYear` and `yearRange` in the intervention config.
 
 ### New Features
 * None.
 
 ### Enhancements
-* `allocation_limit_per_year` is no longer a required field in `InterventionConfig`.
+* To reduce confusion when running certain classes of intervention, the following fields are no longe required in `InterventionConfig`,
+  and are defaulted to sensible values server-side:
+  * `yearRange`
+  * `allocation_limit_per_year`
 
 ### Fixes
 * None.
