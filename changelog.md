@@ -1,5 +1,21 @@
 # EAS Python client
-## [0.27.0] - UNRELEASED
+## [0.28.0] - UNRELEASED
+### Breaking Changes
+* None.
+
+### New Features
+* None.
+
+### Enhancements
+* None.
+
+### Fixes
+* None.
+
+### Notes
+* None.
+
+## [0.27.0] - 2026-01-21
 ### Breaking Changes
 * Bumping `urllib3` to `v2.5.0`, and pulling in `zepben.auth` via the SDK.
 * EAS must support unspecified `allocationLimitPerYear` and `yearRange` in the intervention config.
