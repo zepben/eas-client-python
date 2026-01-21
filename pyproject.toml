@@ -27,7 +27,7 @@ dependencies = [
     "geojson==2.5.0",
     "requests<3.0.0,>=2.26.0",
     "urllib3==2.5.0",
-    "zepben.ewb==1.1.0b14",
+    "zepben.ewb==1.1.0",
     "aiohttp[speedups]==3.9.0",
 ]
 classifiers = [
