@@ -910,7 +910,8 @@ class EasClient:
                                          transformer_tap_settings: Optional[str] = None,
                                          generator_config: Optional[GeneratorConfig] = None):
         """
-        Send request to run hosting capacity calibrationbration name
+        Send request to run hosting capacity calibration
+        :param calibration_name: A string representation of the calibration name
         :param local_calibration_time: A datetime representation of the calibration time, in the timezone of your pqv data ("model time").
         :param feeders: A list of feeder ID's to run the calibration over. If not supplied then the calibration is run over all feeders in the network.
         :param transformer_tap_settings: A set of transformer tap settings to apply before running the calibration work package.
