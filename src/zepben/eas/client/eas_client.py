@@ -386,11 +386,12 @@ class EasClient:
                     "candidateGeneration": work_package.intervention.candidate_generation and {
                         "type": work_package.intervention.candidate_generation.type.name,
                         "interventionCriteriaName": work_package.intervention.candidate_generation.intervention_criteria_name,
-                        "voltageDeltaAvgThreshold": work_package.intervention.candidate_generation.voltage_delta_avg_threshold,
+                        "averageVoltageSpreadThreshold": work_package.intervention.candidate_generation.average_voltage_spread_threshold,
                         "voltageUnderLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_under_limit_hours_threshold,
                         "voltageOverLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_over_limit_hours_threshold,
                         "tapWeightingFactorLowerThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_lower_threshold,
                         "tapWeightingFactorUpperThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_upper_threshold,
+                        "nominalLowVoltage": work_package.intervention.candidate_generation.nominal_low_voltage,
                     },
                     "allocationCriteria": work_package.intervention.allocation_criteria,
                     "specificAllocationInstance": work_package.intervention.specific_allocation_instance,

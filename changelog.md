@@ -1,13 +1,15 @@
 # EAS Python client
 ## [0.28.0] - UNRELEASED
 ### Breaking Changes
-* None.
+* For `CandidateGenerationConfig`, replaced `voltage_delta_avg_threshold` with `average_voltage_spread_threshold`, which serves the same purpose but is
+  in volts instead of voltage per-unit.
 
 ### New Features
 * None.
 
 ### Enhancements
-* None.
+* For `CandidateGenerationConfig`, you may supply a `nominal_low_voltage` in volts to adjust the target "ideal" voltage for LV customers when running
+  `TAP_OPTIMIZATION` interventions.
 
 ### Fixes
 * Fixed bug where geographical regions were not getting passed in the feeder load analysis input.

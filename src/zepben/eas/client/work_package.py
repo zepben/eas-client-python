@@ -767,9 +767,13 @@ class CandidateGenerationConfig:
     base work package run. Only used when type is CRITERIA.
     """
 
-    voltage_delta_avg_threshold: Optional[float] = None
+    average_voltage_spread_threshold: Optional[int] = None
     """
-    The threshold for average deviation in voltage p.u. across the transformer. Only used when type is TAP_OPTIMIZATION.
+    The threshold for average voltage spread under the transformer over the year, in volts.
+    Voltage spread at each timestep is calculated by taking the difference between the maximum and minimum voltage over
+    the nodes under the transformer, for each phase, then taking the maximum of that difference across all phases.
+    When the average voltage spread exceeds this threshold, it indicates that the transformer is experiencing a
+    significant voltage swing that may impact system stability. Only used when type is CRITERIA.
     """
 
     voltage_under_limit_hours_threshold: Optional[int] = None
@@ -798,6 +802,11 @@ class CandidateGenerationConfig:
     (decreasing voltage) is prioritized. If the tap weighting factor exceeds this threshold, it indicates that
     the voltage is significantly over the desired range and requires corrective action. This setting is usually
     positive. Only used when type is TAP_OPTIMIZATION.
+    """
+
+    nominal_low_voltage: Optional[int] = None
+    """
+    The nominal line (phase-to-phase) voltage for LV customers in volts.
     """
 
 
