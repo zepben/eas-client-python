@@ -8,8 +8,7 @@
 * None.
 
 ### Enhancements
-* For `CandidateGenerationConfig`, you may supply a `nominal_low_voltage` in volts to adjust the target "ideal" voltage for LV customers when running
-  `TAP_OPTIMIZATION` interventions.
+* None.
 
 ### Fixes
 * Fixed bug where geographical regions were not getting passed in the feeder load analysis input.

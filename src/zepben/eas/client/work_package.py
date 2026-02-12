@@ -804,11 +804,6 @@ class CandidateGenerationConfig:
     positive. Only used when type is TAP_OPTIMIZATION.
     """
 
-    nominal_low_voltage: Optional[int] = None
-    """
-    The nominal line (phase-to-phase) voltage for LV customers in volts.
-    """
-
 
 @dataclass
 class PhaseRebalanceProportions:
