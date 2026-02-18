@@ -769,11 +769,11 @@ class CandidateGenerationConfig:
 
     average_voltage_spread_threshold: Optional[int] = None
     """
-    The threshold for average voltage spread under the transformer over the year, in volts.
-    Voltage spread at each timestep is calculated by taking the difference between the maximum and minimum voltage over
+    The threshold for average line voltage spread under the transformer over the year, in volts.
+    Voltage spread at each timestep is calculated by taking the difference between the maximum and minimum phase-to-phase voltage over
     the nodes under the transformer, for each phase, then taking the maximum of that difference across all phases.
     When the average voltage spread exceeds this threshold, it indicates that the transformer is experiencing a
-    significant voltage swing that may impact system stability. Only used when type is CRITERIA.
+    significant voltage swing that may impact system stability. Only used when type is TAP_OPTIMIZATION.
     """
 
     voltage_under_limit_hours_threshold: Optional[int] = None
