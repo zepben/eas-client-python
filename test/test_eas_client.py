@@ -17,7 +17,7 @@ from pytest_httpserver import HTTPServer
 from werkzeug import Response
 from zepben.ewb.auth import ZepbenTokenFetcher
 
-from zepben.eas import EasClient, Study, SolveConfig, InterventionConfig, YearRange
+from zepben.eas import EasClient, Study, SolveConfig, InterventionConfig, YearRange, CandidateGenerationConfig, CandidateGenerationType
 from zepben.eas import FeederConfig, ForecastConfig, FixedTimeLoadOverride
 from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsSortCriteriaInput, IngestorRunsFilterInput, \
     IngestorRunState, IngestorRuntimeKind
@@ -1738,6 +1738,56 @@ def test_work_package_config_to_json_includes_server_defaulted_fields_if_specifi
         },
         "interventionType": "COMMUNITY_BESS",
         "candidateGeneration": None,
+        "allocationCriteria": None,
+        "specificAllocationInstance": None,
+        "phaseRebalanceProportions": None,
+        "dvms": None,
+        "allocationLimitPerYear": 5
+    }
+
+def test_work_package_config_to_json_for_tap_optimization(httpserver: HTTPServer):
+    eas_client = EasClient(
+        LOCALHOST,
+        httpserver.port,
+        verify_certificate=False
+    )
+
+    wp_config = WorkPackageConfig(
+        name="wp",
+        syf_config=FeederConfigs([]),
+        intervention=InterventionConfig(
+            base_work_package_id="abc",
+            year_range=YearRange(2020, 2025),
+            intervention_type=InterventionClass.DISTRIBUTION_TAP_OPTIMIZATION,
+            allocation_limit_per_year=5,
+            candidate_generation=CandidateGenerationConfig(
+                type=CandidateGenerationType.TAP_OPTIMIZATION,
+                average_voltage_spread_threshold=40,
+                voltage_under_limit_hours_threshold=1,
+                voltage_over_limit_hours_threshold=2,
+                tap_weighting_factor_lower_threshold=-0.3,
+                tap_weighting_factor_upper_threshold=0.4
+            )
+        )
+    )
+    json_config = eas_client.work_package_config_to_json(wp_config)
+
+    assert json_config["intervention"] == {
+        "baseWorkPackageId": "abc",
+        "yearRange": {
+            "maxYear": 2025,
+            "minYear": 2020
+        },
+        "interventionType": "DISTRIBUTION_TAP_OPTIMIZATION",
+        "candidateGeneration": {
+            "type": "TAP_OPTIMIZATION",
+            "interventionCriteriaName": None,
+            "averageVoltageSpreadThreshold": 40,
+            "voltageUnderLimitHoursThreshold": 1,
+            "voltageOverLimitHoursThreshold": 2,
+            "tapWeightingFactorLowerThreshold": -0.3,
+            "tapWeightingFactorUpperThreshold": 0.4,
+        },
         "allocationCriteria": None,
         "specificAllocationInstance": None,
         "phaseRebalanceProportions": None,
