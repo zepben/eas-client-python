@@ -10,7 +10,7 @@
 * None.
 
 ### Fixes
-* None.
+* Fixed bug where geographical regions were not getting passed in the feeder load analysis input.
 
 ### Notes
 * None.
