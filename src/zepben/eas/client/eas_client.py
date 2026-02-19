@@ -640,7 +640,7 @@ class EasClient:
                         "feeders": feeder_load_analysis_input.feeders,
                         "substations": feeder_load_analysis_input.substations,
                         "subGeographicalRegions": feeder_load_analysis_input.sub_geographical_regions,
-                        "geographicalRegions": feeder_load_analysis_input.feeders,
+                        "geographicalRegions": feeder_load_analysis_input.geographical_regions,
                         "startDate": feeder_load_analysis_input.start_date,
                         "endDate": feeder_load_analysis_input.end_date,
                         "fetchLvNetwork": feeder_load_analysis_input.fetch_lv_network,
