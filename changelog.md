@@ -1,7 +1,9 @@
 # EAS Python client
 ## [0.28.0] - UNRELEASED
 ### Breaking Changes
-* None.
+* For `CandidateGenerationConfig`, replaced `voltage_delta_avg_threshold` with `average_voltage_spread_threshold`, which serves the same purpose but is
+  in volts instead of voltage per-unit.
+  * EAS must support this change in the GraphQL schema (`v2.10.0` and above).
 
 ### New Features
 * None.
