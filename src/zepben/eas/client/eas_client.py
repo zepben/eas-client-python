@@ -380,52 +380,52 @@ class EasClient:
                 }
             },
             "intervention": work_package.intervention and (
-                {
-                    "baseWorkPackageId": work_package.intervention.base_work_package_id,
-                    "interventionType": work_package.intervention.intervention_type.name,
-                    "candidateGeneration": work_package.intervention.candidate_generation and {
-                        "type": work_package.intervention.candidate_generation.type.name,
-                        "interventionCriteriaName": work_package.intervention.candidate_generation.intervention_criteria_name,
-                        "averageVoltageSpreadThreshold": work_package.intervention.candidate_generation.average_voltage_spread_threshold,
-                        "voltageUnderLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_under_limit_hours_threshold,
-                        "voltageOverLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_over_limit_hours_threshold,
-                        "tapWeightingFactorLowerThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_lower_threshold,
-                        "tapWeightingFactorUpperThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_upper_threshold
-                    },
-                    "allocationCriteria": work_package.intervention.allocation_criteria,
-                    "specificAllocationInstance": work_package.intervention.specific_allocation_instance,
-                    "phaseRebalanceProportions": work_package.intervention.phase_rebalance_proportions and {
-                        "a": work_package.intervention.phase_rebalance_proportions.a,
-                        "b": work_package.intervention.phase_rebalance_proportions.b,
-                        "c": work_package.intervention.phase_rebalance_proportions.c
-                    },
-                    "dvms": work_package.intervention.dvms and {
-                        "lowerLimit": work_package.intervention.dvms.lower_limit,
-                        "upperLimit": work_package.intervention.dvms.upper_limit,
-                        "lowerPercentile": work_package.intervention.dvms.lower_percentile,
-                        "upperPercentile": work_package.intervention.dvms.upper_percentile,
-                        "maxIterations": work_package.intervention.dvms.max_iterations,
-                        "regulatorConfig": {
-                            "puTarget": work_package.intervention.dvms.regulator_config.pu_target,
-                            "puDeadbandPercent": work_package.intervention.dvms.regulator_config.pu_deadband_percent,
-                            "maxTapChangePerStep": work_package.intervention.dvms.regulator_config.max_tap_change_per_step,
-                            "allowPushToLimit": work_package.intervention.dvms.regulator_config.allow_push_to_limit
-                        }
-                    }
-                } |
-                (
-                    { "allocationLimitPerYear": work_package.intervention.allocation_limit_per_year }
-                    if work_package.intervention.allocation_limit_per_year is not None else {}
-                ) |
-                (
                     {
-                        "yearRange": {
-                            "maxYear": work_package.intervention.year_range.max_year,
-                            "minYear": work_package.intervention.year_range.min_year
+                        "baseWorkPackageId": work_package.intervention.base_work_package_id,
+                        "interventionType": work_package.intervention.intervention_type.name,
+                        "candidateGeneration": work_package.intervention.candidate_generation and {
+                            "type": work_package.intervention.candidate_generation.type.name,
+                            "interventionCriteriaName": work_package.intervention.candidate_generation.intervention_criteria_name,
+                            "averageVoltageSpreadThreshold": work_package.intervention.candidate_generation.average_voltage_spread_threshold,
+                            "voltageUnderLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_under_limit_hours_threshold,
+                            "voltageOverLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_over_limit_hours_threshold,
+                            "tapWeightingFactorLowerThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_lower_threshold,
+                            "tapWeightingFactorUpperThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_upper_threshold
+                        },
+                        "allocationCriteria": work_package.intervention.allocation_criteria,
+                        "specificAllocationInstance": work_package.intervention.specific_allocation_instance,
+                        "phaseRebalanceProportions": work_package.intervention.phase_rebalance_proportions and {
+                            "a": work_package.intervention.phase_rebalance_proportions.a,
+                            "b": work_package.intervention.phase_rebalance_proportions.b,
+                            "c": work_package.intervention.phase_rebalance_proportions.c
+                        },
+                        "dvms": work_package.intervention.dvms and {
+                            "lowerLimit": work_package.intervention.dvms.lower_limit,
+                            "upperLimit": work_package.intervention.dvms.upper_limit,
+                            "lowerPercentile": work_package.intervention.dvms.lower_percentile,
+                            "upperPercentile": work_package.intervention.dvms.upper_percentile,
+                            "maxIterations": work_package.intervention.dvms.max_iterations,
+                            "regulatorConfig": {
+                                "puTarget": work_package.intervention.dvms.regulator_config.pu_target,
+                                "puDeadbandPercent": work_package.intervention.dvms.regulator_config.pu_deadband_percent,
+                                "maxTapChangePerStep": work_package.intervention.dvms.regulator_config.max_tap_change_per_step,
+                                "allowPushToLimit": work_package.intervention.dvms.regulator_config.allow_push_to_limit
+                            }
                         }
-                    }
-                    if work_package.intervention.year_range is not None else {}
-                )
+                    } |
+                    (
+                        {"allocationLimitPerYear": work_package.intervention.allocation_limit_per_year}
+                        if work_package.intervention.allocation_limit_per_year is not None else {}
+                    ) |
+                    (
+                        {
+                            "yearRange": {
+                                "maxYear": work_package.intervention.year_range.max_year,
+                                "minYear": work_package.intervention.year_range.min_year
+                            }
+                        }
+                        if work_package.intervention.year_range is not None else {}
+                    )
             )
         }
 
@@ -658,6 +658,77 @@ class EasClient:
                                  "seed": feeder_load_analysis_input.fla_forecast_config.seed
                              } if feeder_load_analysis_input.fla_forecast_config else None)
                     }
+                }
+            }
+            if self._verify_certificate:
+                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+
+            async with self.session.post(
+                    construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
+                    headers=self._get_request_headers(),
+                    json=json,
+                    ssl=sslcontext if self._verify_certificate else False
+            ) as response:
+                if response.ok:
+                    return await response.json()
+                else:
+                    response.raise_for_status()
+
+    def get_feeder_load_analysis_report_status(self, report_id: str, full_spec: bool = False):
+        """
+        Send request to evolve app server to retrieve a feeder load analysis report status
+
+        :param report_id: Feeder load analysis report ID
+        :param full_spec: If true the response will include the request sent to generate the report
+        :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report status
+        """
+        return get_event_loop().run_until_complete(
+            self.async_get_feeder_load_analysis_report_status(report_id, full_spec))
+
+    async def async_get_feeder_load_analysis_report_status(self, report_id: str, full_spec: bool = False):
+        """
+        Asynchronously send request to evolve app server to retrieve a feeder load analysis report status
+
+        :param report_id: Feeder load analysis report ID
+        :param full_spec: If true the response will include the request sent to generate the report
+        :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report status
+        """
+        with warnings.catch_warnings():
+            if not self._verify_certificate:
+                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            json = {
+                "query":
+                    """
+                    query getFeederLoadAnalysisReportStatus($reportId: ID!, $fullSpec: Boolean!) {
+                        getFeederLoadAnalysisReportStatus(reportId: $reportId, fullSpec: $fullSpec) {
+                            id
+                            name
+                            createdAt
+                            createdBy
+                            completedAt
+                            state
+                            errors
+                            generationSpec {
+                                feeders
+                                substations
+                                subGeographicalRegions
+                                geographicalRegions
+                                startDate
+                                endDate
+                                fetchLvNetwork
+                                processFeederLoads
+                                processCoincidentLoads
+                                produceBasicReport
+                                produceConductorReport
+                                aggregateAtFeederLevel
+                                output
+                            }
+                        }
+                    }
+                """,
+                "variables": {
+                    "reportId": report_id,
+                    "fullSpec": full_spec,
                 }
             }
             if self._verify_certificate:
