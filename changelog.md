@@ -1,5 +1,21 @@
 # EAS Python client
-## [0.28.0] - UNRELEASED
+## [0.29.0] - UNRELEASED
+### Breaking Changes
+* None.
+
+### New Features
+* None.
+
+### Enhancements
+* None.
+
+### Fixes
+* None.
+
+### Notes
+* None.
+
+## [0.28.0] - 2026-02-25
 ### Breaking Changes
 * For `CandidateGenerationConfig`, replaced `voltage_delta_avg_threshold` with `average_voltage_spread_threshold`, which serves the same purpose but is
   in volts instead of voltage per-unit.
