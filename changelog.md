@@ -6,7 +6,7 @@
   * EAS must support this change in the GraphQL schema (`v2.10.0` and above).
 
 ### New Features
-* None.
+* Added function `get_feeder_load_analysis_report_status` to request feeder load analysis report status to eas client.
 
 ### Enhancements
 * None.
