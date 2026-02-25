@@ -1,7 +1,9 @@
 # EAS Python client
 ## [0.29.0] - UNRELEASED
 ### Breaking Changes
-* None.
+* Removed token fetcher, client id/secret, and username/password auth from EasClient. You must now use access token for auth, generated from the UI.
+* Moved all imports to the top level - you can now reconfigure all imports to be `from zepben.eas import ...`. Existing imports using 
+`from zepben.eas.client import ...` will no longer work.
 
 ### New Features
 * None.
