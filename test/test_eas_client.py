@@ -1,4 +1,4 @@
-#  Copyright 2022 Zeppelin Bend Pty Ltd
+#  Copyright 2026 Zeppelin Bend Pty Ltd
 #
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -132,74 +132,61 @@ def test_get_work_package_cost_estimation_no_verify_success(httpserver: HTTPServ
     assert res == {"data": {"getWorkPackageCostEstimation": "123.45"}}
 
 
-def test_get_work_package_cost_estimation_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
-    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_get_work_package_cost_estimation_invalid_certificate_failure(httpserver: HTTPServer):
+    eas_client = _invalid_ca(httpserver.port)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-            {"data": {"getWorkPackageCostEstimation": "123.45"}})
-        with pytest.raises(httpx.ConnectError):
-            eas_client.get_work_package_cost_estimation(
-                WorkPackageInput(
-                    #"wp_name",
-                    forecastConfig=ForecastConfigInput(
-                        feeders=["feeder"],
-                        years=[1],
-                        scenarios=["scenario"],
-                        timePeriod=TimePeriodInput(
-                            startTime=datetime(2022, 1, 1, 10),
-                            endTime=datetime(2022, 1, 2, 12),
-                            overrides=None
-                        )
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"data": {"getWorkPackageCostEstimation": "123.45"}})
+    with pytest.raises(httpx.ConnectError):
+        eas_client.get_work_package_cost_estimation(
+            WorkPackageInput(
+                forecastConfig=ForecastConfigInput(
+                    feeders=["feeder"],
+                    years=[1],
+                    scenarios=["scenario"],
+                    timePeriod=TimePeriodInput(
+                        startTime=datetime(2022, 1, 1, 10),
+                        endTime=datetime(2022, 1, 2, 12),
+                        overrides=None
                     )
                 )
             )
-
-
-def test_get_work_package_cost_estimation_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
-    with ca.cert_pem.tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
         )
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-            {"data": {"getWorkPackageCostEstimation": "123.45"}})
-        res = eas_client.get_work_package_cost_estimation(
-            WorkPackageInput(
-                feederConfigs=FeederConfigsInput(
-                    configs=[
-                        FeederConfigInput(
-                            feeder="feeder",
-                            years=[1],
-                            scenarios=["scenario"],
-                            fixedTime=FixedTimeInput(
-                                loadTime=datetime(2022, 1, 1),
-                                overrides=[
-                                    FixedTimeLoadOverrideInput(
-                                        loadId="meter",
-                                        genVarOverride=[1],
-                                        genWattsOverride=[2],
-                                        loadVarOverride=[3],
-                                        loadWattsOverride=[4]
-                                    )
-                                ]
-                            )
+
+def test_get_work_package_cost_estimation_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+    eas_client = _valid_ca(httpserver.port, ca)
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"data": {"getWorkPackageCostEstimation": "123.45"}})
+    res = eas_client.get_work_package_cost_estimation(
+        WorkPackageInput(
+            feederConfigs=FeederConfigsInput(
+                configs=[
+                    FeederConfigInput(
+                        feeder="feeder",
+                        years=[1],
+                        scenarios=["scenario"],
+                        fixedTime=FixedTimeInput(
+                            loadTime=datetime(2022, 1, 1),
+                            overrides=[
+                                FixedTimeLoadOverrideInput(
+                                    loadId="meter",
+                                    genVarOverride=[1],
+                                    genWattsOverride=[2],
+                                    loadVarOverride=[3],
+                                    loadWattsOverride=[4]
+                                )
+                            ]
                         )
-                    ]
-                )
+                    )
+                ]
             )
         )
+    )
 
-        httpserver.check_assertions()
-        assert res == {"data": {"getWorkPackageCostEstimation": "123.45"}}
+    httpserver.check_assertions()
+    assert res == {"data": {"getWorkPackageCostEstimation": "123.45"}}
 
 
 def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPServer):
@@ -228,46 +215,13 @@ def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPSer
     assert res == {"data": {"runWorkPackage": "workPackageId"}}
 
 
-def test_run_hosting_capacity_work_package_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
-    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_run_hosting_capacity_work_package_invalid_certificate_failure(httpserver: HTTPServer):
+    eas_client = _invalid_ca(httpserver.port)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-            {"data": {"runWorkPackage": "workPackageId"}})
-        with pytest.raises(httpx.ConnectError):
-            eas_client.run_hosting_capacity_work_package(
-                WorkPackageInput(
-                    forecastConfig=ForecastConfigInput(
-                        feeders=["feeder"],
-                        years=[1],
-                        scenarios=["scenario"],
-                        timePeriod=TimePeriodInput(
-                            startTime=datetime(2022, 1, 1),
-                            endTime=datetime(2022, 1, 2),
-                            overrides=None
-                        )
-                    )
-                ), work_package_name="wp_name",
-            )
-
-
-def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
-    with ca.cert_pem.tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
-
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-            {"data": {"runWorkPackage": "workPackageId"}})
-        res = eas_client.run_hosting_capacity_work_package(
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"data": {"runWorkPackage": "workPackageId"}})
+    with pytest.raises(httpx.ConnectError):
+        eas_client.run_hosting_capacity_work_package(
             WorkPackageInput(
                 forecastConfig=ForecastConfigInput(
                     feeders=["feeder"],
@@ -276,21 +230,42 @@ def test_run_hosting_capacity_work_package_valid_certificate_success(ca: trustme
                     timePeriod=TimePeriodInput(
                         startTime=datetime(2022, 1, 1),
                         endTime=datetime(2022, 1, 2),
-                        overrides=[
-                            TimePeriodLoadOverrideInput(
-                                loadId="meter1",
-                                loadWattsOverride=[1.0],
-                                genWattsOverride=[2.0],
-                                loadVarOverride=[3.0],
-                                genVarOverride=[4.0]
-                            )
-                        ]
+                        overrides=None
                     )
                 )
             ), work_package_name="wp_name",
         )
-        httpserver.check_assertions()
-        assert res == {"data": {"runWorkPackage": "workPackageId"}}
+
+
+def test_run_hosting_capacity_work_package_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+    eas_client = _valid_ca(httpserver.port, ca)
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"data": {"runWorkPackage": "workPackageId"}})
+    res = eas_client.run_hosting_capacity_work_package(
+        WorkPackageInput(
+            forecastConfig=ForecastConfigInput(
+                feeders=["feeder"],
+                years=[1],
+                scenarios=["scenario"],
+                timePeriod=TimePeriodInput(
+                    startTime=datetime(2022, 1, 1),
+                    endTime=datetime(2022, 1, 2),
+                    overrides=[
+                        TimePeriodLoadOverrideInput(
+                            loadId="meter1",
+                            loadWattsOverride=[1.0],
+                            genWattsOverride=[2.0],
+                            loadVarOverride=[3.0],
+                            genVarOverride=[4.0]
+                        )
+                    ]
+                )
+            )
+        ), work_package_name="wp_name",
+    )
+    httpserver.check_assertions()
+    assert res == {"data": {"runWorkPackage": "workPackageId"}}
 
 
 def test_cancel_hosting_capacity_work_package_no_verify_success(httpserver: HTTPServer):
@@ -308,35 +283,23 @@ def test_cancel_hosting_capacity_work_package_no_verify_success(httpserver: HTTP
     assert res == {"data": {"cancelHostingCapacity": "workPackageId"}}
 
 
-def test_cancel_hosting_capacity_work_package_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
-    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_cancel_hosting_capacity_work_package_invalid_certificate_failure(httpserver: HTTPServer):
+    eas_client = _invalid_ca(httpserver.port)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-            {"data": {"cancelWorkPackage": "workPackageId"}})
-        with pytest.raises(httpx.ConnectError):
-            eas_client.cancel_hosting_capacity_work_package("workPackageId")
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"data": {"cancelWorkPackage": "workPackageId"}})
+    with pytest.raises(httpx.ConnectError):
+        eas_client.cancel_hosting_capacity_work_package("workPackageId")
 
 
-def test_cancel_hosting_capacity_work_package_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
-    with ca.cert_pem.tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_cancel_hosting_capacity_work_package_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+    eas_client = _valid_ca(httpserver.port, ca)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-            {"data": {"cancelWorkPackage": "workPackageId"}})
-        res = eas_client.cancel_hosting_capacity_work_package("workPackageId")
-        httpserver.check_assertions()
-        assert res == {"data": {"cancelWorkPackage": "workPackageId"}}
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"data": {"cancelWorkPackage": "workPackageId"}})
+    res = eas_client.cancel_hosting_capacity_work_package("workPackageId")
+    httpserver.check_assertions()
+    assert res == {"data": {"cancelWorkPackage": "workPackageId"}}
 
 
 def test_get_hosting_capacity_work_package_progress_no_verify_success(httpserver: HTTPServer):
@@ -354,35 +317,23 @@ def test_get_hosting_capacity_work_package_progress_no_verify_success(httpserver
     assert res == {"data": {"getWorkPackageProgress": {}}}
 
 
-def test_get_hosting_capacity_work_package_progress_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
-    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_get_hosting_capacity_work_package_progress_invalid_certificate_failure(httpserver: HTTPServer):
+    eas_client = _invalid_ca(httpserver.port)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-            {"data": {"getWorkPackageProgress": {}}})
-        with pytest.raises(httpx.ConnectError):
-            eas_client.get_hosting_capacity_work_packages_progress()
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"data": {"getWorkPackageProgress": {}}})
+    with pytest.raises(httpx.ConnectError):
+        eas_client.get_hosting_capacity_work_packages_progress()
 
 
-def test_get_hosting_capacity_work_package_progress_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
-    with ca.cert_pem.tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_get_hosting_capacity_work_package_progress_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+    eas_client = _valid_ca(httpserver.port, ca)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-            {"data": {"getWorkPackageProgress": {}}})
-        res = eas_client.get_hosting_capacity_work_packages_progress()
-        httpserver.check_assertions()
-        assert res == {"data": {"getWorkPackageProgress": {}}}
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"data": {"getWorkPackageProgress": {}}})
+    res = eas_client.get_hosting_capacity_work_packages_progress()
+    httpserver.check_assertions()
+    assert res == {"data": {"getWorkPackageProgress": {}}}
 
 
 def test_upload_study_no_verify_success(httpserver: HTTPServer):
@@ -406,33 +357,21 @@ def test_upload_study_no_verify_success(httpserver: HTTPServer):
     assert res == {"result": "success"}
 
 
-def test_upload_study_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
-    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_upload_study_invalid_certificate_failure(httpserver: HTTPServer):
+    eas_client = _invalid_ca(httpserver.port)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
-        with pytest.raises(httpx.ConnectError):
-            eas_client.upload_study(StudyInput(name="Test study", description="description", tags=["tag"], results=[StudyResultInput(name="Huge success", sections=[])], styles=[]))
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    with pytest.raises(httpx.ConnectError):
+        eas_client.upload_study(StudyInput(name="Test study", description="description", tags=["tag"], results=[StudyResultInput(name="Huge success", sections=[])], styles=[]))
 
 
-def test_upload_study_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
-    with ca.cert_pem.tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_upload_study_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+    eas_client = _valid_ca(httpserver.port, ca)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
-        res = eas_client.upload_study(StudyInput(name="Test study", description="description", tags=["tag"], results=[StudyResultInput(name="Huge success", sections=[])], styles=[]))
-        httpserver.check_assertions()
-        assert res == {"result": "success"}
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    res = eas_client.upload_study(StudyInput(name="Test study", description="description", tags=["tag"], results=[StudyResultInput(name="Huge success", sections=[])], styles=[]))
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
 
 
 def hosting_capacity_run_calibration_request_handler(request):
@@ -461,34 +400,22 @@ def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServ
     assert res == {"result": "success"}
 
 
-def test_run_hosting_capacity_calibration_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
-    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_run_hosting_capacity_calibration_invalid_certificate_failure(httpserver: HTTPServer):
+    eas_client = _invalid_ca(httpserver.port)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
-        with pytest.raises(httpx.ConnectError):
-            eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    with pytest.raises(httpx.ConnectError):
+        eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
 
 
-def test_run_hosting_capacity_calibration_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
-    with ca.cert_pem.tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_run_hosting_capacity_calibration_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+    eas_client = _valid_ca(httpserver.port, ca)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-            hosting_capacity_run_calibration_request_handler)
-        res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
-        httpserver.check_assertions()
-        assert res == {"result": "success"}
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        hosting_capacity_run_calibration_request_handler)
+    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
 
 
 def get_hosting_capacity_run_calibration_request_handler(request):
@@ -515,34 +442,22 @@ def test_get_hosting_capacity_calibration_run_no_verify_success(httpserver: HTTP
     assert res == {"result": "success"}
 
 
-def test_get_hosting_capacity_calibration_run_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
-    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_get_hosting_capacity_calibration_run_invalid_certificate_failure(httpserver: HTTPServer):
+    eas_client = _invalid_ca(httpserver.port)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
-        with pytest.raises(httpx.ConnectError):
-            eas_client.get_hosting_capacity_calibration_run("calibration-id")
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    with pytest.raises(httpx.ConnectError):
+        eas_client.get_hosting_capacity_calibration_run("calibration-id")
 
 
-def test_get_hosting_capacity_calibration_run_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
-    with ca.cert_pem.tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_get_hosting_capacity_calibration_run_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+    eas_client = _valid_ca(httpserver.port, ca)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-            get_hosting_capacity_run_calibration_request_handler)
-        res = eas_client.get_hosting_capacity_calibration_run("calibration-id")
-        httpserver.check_assertions()
-        assert res == {"result": "success"}
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        get_hosting_capacity_run_calibration_request_handler)
+    res = eas_client.get_hosting_capacity_calibration_run("calibration-id")
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
 
 
 def hosting_capacity_run_calibration_with_calibration_time_request_handler(request):
@@ -585,7 +500,8 @@ def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_succes
 
 
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_no_generator_config(
-        httpserver: HTTPServer):
+        httpserver: HTTPServer
+):
     eas_client = EasClient(
         LOCALHOST,
         httpserver.port,
@@ -626,7 +542,8 @@ def hosting_capacity_run_calibration_with_generator_config_request_handler(reque
 
 
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_generator_config(
-        httpserver: HTTPServer):
+        httpserver: HTTPServer
+):
     eas_client = EasClient(
         LOCALHOST,
         httpserver.port,
@@ -667,7 +584,8 @@ def hosting_capacity_run_calibration_with_partial_model_config_request_handler(r
 
 
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_model_config(
-        httpserver: HTTPServer):
+        httpserver: HTTPServer
+):
     eas_client = EasClient(
         LOCALHOST,
         httpserver.port,
@@ -1044,43 +962,32 @@ def test_run_opendss_export_no_verify_success(httpserver: HTTPServer):
     assert res == {"result": "success"}
 
 
-def test_run_opendss_export_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
-    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_run_opendss_export_invalid_certificate_failure(httpserver: HTTPServer):
+    eas_client = _invalid_ca(httpserver.port)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
-        with pytest.raises(httpx.ConnectError):
-            eas_client.run_opendss_export(OPENDSS_CONFIG)
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    with pytest.raises(httpx.ConnectError):
+        eas_client.run_opendss_export(OPENDSS_CONFIG)
 
 
-def test_run_opendss_export_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
-    with ca.cert_pem.tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
-        dss_conf = OPENDSS_CONFIG.model_copy()
-        dss_conf.generation_spec.modules_configuration.common.fixed_time = FixedTimeInput(load_time=datetime(2022, 4, 1),
-                                             overrides=[
-                                                 FixedTimeLoadOverrideInput(
-                                                     loadId="meter1",
-                                                     genVarOverride=[1.0],
-                                                     genWattsOverride=[2.0],
-                                                     loadVarOverride=[3.0],
-                                                     loadWattsOverride=[4.0]
-                                                 )
-                                             ])
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(run_opendss_export_request_handler)
-        res = eas_client.run_opendss_export(dss_conf)
-        httpserver.check_assertions()
-        assert res == {"result": "success"}
+def test_run_opendss_export_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+    eas_client = _valid_ca(httpserver.port, ca)
+
+    dss_conf = OPENDSS_CONFIG.model_copy()
+    dss_conf.generation_spec.modules_configuration.common.fixed_time = FixedTimeInput(load_time=datetime(2022, 4, 1),
+                                         overrides=[
+                                             FixedTimeLoadOverrideInput(
+                                                 loadId="meter1",
+                                                 genVarOverride=[1.0],
+                                                 genWattsOverride=[2.0],
+                                                 loadVarOverride=[3.0],
+                                                 loadWattsOverride=[4.0]
+                                             )
+                                         ])
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(run_opendss_export_request_handler)
+    res = eas_client.run_opendss_export(dss_conf)
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
 
 
 get_paged_opendss_models_query = """
@@ -1127,18 +1034,12 @@ def test_get_paged_opendss_models_no_verify_success(httpserver: HTTPServer):
     assert res == {"result": "success"}
 
 
-def test_get_paged_opendss_models_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
-    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_get_paged_opendss_models_invalid_certificate_failure(httpserver: HTTPServer):
+    eas_client = _invalid_ca(httpserver.port)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
-        with pytest.raises(httpx.ConnectError):
-            eas_client.get_paged_opendss_models()
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    with pytest.raises(httpx.ConnectError):
+        eas_client.get_paged_opendss_models()
 
 
 def get_paged_opendss_models_no_param_request_handler(request):
@@ -1151,20 +1052,14 @@ def get_paged_opendss_models_no_param_request_handler(request):
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
 
-def test_get_paged_opendss_models_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
-    with ca.cert_pem.tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_get_paged_opendss_models_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+    eas_client = _valid_ca(httpserver.port, ca)
 
-        httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-            get_paged_opendss_models_no_param_request_handler)
-        res = eas_client.get_paged_opendss_models()
-        httpserver.check_assertions()
-        assert res == {"result": "success"}
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        get_paged_opendss_models_no_param_request_handler)
+    res = eas_client.get_paged_opendss_models()
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
 
 
 def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer):
@@ -1183,39 +1078,27 @@ def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer
     assert res == "https://example.com/download/1"
 
 
-def test_get_opendss_model_download_url_invalid_certificate_failure(ca: trustme.CA, httpserver: HTTPServer):
-    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_get_opendss_model_download_url_invalid_certificate_failure(httpserver: HTTPServer):
+    eas_client = _invalid_ca(httpserver.port)
 
-        httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
-            status=HTTPStatus.FOUND,
-            headers={"Location": "https://example.com/download/1"}
-        ))
-        with pytest.raises(httpx.ConnectError):
-            eas_client.get_opendss_model_download_url(1)
+    httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
+        status=HTTPStatus.FOUND,
+        headers={"Location": "https://example.com/download/1"}
+    ))
+    with pytest.raises(httpx.ConnectError):
+        eas_client.get_opendss_model_download_url(1)
 
 
-def test_get_opendss_model_download_url_valid_certificate_success(ca: trustme.CA, httpserver: HTTPServer):
-    with ca.cert_pem.tempfile() as ca_filename:
-        eas_client = EasClient(
-            LOCALHOST,
-            httpserver.port,
-            verify_certificate=True,
-            ca_filename=ca_filename
-        )
+def test_get_opendss_model_download_url_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+    eas_client = _valid_ca(httpserver.port, ca)
 
-        httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
-            status=HTTPStatus.FOUND,
-            headers={"Location": "https://example.com/download/1"}
-        ))
-        res = eas_client.get_opendss_model_download_url(1)
-        httpserver.check_assertions()
-        assert res == "https://example.com/download/1"
+    httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
+        status=HTTPStatus.FOUND,
+        headers={"Location": "https://example.com/download/1"}
+    ))
+    res = eas_client.get_opendss_model_download_url(1)
+    httpserver.check_assertions()
+    assert res == "https://example.com/download/1"
 
 
 def run_ingestor_request_handler(request):
@@ -1349,12 +1232,7 @@ def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPSer
     assert res == {"result": "success"}
 
 
-def test_work_package_config_to_json_omits_server_defaulted_fields_if_unspecified(httpserver: HTTPServer):
-    eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
-    )
+def test_work_package_config_to_json_omits_server_defaulted_fields_if_unspecified():
 
     wp_config = WorkPackageInput(
         feederConfigs=FeederConfigsInput(configs=[]),
@@ -1370,12 +1248,7 @@ def test_work_package_config_to_json_omits_server_defaulted_fields_if_unspecifie
         "interventionType": "COMMUNITY_BESS",
     }
 
-def test_work_package_config_to_json_includes_server_defaulted_fields_if_specified(httpserver: HTTPServer):
-    eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
-    )
+def test_work_package_config_to_json_includes_server_defaulted_fields_if_specified():
 
     wp_config = WorkPackageInput(
         feederConfigs=FeederConfigsInput(configs=[]),
@@ -1403,13 +1276,7 @@ def test_work_package_config_to_json_includes_server_defaulted_fields_if_specifi
         "allocationLimitPerYear": 5
     }
 
-def test_work_package_config_to_json_for_tap_optimization(httpserver: HTTPServer):
-    eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
-        verify_certificate=False
-    )
-
+def test_work_package_config_to_json_for_tap_optimization():
     wp_config = WorkPackageInput(
         feederConfigs=FeederConfigsInput(configs=[]),
         intervention=InterventionConfigInput(
@@ -1459,3 +1326,23 @@ def test_work_package_config_to_json_for_tap_optimization(httpserver: HTTPServer
         "qualityAssuranceProcessing": None,
         "resultProcessorConfig": None,
     }
+
+
+def _invalid_ca(port):
+    with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
+        return EasClient(
+            LOCALHOST,
+            port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
+
+
+def _valid_ca(port, ca: trustme.CA):
+    with ca.cert_pem.tempfile() as ca_filename:
+        return EasClient(
+            LOCALHOST,
+            port,
+            verify_certificate=True,
+            ca_filename=ca_filename
+        )
