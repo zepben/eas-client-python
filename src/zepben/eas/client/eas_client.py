@@ -3,6 +3,9 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+__all__ = ["EasClient"]
+
 import ssl
 from asyncio import get_event_loop
 from datetime import datetime
@@ -11,8 +14,6 @@ from http import HTTPStatus
 import httpx
 from aiohttp import ClientSession
 
-
-__all__ = ["EasClient"]
 
 from zepben.eas.client.patched_generated_client import PatchedClient as Client
 
