@@ -3,25 +3,24 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
-from zepben.eas.client.feeder_load_analysis_input import FeederLoadAnalysisInput
-from zepben.eas.client.fla_forecast_config import FlaForecastConfig
+from zepben.eas.lib.generated_graphql_client import FeederLoadAnalysisInput, FlaForecastConfigInput
 
 
 def test_feeder_load_analysis_constructor():
     feeder_load_analysis_input = FeederLoadAnalysisInput(
+        aggregate_at_feeder_level=False,
+        end_date="2022-12-31",
         feeders=["feeder123"],
         substations=["sub1"],
         sub_geographical_regions=["sgr1"],
         geographical_regions=["gr1"],
         start_date="2022-04-01",
-        end_date="2022-12-31",
         fetch_lv_network=True,
         process_feeder_loads=True,
         process_coincident_loads=True,
-        aggregate_at_feeder_level=False,
+        produce_conductor_report=False,
         output="Test",
-        fla_forecast_config=FlaForecastConfig(
+        fla_forecast_config=FlaForecastConfigInput(
             scenario_id="1",
             year=2030,
             pv_upgrade_threshold=8000,

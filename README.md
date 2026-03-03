@@ -118,3 +118,11 @@ async def upload():
 
     await eas_client.aclose()
 ```
+
+# Development #
+
+To regenerate the graphql client you will need to install `zepben.eas` with `eas-codegen` optional dependencies, then run:
+
+```shell
+ariadne-codegen
+```
