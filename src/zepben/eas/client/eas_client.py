@@ -87,8 +87,8 @@ class EasClient:
     def close(self):
         return get_event_loop().run_until_complete(self.aclose())
 
-    async def aclose(self):  # FIXME: __axeit__ ?
-        return
+    async def aclose(self):
+        await self._gql_client.http_client.aclose()
 
     @async_func
     @catch_warnings
