@@ -8,6 +8,10 @@ __all__ = ["OpenDssModelState"]
 
 from enum import Enum
 
+__doc__ = """
+    This file should ONLY contain enums that the gql generator misses.
+    Ideally it should be non existent.
+"""
 
 class OpenDssModelState(Enum):
     COULD_NOT_START = 'COULD_NOT_START'

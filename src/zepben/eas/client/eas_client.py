@@ -12,9 +12,8 @@ from datetime import datetime
 from http import HTTPStatus
 
 import httpx
-from aiohttp import ClientSession
 
-
+from zepben.eas.client.decorators import async_func, catch_warnings
 from zepben.eas.client.patched_generated_client import PatchedClient as Client
 
 from zepben.eas.lib.generated_graphql_client import WorkPackageInput, FeederLoadAnalysisInput, StudyInput, \
@@ -40,8 +39,7 @@ class EasClient:
         access_token: str | None = None,
         verify_certificate: bool = True,
         ca_filename: str | None = None,
-        session: ClientSession = None,
-        json_serialiser=None
+        asynchronous: bool = False,
     ):
         """
         Construct a client for the Evolve App Server. If the server is HTTPS, authentication may be configured.
@@ -61,10 +59,9 @@ class EasClient:
         HTTP/HTTPS parameters:
         :param verify_certificate: Set this to "False" to disable certificate verification.
         :param ca_filename: Path to CA file to use for verification. (Optional - by default will use system certs)
-        :param session: aiohttp ClientSession to use, if not provided a new session will be created for you. You should
-                        typically only use one aiohttp session per application.
-        :param json_serialiser: JSON serialiser to use for requests e.g. ujson.dumps. (Defaults to json.dumps)
+        :param asynchronous: all functions will be returned as ``Coroutine``s if True, or ran in an existing event loop if False
         """
+        self._asynchronous = asynchronous
         self._protocol = protocol
         self._host = host
         self._port = port
@@ -93,46 +90,46 @@ class EasClient:
     async def aclose(self):  # FIXME: __axeit__ ?
         return
 
-    def get_work_package_cost_estimation(self, work_package: WorkPackageInput):
+    @async_func
+    @catch_warnings
+    async def get_work_package_cost_estimation(self, work_package: WorkPackageInput):
         """
         Send request to hosting capacity service to get an estimate cost of supplied work package
 
         :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.query(
-                Query.get_work_package_cost_estimation(work_package),
-                operation_name="getWorkPackageCostEstimation",
-            )
+        return await self._gql_client.query(
+            Query.get_work_package_cost_estimation(work_package),
+            operation_name="getWorkPackageCostEstimation",
         )
 
-    def run_hosting_capacity_work_package(self, work_package: WorkPackageInput, work_package_name: str):
+    @async_func
+    @catch_warnings
+    async def run_hosting_capacity_work_package(self, work_package: WorkPackageInput, work_package_name: str):
         """
         Send request to hosting capacity service to run work package
 
         :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.mutation(
-                Mutation.run_work_package(work_package, work_package_name=work_package_name),
-                operation_name="runWorkPackage",
-            )
+        return await self._gql_client.mutation(
+            Mutation.run_work_package(work_package, work_package_name=work_package_name),
+            operation_name="runWorkPackage",
         )
 
-    def cancel_hosting_capacity_work_package(self, work_package_id: str):
+    @async_func
+    @catch_warnings
+    async def cancel_hosting_capacity_work_package(self, work_package_id: str):
         """
         Send request to hosting capacity service to cancel a running work package
 
         :param work_package_id: The id of the running work package to cancel
         :return: The HTTP response received from the Evolve App Server after attempting to cancel work package
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.mutation(
-                Mutation.cancel_work_package(work_package_id=work_package_id),
-                operation_name="cancelWorkPackage"
-            )
+        return await self._gql_client.mutation(
+            Mutation.cancel_work_package(work_package_id=work_package_id),
+            operation_name="cancelWorkPackage"
         )
 
     def get_hosting_capacity_work_packages_progress(self):  # FIXME: why is this info not returned by get_work_package_by_id ?
@@ -149,21 +146,23 @@ class EasClient:
             )
         )
 
-    def run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
+    @async_func
+    @catch_warnings
+    async def run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
         """
         Send request to evolve app server to run a feeder load analysis study
 
         :param feeder_load_analysis_input:: An instance of the `FeederLoadAnalysisConfig` data class representing the configuration for the run
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.mutation(
-                Mutation.run_feeder_load_analysis(feeder_load_analysis_input),
-                operation_name="runFeederLoadAnalysisReport"
-            )
+        return await self._gql_client.mutation(
+            Mutation.run_feeder_load_analysis(feeder_load_analysis_input),
+            operation_name="runFeederLoadAnalysisReport"
         )
 
-    def get_feeder_load_analysis_report_status(self, report_id: str, full_spec: bool = False):
+    @async_func
+    @catch_warnings
+    async def get_feeder_load_analysis_report_status(self, report_id: str, full_spec: bool = False):
         """
         Send request to evolve app server to retrieve a feeder load analysis report status
 
@@ -171,84 +170,84 @@ class EasClient:
         :param full_spec: If true the response will include the request sent to generate the report
         :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report status
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.query(
-                Query.get_feeder_load_analysis_report_status(report_id, full_spec=full_spec).fields(
-                    FeederLoadAnalysisReportFields.id,
-                    FeederLoadAnalysisReportFields.name,
-                    FeederLoadAnalysisReportFields.created_at,
-                    FeederLoadAnalysisReportFields.created_by,
-                    FeederLoadAnalysisReportFields.completed_at,
-                    FeederLoadAnalysisReportFields.state,
-                    FeederLoadAnalysisReportFields.errors,
-                    FeederLoadAnalysisReportFields.generation_spec().fields(
-                        FeederLoadAnalysisSpecFields.feeders,
-                        FeederLoadAnalysisSpecFields.substations,
-                        FeederLoadAnalysisSpecFields.sub_geographical_regions,
-                        FeederLoadAnalysisSpecFields.geographical_regions,
-                        FeederLoadAnalysisSpecFields.start_date,
-                        FeederLoadAnalysisSpecFields.end_date,
-                        FeederLoadAnalysisSpecFields.fetch_lv_network,
-                        FeederLoadAnalysisSpecFields.process_feeder_loads,
-                        FeederLoadAnalysisSpecFields.process_coincident_loads,
-                        FeederLoadAnalysisSpecFields.produce_basic_report,
-                        FeederLoadAnalysisSpecFields.produce_conductor_report,
-                        FeederLoadAnalysisSpecFields.aggregate_at_feeder_level,
-                        FeederLoadAnalysisSpecFields.output
-                    ),
+        return await self._gql_client.query(
+            Query.get_feeder_load_analysis_report_status(report_id, full_spec=full_spec).fields(
+                FeederLoadAnalysisReportFields.id,
+                FeederLoadAnalysisReportFields.name,
+                FeederLoadAnalysisReportFields.created_at,
+                FeederLoadAnalysisReportFields.created_by,
+                FeederLoadAnalysisReportFields.completed_at,
+                FeederLoadAnalysisReportFields.state,
+                FeederLoadAnalysisReportFields.errors,
+                FeederLoadAnalysisReportFields.generation_spec().fields(
+                    FeederLoadAnalysisSpecFields.feeders,
+                    FeederLoadAnalysisSpecFields.substations,
+                    FeederLoadAnalysisSpecFields.sub_geographical_regions,
+                    FeederLoadAnalysisSpecFields.geographical_regions,
+                    FeederLoadAnalysisSpecFields.start_date,
+                    FeederLoadAnalysisSpecFields.end_date,
+                    FeederLoadAnalysisSpecFields.fetch_lv_network,
+                    FeederLoadAnalysisSpecFields.process_feeder_loads,
+                    FeederLoadAnalysisSpecFields.process_coincident_loads,
+                    FeederLoadAnalysisSpecFields.produce_basic_report,
+                    FeederLoadAnalysisSpecFields.produce_conductor_report,
+                    FeederLoadAnalysisSpecFields.aggregate_at_feeder_level,
+                    FeederLoadAnalysisSpecFields.output
                 ),
-                operation_name="getFeederLoadAnalysisReportStatus",
-            )
+            ),
+            operation_name="getFeederLoadAnalysisReportStatus",
         )
 
-    def upload_study(self, study: StudyInput | list[StudyInput]):
+    @async_func
+    @catch_warnings
+    async def upload_study(self, study: StudyInput | list[StudyInput]):
         """
         Uploads a new study to the Evolve App Server
         :param study: An instance of a data class representing a new study
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.mutation(
-                Mutation.add_studies(study if isinstance(study, list) else [study]),
-                operation_name="addStudy",
-            )
+        return await self._gql_client.mutation(
+            Mutation.add_studies(study if isinstance(study, list) else [study]),
+            operation_name="addStudy",
         )
 
-    def run_ingestor(self, run_config: list[IngestorConfigInput]):
+    @async_func
+    @catch_warnings
+    async def run_ingestor(self, run_config: list[IngestorConfigInput]):
         """
         Send request to perform an ingestor run
         :param run_config: A list of IngestorConfigInput
         :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.mutation(
-                Mutation.execute_ingestor(run_config=run_config),
-                operation_name="executeIngestor",
-            )
+        return await self._gql_client.mutation(
+            Mutation.execute_ingestor(run_config=run_config),
+            operation_name="executeIngestor",
         )
 
-    def get_ingestor_run(self, ingestor_run_id: int):
+    @async_func
+    @catch_warnings
+    async def get_ingestor_run(self, ingestor_run_id: int):
         """
         Send request to retrieve the record of a particular ingestor run.
         :param ingestor_run_id: The ID of the ingestor run to retrieve execution information about.
         :return: The HTTP response received from the Evolve App Server including the ingestor run information (if found).
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.query(
-                Query.get_ingestor_run(ingestor_run_id).fields(
-                    IngestionRunFields.id,
-                    IngestionRunFields.container_runtime_type,
-                    IngestionRunFields.payload,
-                    IngestionRunFields.token,
-                    IngestionRunFields.status,
-                    IngestionRunFields.started_at,
-                    IngestionRunFields.status_last_updated_at,
-                    IngestionRunFields.completed_at,
-                ),
-                operation_name="getIngestorRun",
-            )
+        return await self._gql_client.query(
+            Query.get_ingestor_run(ingestor_run_id).fields(
+                IngestionRunFields.id,
+                IngestionRunFields.container_runtime_type,
+                IngestionRunFields.payload,
+                IngestionRunFields.token,
+                IngestionRunFields.status,
+                IngestionRunFields.started_at,
+                IngestionRunFields.status_last_updated_at,
+                IngestionRunFields.completed_at,
+            ),
+            operation_name="getIngestorRun",
         )
 
-    def get_ingestor_run_list(
+    @async_func
+    @catch_warnings
+    async def get_ingestor_run_list(
             self,
             query_filter: IngestorRunsFilterInput | None = None,
             query_sort: IngestorRunsSortCriteriaInput | None = None
@@ -260,23 +259,23 @@ class EasClient:
         :param query_sort: An `IngestorRunsSortCriteriaInput` that can control the order of the returned record based on a number of fields. (Optional)
         :return: The HTTP response received from the Evolve App Server including all matching ingestor records found.
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.query(
-                Query.list_ingestor_runs(filter_=query_filter, sort=query_sort).fields(
-                    IngestionRunFields.id,
-                    IngestionRunFields.container_runtime_type,
-                    IngestionRunFields.payload,
-                    IngestionRunFields.token,
-                    IngestionRunFields.status,
-                    IngestionRunFields.started_at,
-                    IngestionRunFields.status_last_updated_at,
-                    IngestionRunFields.completed_at,
-                ),
-                operation_name="listIngestorRuns",
-            )
+        return await self._gql_client.query(
+            Query.list_ingestor_runs(filter_=query_filter, sort=query_sort).fields(
+                IngestionRunFields.id,
+                IngestionRunFields.container_runtime_type,
+                IngestionRunFields.payload,
+                IngestionRunFields.token,
+                IngestionRunFields.status,
+                IngestionRunFields.started_at,
+                IngestionRunFields.status_last_updated_at,
+                IngestionRunFields.completed_at,
+            ),
+            operation_name="listIngestorRuns",
         )
 
-    def run_hosting_capacity_calibration(
+    @async_func
+    @catch_warnings
+    async def run_hosting_capacity_calibration(
             self,
             calibration_name: str,
             local_calibration_time: datetime,
@@ -304,55 +303,55 @@ class EasClient:
             if generator_config.model:
                 generator_config.model.transformer_tap_settings = transformer_tap_settings
 
-        return get_event_loop().run_until_complete(
-            self._gql_client.mutation(
-                Mutation.run_calibration(
-                    calibration_name=calibration_name,
-                    calibration_time_local=local_calibration_time,
-                    feeders=feeders,
-                    generator_config=generator_config,
-                ),
-                operation_name="runCalibration",
-            )
+        return await self._gql_client.mutation(
+            Mutation.run_calibration(
+                calibration_name=calibration_name,
+                calibration_time_local=local_calibration_time,
+                feeders=feeders,
+                generator_config=generator_config,
+            ),
+            operation_name="runCalibration",
         )
 
-    def get_hosting_capacity_calibration_run(self, id: str):
+    @async_func
+    @catch_warnings
+    async def get_hosting_capacity_calibration_run(self, id: str):
         """
         Retrieve information of a hosting capacity calibration run
         :param id: The calibration run ID
         :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.query(
-                Query.get_calibration_run(id).fields(
-                    HcCalibrationFields.id,
-                    HcCalibrationFields.name,
-                    HcCalibrationFields.workflow_id,
-                    HcCalibrationFields.run_id,
-                    HcCalibrationFields.calibration_time_local,
-                    HcCalibrationFields.start_at,
-                    HcCalibrationFields.completed_at,
-                    HcCalibrationFields.status,
-                    HcCalibrationFields.feeders,
-                    HcCalibrationFields.calibration_work_package_config,
-                ),
-                operation_name="getCalibrationRun",
-            )
+        return await self._gql_client.query(
+            Query.get_calibration_run(id).fields(
+                HcCalibrationFields.id,
+                HcCalibrationFields.name,
+                HcCalibrationFields.workflow_id,
+                HcCalibrationFields.run_id,
+                HcCalibrationFields.calibration_time_local,
+                HcCalibrationFields.start_at,
+                HcCalibrationFields.completed_at,
+                HcCalibrationFields.status,
+                HcCalibrationFields.feeders,
+                HcCalibrationFields.calibration_work_package_config,
+            ),
+            operation_name="getCalibrationRun",
         )
 
-    def get_hosting_capacity_calibration_sets(self):
+    @async_func
+    @catch_warnings
+    async def get_hosting_capacity_calibration_sets(self):
         """
         Retrieve a list of all completed calibration runs initiated through Evolve App Server
         :return: The HTTP response received from the Evolve App Server after requesting completed calibration runs
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.query(
-                Query.get_calibration_sets(),
-                operation_name="getCalibrationSets",
-            )
+        return await self._gql_client.query(
+            Query.get_calibration_sets(),
+            operation_name="getCalibrationSets",
         )
 
-    def get_transformer_tap_settings(
+    @async_func
+    @catch_warnings
+    async def get_transformer_tap_settings(
             self,
             calibration_name: str,
             feeder: str | None = None,
@@ -365,39 +364,39 @@ class EasClient:
         :param transformer_mrid: An optional filter to return only the transformer tap settings for a particular transfomer mrid
         :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.query(
-                Query.get_transformer_tap_settings(
-                    calibration_name=calibration_name,
-                    feeder=feeder,
-                    transformer_mrid=transformer_mrid
-                ).fields(
-                    GqlTxTapRecordFields.id,
-                    GqlTxTapRecordFields.high_step,
-                    GqlTxTapRecordFields.low_step,
-                    GqlTxTapRecordFields.nominal_tap_num,
-                    GqlTxTapRecordFields.tap_position,
-                    GqlTxTapRecordFields.control_enabled,
-                    GqlTxTapRecordFields.step_voltage_increment,
-                ),
-                operation_name="getTransformerTapSettings",
-            )
+        return await self._gql_client.query(
+            Query.get_transformer_tap_settings(
+                calibration_name=calibration_name,
+                feeder=feeder,
+                transformer_mrid=transformer_mrid
+            ).fields(
+                GqlTxTapRecordFields.id,
+                GqlTxTapRecordFields.high_step,
+                GqlTxTapRecordFields.low_step,
+                GqlTxTapRecordFields.nominal_tap_num,
+                GqlTxTapRecordFields.tap_position,
+                GqlTxTapRecordFields.control_enabled,
+                GqlTxTapRecordFields.step_voltage_increment,
+            ),
+            operation_name="getTransformerTapSettings",
         )
 
-    def run_opendss_export(self, config: OpenDssModelInput):
+    @async_func
+    @catch_warnings
+    async def run_opendss_export(self, config: OpenDssModelInput):
         """
         Send request to run an opendss export
         :param config: The OpenDssConfig for running the export
         :return: The HTTP response received from the Evolve App Server after attempting to run the opendss export
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.mutation(
-                Mutation.create_open_dss_model(config),
-                operation_name="createOpenDssModel",
-            )
+        return await self._gql_client.mutation(
+            Mutation.create_open_dss_model(config),
+            operation_name="createOpenDssModel",
         )
 
-    def get_paged_opendss_models(
+    @async_func
+    @catch_warnings
+    async def get_paged_opendss_models(
         self,
         limit: int | None = None,
         offset: int | None = None,
@@ -411,40 +410,32 @@ class EasClient:
         :param query_sort: The sorting to apply to the query
         :return: The HTTP response received from the Evolve App Server after requesting opendss export run information
         """
-        return get_event_loop().run_until_complete(
-            self._gql_client.query(
-                Query.paged_open_dss_models(
-                    limit=limit,
-                    offset=offset,
-                    filter_=query_filter,
-                    sort=query_sort
-                ).fields(
-                    OpenDssModelPageFields.total_count,
-                    OpenDssModelPageFields.offset,
-                    OpenDssModelPageFields.models().fields(
-                        OpenDssModelFields.id,
-                        OpenDssModelFields.name,
-                        OpenDssModelFields.created_at,
-                        OpenDssModelFields.state,
-                        OpenDssModelFields.download_url,
-                        OpenDssModelFields.is_public,
-                        OpenDssModelFields.errors,
-                        OpenDssModelFields.generation_spec
-                    ),
+        return await self._gql_client.query(
+            Query.paged_open_dss_models(
+                limit=limit,
+                offset=offset,
+                filter_=query_filter,
+                sort=query_sort
+            ).fields(
+                OpenDssModelPageFields.total_count,
+                OpenDssModelPageFields.offset,
+                OpenDssModelPageFields.models().fields(
+                    OpenDssModelFields.id,
+                    OpenDssModelFields.name,
+                    OpenDssModelFields.created_at,
+                    OpenDssModelFields.state,
+                    OpenDssModelFields.download_url,
+                    OpenDssModelFields.is_public,
+                    OpenDssModelFields.errors,
+                    OpenDssModelFields.generation_spec
                 ),
-                operation_name="pagedOpenDssModels",
-            )
+            ),
+            operation_name="pagedOpenDssModels",
         )
 
-    def get_opendss_model_download_url(self, run_id: int):
-        """
-        Retrieve a download url for the specified opendss export run id
-        :param run_id: The opendss export run ID
-        :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
-        """
-        return get_event_loop().run_until_complete(self.async_get_opendss_model_download_url(run_id))
-
-    async def async_get_opendss_model_download_url(self, run_id: int):
+    @async_func
+    @catch_warnings
+    async def get_opendss_model_download_url(self, run_id: int):
         """
         Retrieve a download url for the specified opendss export run id
         :param run_id: The opendss export run ID
@@ -460,15 +451,9 @@ class EasClient:
         elif not response.ok:
             response.raise_for_status()
 
-    def get_opendss_model(self, model_id: int):
-        """
-        Retrieve information of a OpenDss model export
-        :param model_id: The OpenDss model export ID
-        :return: The HTTP response received from the Evolve App Server after requesting the openDss model info
-        """
-        return get_event_loop().run_until_complete(self.async_get_opendss_model(model_id))
-
-    async def async_get_opendss_model(self, model_id: int):
+    @async_func
+    @catch_warnings
+    async def get_opendss_model(self, model_id: int):
         """
         Retrieve information of a OpenDss model export
         :param model_id: The OpenDss model export ID
@@ -479,7 +464,7 @@ class EasClient:
         page_size = 20
 
         while True:
-            response = self.get_paged_opendss_models(page_size, offset)
+            response = await self.get_paged_opendss_models(page_size, offset)
             total_count = int(response["data"]["pagedOpenDssModels"]["totalCount"])
             page_count = len(response["data"]["pagedOpenDssModels"]["models"])
             for model in response["data"]["pagedOpenDssModels"]["models"]:
