@@ -422,10 +422,10 @@ def get_hosting_capacity_run_calibration_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == ("query getCalibrationRun($id_10: ID!) { id name workflowId runId "
-                     "calibrationTimeLocal startAt completedAt status feeders "
-                     "calibrationWorkPackageConfig getCalibrationRun(id: $id_10) }")
-    assert actual_body['variables'] == {"id_10": "calibration-id"}
+    assert query == ("query getCalibrationRun($id_0: ID!) { getCalibrationRun(id: $id_0) { id name "
+                     "workflowId runId calibrationTimeLocal startAt completedAt status feeders "
+                     "calibrationWorkPackageConfig } }")
+    assert actual_body['variables'] == {"id_0": "calibration-id"}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
@@ -992,14 +992,11 @@ def test_run_opendss_export_valid_certificate_success(httpserver: HTTPServer, ca
     assert res == {"result": "success"}
 
 
-get_paged_opendss_models_query = """
-        query pagedOpenDssModels($limit_3: Int, $offset_3: Long, $filter_3:
-         GetOpenDssModelsFilterInput, $sort_3: GetOpenDssModelsSortCriteriaInput) { 
-         totalCount offset models { id name createdAt state downloadUrl isPublic 
-         errors generationSpec } pagedOpenDssModels( limit: $limit_3 offset: 
-         $offset_3 filter: $filter_3 sort: $sort_3 )
-        }
-    """
+get_paged_opendss_models_query = ("query pagedOpenDssModels($limit_0: Int, $offset_0: Long, $filter_0: "
+                                  "GetOpenDssModelsFilterInput, $sort_0: GetOpenDssModelsSortCriteriaInput) { "
+                                  "pagedOpenDssModels( limit: $limit_0 offset: $offset_0 filter: $filter_0 "
+                                  "sort: $sort_0 ) { totalCount offset models { id name createdAt state "
+                                  "downloadUrl isPublic errors generationSpec } } }")
 
 
 def get_paged_opendss_models_request_handler(request):
@@ -1008,14 +1005,14 @@ def get_paged_opendss_models_request_handler(request):
 
     assert query == " ".join(line.strip() for line in get_paged_opendss_models_query.strip().splitlines())
     assert actual_body['variables'] == {
-        "limit_3": 5,
-        "offset_3": 0,
-        "filter_3": {
+        "limit_0": 5,
+        "offset_0": 0,
+        "filter_0": {
             "name": "TEST OPENDSS MODEL 1",
             "isPublic": True,
             "state": ["COMPLETED"],
         },
-        "sort_3": {
+        "sort_0": {
             "state": "ASC",
         }
     }
@@ -1051,8 +1048,8 @@ def get_paged_opendss_models_no_param_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == ('query pagedOpenDssModels { totalCount offset models { id name createdAt '
-                     'state downloadUrl isPublic errors generationSpec } pagedOpenDssModels }')
+    assert query == ('query pagedOpenDssModels { pagedOpenDssModels { totalCount offset models { id name createdAt '
+                     'state downloadUrl isPublic errors generationSpec } } }')
     assert actual_body['variables'] == {}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
@@ -1137,9 +1134,10 @@ def get_ingestor_run_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == ("query getIngestorRun($id_8: Int!) { id containerRuntimeType payload token "
-                     "status startedAt statusLastUpdatedAt completedAt getIngestorRun(id: $id_8) }")
-    assert actual_body['variables'] == {"id_8": 1}
+    assert query == ("query getIngestorRun($id_0: Int!) { getIngestorRun(id: $id_0) { id "
+                     "containerRuntimeType payload token status startedAt statusLastUpdatedAt "
+                     "completedAt } }")
+    assert actual_body['variables'] == {"id_0": 1}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
 
@@ -1161,8 +1159,8 @@ def get_ingestor_run_list_request_empty_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    get_ingestor_run_list_query = ("query listIngestorRuns { id containerRuntimeType payload token status "
-                                   "startedAt statusLastUpdatedAt completedAt listIngestorRuns }")
+    get_ingestor_run_list_query = ("query listIngestorRuns { listIngestorRuns { id containerRuntimeType payload "
+                                   "token status startedAt statusLastUpdatedAt completedAt } }")
     assert query == " ".join(line.strip() for line in get_ingestor_run_list_query.strip().splitlines())
     assert actual_body['variables'] == {}
 
@@ -1186,19 +1184,19 @@ def get_ingestor_run_list_request_complete_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    get_ingestor_run_list_query = ("query listIngestorRuns($filter_8: IngestorRunsFilterInput, $sort_8: "
-                                   "IngestorRunsSortCriteriaInput) { id containerRuntimeType payload token "
-                                   "status startedAt statusLastUpdatedAt completedAt listIngestorRuns(filter: "
-                                   "$filter_8, sort: $sort_8) }")
+    get_ingestor_run_list_query = ("query listIngestorRuns($filter_0: IngestorRunsFilterInput, $sort_0: "
+                                   "IngestorRunsSortCriteriaInput) { listIngestorRuns(filter: $filter_0, sort: "
+                                   "$sort_0) { id containerRuntimeType payload token status startedAt "
+                                   "statusLastUpdatedAt completedAt } }")
     assert query == " ".join(line.strip() for line in get_ingestor_run_list_query.strip().splitlines())
     assert actual_body['variables'] == {
-        "filter_8": {
+        "filter_0": {
             "id": '4',
             "status": ["SUCCESS", "STARTED", "FAILED_TO_START"],
             "completed": True,
             "containerRuntimeType": ["TEMPORAL_KUBERNETES", "AZURE_CONTAINER_APP_JOB"]
         },
-        "sort_8": {
+        "sort_0": {
             "status": "ASC",
             "startedAt": "DESC",
             "statusLastUpdatedAt": "ASC",

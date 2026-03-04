@@ -173,29 +173,30 @@ class EasClient:
         """
         return get_event_loop().run_until_complete(
             self._gql_client.query(
-                FeederLoadAnalysisReportFields.id,
-                FeederLoadAnalysisReportFields.name,
-                FeederLoadAnalysisReportFields.created_at,
-                FeederLoadAnalysisReportFields.created_by,
-                FeederLoadAnalysisReportFields.completed_at,
-                FeederLoadAnalysisReportFields.state,
-                FeederLoadAnalysisReportFields.errors,
-                FeederLoadAnalysisReportFields.generation_spec().fields(
-                    FeederLoadAnalysisSpecFields.feeders,
-                    FeederLoadAnalysisSpecFields.substations,
-                    FeederLoadAnalysisSpecFields.sub_geographical_regions,
-                    FeederLoadAnalysisSpecFields.geographical_regions,
-                    FeederLoadAnalysisSpecFields.start_date,
-                    FeederLoadAnalysisSpecFields.end_date,
-                    FeederLoadAnalysisSpecFields.fetch_lv_network,
-                    FeederLoadAnalysisSpecFields.process_feeder_loads,
-                    FeederLoadAnalysisSpecFields.process_coincident_loads,
-                    FeederLoadAnalysisSpecFields.produce_basic_report,
-                    FeederLoadAnalysisSpecFields.produce_conductor_report,
-                    FeederLoadAnalysisSpecFields.aggregate_at_feeder_level,
-                    FeederLoadAnalysisSpecFields.output
+                Query.get_feeder_load_analysis_report_status(report_id, full_spec=full_spec).fields(
+                    FeederLoadAnalysisReportFields.id,
+                    FeederLoadAnalysisReportFields.name,
+                    FeederLoadAnalysisReportFields.created_at,
+                    FeederLoadAnalysisReportFields.created_by,
+                    FeederLoadAnalysisReportFields.completed_at,
+                    FeederLoadAnalysisReportFields.state,
+                    FeederLoadAnalysisReportFields.errors,
+                    FeederLoadAnalysisReportFields.generation_spec().fields(
+                        FeederLoadAnalysisSpecFields.feeders,
+                        FeederLoadAnalysisSpecFields.substations,
+                        FeederLoadAnalysisSpecFields.sub_geographical_regions,
+                        FeederLoadAnalysisSpecFields.geographical_regions,
+                        FeederLoadAnalysisSpecFields.start_date,
+                        FeederLoadAnalysisSpecFields.end_date,
+                        FeederLoadAnalysisSpecFields.fetch_lv_network,
+                        FeederLoadAnalysisSpecFields.process_feeder_loads,
+                        FeederLoadAnalysisSpecFields.process_coincident_loads,
+                        FeederLoadAnalysisSpecFields.produce_basic_report,
+                        FeederLoadAnalysisSpecFields.produce_conductor_report,
+                        FeederLoadAnalysisSpecFields.aggregate_at_feeder_level,
+                        FeederLoadAnalysisSpecFields.output
+                    ),
                 ),
-                Query.get_feeder_load_analysis_report_status(report_id, full_spec=full_spec),
                 operation_name="getFeederLoadAnalysisReportStatus",
             )
         )
@@ -233,15 +234,16 @@ class EasClient:
         """
         return get_event_loop().run_until_complete(
             self._gql_client.query(
-                IngestionRunFields.id,
-                IngestionRunFields.container_runtime_type,
-                IngestionRunFields.payload,
-                IngestionRunFields.token,
-                IngestionRunFields.status,
-                IngestionRunFields.started_at,
-                IngestionRunFields.status_last_updated_at,
-                IngestionRunFields.completed_at,
-                Query.get_ingestor_run(ingestor_run_id),
+                Query.get_ingestor_run(ingestor_run_id).fields(
+                    IngestionRunFields.id,
+                    IngestionRunFields.container_runtime_type,
+                    IngestionRunFields.payload,
+                    IngestionRunFields.token,
+                    IngestionRunFields.status,
+                    IngestionRunFields.started_at,
+                    IngestionRunFields.status_last_updated_at,
+                    IngestionRunFields.completed_at,
+                ),
                 operation_name="getIngestorRun",
             )
         )
@@ -260,15 +262,16 @@ class EasClient:
         """
         return get_event_loop().run_until_complete(
             self._gql_client.query(
-                IngestionRunFields.id,
-                IngestionRunFields.container_runtime_type,
-                IngestionRunFields.payload,
-                IngestionRunFields.token,
-                IngestionRunFields.status,
-                IngestionRunFields.started_at,
-                IngestionRunFields.status_last_updated_at,
-                IngestionRunFields.completed_at,
-                Query.list_ingestor_runs(filter_=query_filter, sort=query_sort),
+                Query.list_ingestor_runs(filter_=query_filter, sort=query_sort).fields(
+                    IngestionRunFields.id,
+                    IngestionRunFields.container_runtime_type,
+                    IngestionRunFields.payload,
+                    IngestionRunFields.token,
+                    IngestionRunFields.status,
+                    IngestionRunFields.started_at,
+                    IngestionRunFields.status_last_updated_at,
+                    IngestionRunFields.completed_at,
+                ),
                 operation_name="listIngestorRuns",
             )
         )
@@ -321,17 +324,18 @@ class EasClient:
         """
         return get_event_loop().run_until_complete(
             self._gql_client.query(
-                HcCalibrationFields.id,
-                HcCalibrationFields.name,
-                HcCalibrationFields.workflow_id,
-                HcCalibrationFields.run_id,
-                HcCalibrationFields.calibration_time_local,
-                HcCalibrationFields.start_at,
-                HcCalibrationFields.completed_at,
-                HcCalibrationFields.status,
-                HcCalibrationFields.feeders,
-                HcCalibrationFields.calibration_work_package_config,
-                Query.get_calibration_run(id),
+                Query.get_calibration_run(id).fields(
+                    HcCalibrationFields.id,
+                    HcCalibrationFields.name,
+                    HcCalibrationFields.workflow_id,
+                    HcCalibrationFields.run_id,
+                    HcCalibrationFields.calibration_time_local,
+                    HcCalibrationFields.start_at,
+                    HcCalibrationFields.completed_at,
+                    HcCalibrationFields.status,
+                    HcCalibrationFields.feeders,
+                    HcCalibrationFields.calibration_work_package_config,
+                ),
                 operation_name="getCalibrationRun",
             )
         )
@@ -363,17 +367,18 @@ class EasClient:
         """
         return get_event_loop().run_until_complete(
             self._gql_client.query(
-                GqlTxTapRecordFields.id,
-                GqlTxTapRecordFields.high_step,
-                GqlTxTapRecordFields.low_step,
-                GqlTxTapRecordFields.nominal_tap_num,
-                GqlTxTapRecordFields.tap_position,
-                GqlTxTapRecordFields.control_enabled,
-                GqlTxTapRecordFields.step_voltage_increment,
                 Query.get_transformer_tap_settings(
                     calibration_name=calibration_name,
                     feeder=feeder,
                     transformer_mrid=transformer_mrid
+                ).fields(
+                    GqlTxTapRecordFields.id,
+                    GqlTxTapRecordFields.high_step,
+                    GqlTxTapRecordFields.low_step,
+                    GqlTxTapRecordFields.nominal_tap_num,
+                    GqlTxTapRecordFields.tap_position,
+                    GqlTxTapRecordFields.control_enabled,
+                    GqlTxTapRecordFields.step_voltage_increment,
                 ),
                 operation_name="getTransformerTapSettings",
             )
@@ -408,19 +413,25 @@ class EasClient:
         """
         return get_event_loop().run_until_complete(
             self._gql_client.query(
-                OpenDssModelPageFields.total_count,
-                OpenDssModelPageFields.offset,
-                OpenDssModelPageFields.models().fields(
-                    OpenDssModelFields.id,
-                    OpenDssModelFields.name,
-                    OpenDssModelFields.created_at,
-                    OpenDssModelFields.state,
-                    OpenDssModelFields.download_url,
-                    OpenDssModelFields.is_public,
-                    OpenDssModelFields.errors,
-                    OpenDssModelFields.generation_spec
+                Query.paged_open_dss_models(
+                    limit=limit,
+                    offset=offset,
+                    filter_=query_filter,
+                    sort=query_sort
+                ).fields(
+                    OpenDssModelPageFields.total_count,
+                    OpenDssModelPageFields.offset,
+                    OpenDssModelPageFields.models().fields(
+                        OpenDssModelFields.id,
+                        OpenDssModelFields.name,
+                        OpenDssModelFields.created_at,
+                        OpenDssModelFields.state,
+                        OpenDssModelFields.download_url,
+                        OpenDssModelFields.is_public,
+                        OpenDssModelFields.errors,
+                        OpenDssModelFields.generation_spec
+                    ),
                 ),
-                Query.paged_open_dss_models(limit=limit, offset=offset, filter_=query_filter, sort=query_sort),
                 operation_name="pagedOpenDssModels",
             )
         )
