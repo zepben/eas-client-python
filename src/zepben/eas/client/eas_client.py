@@ -33,6 +33,7 @@ class EasClient:
 
     def __init__(
         self,
+        *,
         host: str,
         port: int,
         protocol: str = "https",
