@@ -50,6 +50,15 @@ test = [
     "pytest-httpserver==1.0.8",
     "trustme==0.9.0"
 ]
+eas-codegen = [
+    "ariadne-codegen"
+]
 
 [tool.setuptools.packages.find]
 where = ["src/"]
+
+[tool.ariadne-codegen]
+remote_schema_url = "http://127.0.0.1:7654/api/graphql"
+enable_custom_operations=true
+target_package_path='src/zepben/eas/lib'
+target_package_name='generated_graphql_client'
