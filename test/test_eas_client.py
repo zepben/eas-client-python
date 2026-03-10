@@ -59,8 +59,8 @@ class MockResponse:
 
 def test_create_eas_client_success():
     eas_client = EasClient(
-        mock_host,
-        mock_port,
+        host=mock_host,
+        port=mock_port,
         protocol=mock_protocol,
         verify_certificate=mock_verify_certificate
     )
@@ -73,8 +73,8 @@ def test_create_eas_client_success():
 
 def test_get_request_headers_adds_access_token_in_auth_header():
     eas_client = EasClient(
-        mock_host,
-        mock_port,
+        host=mock_host,
+        port=mock_port,
         access_token=mock_access_token,
     )
 
@@ -106,8 +106,8 @@ def httpserver_ssl_context(localhost_cert):
 
 def test_get_work_package_cost_estimation_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -191,8 +191,8 @@ def test_get_work_package_cost_estimation_valid_certificate_success(httpserver: 
 
 def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -270,8 +270,8 @@ def test_run_hosting_capacity_work_package_valid_certificate_success(httpserver:
 
 def test_cancel_hosting_capacity_work_package_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -304,8 +304,8 @@ def test_cancel_hosting_capacity_work_package_valid_certificate_success(httpserv
 
 def test_get_hosting_capacity_work_package_progress_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -338,8 +338,8 @@ def test_get_hosting_capacity_work_package_progress_valid_certificate_success(ht
 
 def test_upload_study_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -388,8 +388,8 @@ def hosting_capacity_run_calibration_request_handler(request):
 
 def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -432,8 +432,8 @@ def get_hosting_capacity_run_calibration_request_handler(request):
 
 def test_get_hosting_capacity_calibration_run_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -483,8 +483,8 @@ def hosting_capacity_run_calibration_with_calibration_time_request_handler(reque
 
 def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -505,8 +505,8 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
         httpserver: HTTPServer
 ):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -547,8 +547,8 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
         httpserver: HTTPServer
 ):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -589,8 +589,8 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
         httpserver: HTTPServer
 ):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -608,8 +608,8 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
 
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -638,8 +638,8 @@ def get_hosting_capacity_calibration_sets_request_handler(request):
 
 def test_get_hosting_capacity_calibration_sets_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -953,8 +953,8 @@ OPENDSS_CONFIG = OpenDssModelInput(
 
 def test_run_opendss_export_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -1022,8 +1022,8 @@ def get_paged_opendss_models_request_handler(request):
 
 def test_get_paged_opendss_models_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -1067,8 +1067,8 @@ def test_get_paged_opendss_models_valid_certificate_success(httpserver: HTTPServ
 
 def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -1117,8 +1117,8 @@ def run_ingestor_request_handler(request):
 
 def test_run_ingestor_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -1144,8 +1144,8 @@ def get_ingestor_run_request_handler(request):
 
 def test_get_ingestor_run_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -1169,8 +1169,8 @@ def get_ingestor_run_list_request_empty_handler(request):
 
 def test_get_ingestor_run_list_empty_filter_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -1210,8 +1210,8 @@ def get_ingestor_run_list_request_complete_handler(request):
 
 def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
-        LOCALHOST,
-        httpserver.port,
+        host=LOCALHOST,
+        port=httpserver.port,
         verify_certificate=False
     )
 
@@ -1336,8 +1336,8 @@ def test_work_package_config_to_json_for_tap_optimization():
 def _invalid_ca(port):
     with trustme.Blob(b"invalid ca").tempfile() as ca_filename:
         return EasClient(
-            LOCALHOST,
-            port,
+            host=LOCALHOST,
+            port=port,
             verify_certificate=True,
             ca_filename=ca_filename
         )
@@ -1346,8 +1346,8 @@ def _invalid_ca(port):
 def _valid_ca(port, ca: trustme.CA):
     with ca.cert_pem.tempfile() as ca_filename:
         return EasClient(
-            LOCALHOST,
-            port,
+            host=LOCALHOST,
+            port=port,
             verify_certificate=True,
             ca_filename=ca_filename
         )
