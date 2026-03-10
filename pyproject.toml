@@ -51,14 +51,18 @@ test = [
     "trustme==0.9.0"
 ]
 eas-codegen = [
-    "ariadne-codegen"
+    "ariadne-codegen @ git+https://github.com/chestm007/ariadne-codegen"  # This could break a pypi upload. Waiting on https://github.com/mirumee/ariadne-codegen/pull/413 to be merged.
 ]
 
 [tool.setuptools.packages.find]
 where = ["src/"]
 
 [tool.ariadne-codegen]
-remote_schema_url = "http://127.0.0.1:7654/api/graphql"
+remote_schema_url = "http://127.0.0.1:7654/api/graphql"  # Set to address of Evolve App Server
 enable_custom_operations=true
 target_package_path='src/zepben/eas/lib'
 target_package_name='generated_graphql_client'
+include_comments=false
+introspection_descriptions=true
+#introspection_schema_description=true
+#introspection_directive_is_repeatable=true
