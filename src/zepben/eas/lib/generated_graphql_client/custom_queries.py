@@ -1,6 +1,5 @@
 from typing import Any, Optional
 
-from . import HostingCapacityFileType, WorkflowStatus, ContainerType, SincalFileType, VariantFileType
 from .custom_fields import (
     AppOptionsFields,
     CustomerDetailsResponseFields,
@@ -66,6 +65,7 @@ from .input_types import (
     ProcessedDiffSortCriteriaInput,
     WorkPackageInput,
 )
+from .enums import HostingCapacityFileType, WorkflowStatus, ContainerType, SincalFileType, VariantFileType
 
 
 class Query:

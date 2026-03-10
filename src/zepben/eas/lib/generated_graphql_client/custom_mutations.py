@@ -1,6 +1,5 @@
 from typing import Any, Optional
 
-from . import SincalFileType, VariantFileType
 from .custom_fields import (
     DiffResultFields,
     RemoveAppOptionResultFields,
@@ -20,6 +19,7 @@ from .input_types import (
     StudyInput,
     WorkPackageInput,
 )
+from .enums import SincalFileType, VariantFileType
 
 
 class Mutation:
