@@ -78,7 +78,7 @@ def test_get_request_headers_adds_access_token_in_auth_header():
         access_token=mock_access_token,
     )
 
-    headers = eas_client._gql_client.http_client.headers
+    headers = eas_client.http_client.headers
     assert headers["authorization"] == f"Bearer {mock_access_token}"
 
 

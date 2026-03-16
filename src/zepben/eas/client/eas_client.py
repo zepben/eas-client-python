@@ -10,8 +10,10 @@ import ssl
 from asyncio import get_event_loop
 from datetime import datetime
 from http import HTTPStatus
+from typing import Any
 
 import httpx
+from graphql import OperationType
 
 from zepben.eas.client.decorators import async_func, catch_warnings
 from zepben.eas.client.patched_generated_client import PatchedClient as Client
@@ -19,6 +21,7 @@ from zepben.eas.client.patched_generated_client import PatchedClient as Client
 from zepben.eas.lib.generated_graphql_client import WorkPackageInput, FeederLoadAnalysisInput, StudyInput, \
     IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput, HcGeneratorConfigInput, \
     HcModelConfigInput, OpenDssModelInput, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
+from zepben.eas.lib.generated_graphql_client.base_operation import GraphQLField
 from zepben.eas.lib.generated_graphql_client.custom_fields import FeederLoadAnalysisSpecFields, \
     FeederLoadAnalysisReportFields, IngestionRunFields, HcCalibrationFields, GqlTxTapRecordFields, \
     OpenDssModelPageFields, OpenDssModelFields
@@ -26,7 +29,7 @@ from zepben.eas.lib.generated_graphql_client.custom_mutations import Mutation
 from zepben.eas.lib.generated_graphql_client.custom_queries import Query
 
 
-class EasClient:
+class EasClient(Client):
     """
     A class used to represent a client to the Evolve App Server, with methods that represent requests to its API.
     """
@@ -79,7 +82,7 @@ class EasClient:
             headers=dict(authorization=f"Bearer {access_token}") if access_token else None,
             verify=verify,
         )
-        self._gql_client = Client(
+        super().__init__(
             f"{self._base_url}/api/graphql",
             http_client=http_client,
         )
@@ -89,7 +92,22 @@ class EasClient:
         return get_event_loop().run_until_complete(self.aclose())
 
     async def aclose(self):
-        await self._gql_client.http_client.aclose()
+        await self.http_client.aclose()
+
+    async def query(self, *fields: GraphQLField, operation_name: str = None) -> dict[str, Any]:
+        """Execute a query against the Evolve App Server."""
+        return await super().query(*fields, operation_name=operation_name)
+
+    async def mutation(self, *fields: GraphQLField, operation_name: str = None) -> dict[str, Any]:
+        """Execute a mutation against the Evolve App Server."""
+        return await super().mutation(*fields, operation_name=operation_name)
+
+    async def execute_custom_operation(self, *fields: GraphQLField, operation_type: OperationType, operation_name: str = None) -> dict[str, Any]:
+        return await super().execute_custom_operation(
+            *fields,
+            operation_type=operation_type,
+            operation_name=operation_name or '-'.join(f._field_name for f in fields)
+        )
 
     @async_func
     @catch_warnings
@@ -100,9 +118,8 @@ class EasClient:
         :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return await self._gql_client.query(
+        return await self.query(
             Query.get_work_package_cost_estimation(work_package),
-            operation_name="getWorkPackageCostEstimation",
         )
 
     @async_func
@@ -114,9 +131,8 @@ class EasClient:
         :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return await self._gql_client.mutation(
+        return await self.mutation(
             Mutation.run_work_package(work_package, work_package_name=work_package_name),
-            operation_name="runWorkPackage",
         )
 
     @async_func
@@ -128,9 +144,8 @@ class EasClient:
         :param work_package_id: The id of the running work package to cancel
         :return: The HTTP response received from the Evolve App Server after attempting to cancel work package
         """
-        return await self._gql_client.mutation(
+        return await self.mutation(
             Mutation.cancel_work_package(work_package_id=work_package_id),
-            operation_name="cancelWorkPackage"
         )
 
     def get_hosting_capacity_work_packages_progress(self):  # FIXME: why is this info not returned by get_work_package_by_id ?
@@ -139,11 +154,9 @@ class EasClient:
 
         :return: The HTTP response received from the Evolve App Server after requesting work packages progress info
         """
-        raise NotImplementedError()
         return get_event_loop().run_until_complete(
-            self._gql_client.query(
-                Query.get_work_packages(),
-                operation_name="getWorkPackagesProgres",
+            self.query(
+                Query.get_active_work_packages(),
             )
         )
 
@@ -156,9 +169,8 @@ class EasClient:
         :param feeder_load_analysis_input:: An instance of the `FeederLoadAnalysisConfig` data class representing the configuration for the run
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return await self._gql_client.mutation(
+        return await self.mutation(
             Mutation.run_feeder_load_analysis(feeder_load_analysis_input),
-            operation_name="runFeederLoadAnalysisReport"
         )
 
     @async_func
@@ -171,7 +183,7 @@ class EasClient:
         :param full_spec: If true the response will include the request sent to generate the report
         :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report status
         """
-        return await self._gql_client.query(
+        return await self.query(
             Query.get_feeder_load_analysis_report_status(report_id, full_spec=full_spec).fields(
                 FeederLoadAnalysisReportFields.id,
                 FeederLoadAnalysisReportFields.name,
@@ -196,7 +208,6 @@ class EasClient:
                     FeederLoadAnalysisSpecFields.output
                 ),
             ),
-            operation_name="getFeederLoadAnalysisReportStatus",
         )
 
     @async_func
@@ -206,9 +217,8 @@ class EasClient:
         Uploads a new study to the Evolve App Server
         :param study: An instance of a data class representing a new study
         """
-        return await self._gql_client.mutation(
+        return await self.mutation(
             Mutation.add_studies(study if isinstance(study, list) else [study]),
-            operation_name="addStudy",
         )
 
     @async_func
@@ -219,9 +229,8 @@ class EasClient:
         :param run_config: A list of IngestorConfigInput
         :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
         """
-        return await self._gql_client.mutation(
+        return await self.mutation(
             Mutation.execute_ingestor(run_config=run_config),
-            operation_name="executeIngestor",
         )
 
     @async_func
@@ -232,7 +241,7 @@ class EasClient:
         :param ingestor_run_id: The ID of the ingestor run to retrieve execution information about.
         :return: The HTTP response received from the Evolve App Server including the ingestor run information (if found).
         """
-        return await self._gql_client.query(
+        return await self.query(
             Query.get_ingestor_run(ingestor_run_id).fields(
                 IngestionRunFields.id,
                 IngestionRunFields.container_runtime_type,
@@ -243,7 +252,6 @@ class EasClient:
                 IngestionRunFields.status_last_updated_at,
                 IngestionRunFields.completed_at,
             ),
-            operation_name="getIngestorRun",
         )
 
     @async_func
@@ -260,7 +268,7 @@ class EasClient:
         :param query_sort: An `IngestorRunsSortCriteriaInput` that can control the order of the returned record based on a number of fields. (Optional)
         :return: The HTTP response received from the Evolve App Server including all matching ingestor records found.
         """
-        return await self._gql_client.query(
+        return await self.query(
             Query.list_ingestor_runs(filter_=query_filter, sort=query_sort).fields(
                 IngestionRunFields.id,
                 IngestionRunFields.container_runtime_type,
@@ -271,7 +279,6 @@ class EasClient:
                 IngestionRunFields.status_last_updated_at,
                 IngestionRunFields.completed_at,
             ),
-            operation_name="listIngestorRuns",
         )
 
     @async_func
@@ -304,14 +311,13 @@ class EasClient:
             if generator_config.model:
                 generator_config.model.transformer_tap_settings = transformer_tap_settings
 
-        return await self._gql_client.mutation(
+        return await self.mutation(
             Mutation.run_calibration(
                 calibration_name=calibration_name,
                 calibration_time_local=local_calibration_time,
                 feeders=feeders,
                 generator_config=generator_config,
             ),
-            operation_name="runCalibration",
         )
 
     @async_func
@@ -322,7 +328,7 @@ class EasClient:
         :param id: The calibration run ID
         :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
-        return await self._gql_client.query(
+        return await self.query(
             Query.get_calibration_run(id).fields(
                 HcCalibrationFields.id,
                 HcCalibrationFields.name,
@@ -335,7 +341,6 @@ class EasClient:
                 HcCalibrationFields.feeders,
                 HcCalibrationFields.calibration_work_package_config,
             ),
-            operation_name="getCalibrationRun",
         )
 
     @async_func
@@ -345,9 +350,8 @@ class EasClient:
         Retrieve a list of all completed calibration runs initiated through Evolve App Server
         :return: The HTTP response received from the Evolve App Server after requesting completed calibration runs
         """
-        return await self._gql_client.query(
+        return await self.query(
             Query.get_calibration_sets(),
-            operation_name="getCalibrationSets",
         )
 
     @async_func
@@ -365,7 +369,7 @@ class EasClient:
         :param transformer_mrid: An optional filter to return only the transformer tap settings for a particular transfomer mrid
         :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
         """
-        return await self._gql_client.query(
+        return await self.query(
             Query.get_transformer_tap_settings(
                 calibration_name=calibration_name,
                 feeder=feeder,
@@ -379,7 +383,6 @@ class EasClient:
                 GqlTxTapRecordFields.control_enabled,
                 GqlTxTapRecordFields.step_voltage_increment,
             ),
-            operation_name="getTransformerTapSettings",
         )
 
     @async_func
@@ -390,9 +393,8 @@ class EasClient:
         :param config: The OpenDssConfig for running the export
         :return: The HTTP response received from the Evolve App Server after attempting to run the opendss export
         """
-        return await self._gql_client.mutation(
+        return await self.mutation(
             Mutation.create_open_dss_model(config),
-            operation_name="createOpenDssModel",
         )
 
     @async_func
@@ -411,7 +413,7 @@ class EasClient:
         :param query_sort: The sorting to apply to the query
         :return: The HTTP response received from the Evolve App Server after requesting opendss export run information
         """
-        return await self._gql_client.query(
+        return await self.query(
             Query.paged_open_dss_models(
                 limit=limit,
                 offset=offset,
@@ -431,7 +433,6 @@ class EasClient:
                     OpenDssModelFields.generation_spec
                 ),
             ),
-            operation_name="pagedOpenDssModels",
         )
 
     @async_func
@@ -442,9 +443,9 @@ class EasClient:
         :param run_id: The opendss export run ID
         :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
         """
-        response = (await self._gql_client.http_client.get(
+        response = (await self.http_client.get(
             f"{self._base_url}/api/opendss-model/{run_id}",
-            headers=self._gql_client.headers,
+            headers=self.headers,
             follow_redirects=False
         ))
         if response.status_code == HTTPStatus.FOUND:

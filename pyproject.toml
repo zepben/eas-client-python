@@ -60,9 +60,8 @@ where = ["src/"]
 [tool.ariadne-codegen]
 remote_schema_url = "http://127.0.0.1:7654/api/graphql"  # Set to address of Evolve App Server
 enable_custom_operations=true
+include_comments=false
 target_package_path='src/zepben/eas/lib'
 target_package_name='generated_graphql_client'
-include_comments=false
 introspection_descriptions=true
-#introspection_schema_description=true
-#introspection_directive_is_repeatable=true
+introspection_input_value_deprecations=true
