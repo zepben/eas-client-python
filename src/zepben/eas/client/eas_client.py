@@ -1,48 +1,73 @@
-#  Copyright 2020 Zeppelin Bend Pty Ltd
+#  Copyright 2026 Zeppelin Bend Pty Ltd
 #
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-import ssl
-import warnings
-from asyncio import get_event_loop
-from dataclasses import asdict
-from datetime import datetime
-from hashlib import sha256
-from http import HTTPStatus
-from json import dumps
-from typing import Optional, List
-
-import aiohttp
-from aiohttp import ClientSession
-from urllib3.exceptions import InsecureRequestWarning
-
-from zepben.eas.client.feeder_load_analysis_input import FeederLoadAnalysisInput
-from zepben.eas.client.ingestor import IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput
-from zepben.eas.client.opendss import OpenDssConfig, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
-from zepben.eas.client.study import Study
-from zepben.eas.client.util import construct_url
-from zepben.eas.client.work_package import WorkPackageConfig, FixedTime, TimePeriod, ForecastConfig, FeederConfigs, \
-    GeneratorConfig, ModelConfig
 
 __all__ = ["EasClient"]
 
+import inspect
+import ssl
+from datetime import datetime
+from http import HTTPStatus
+from types import MethodType
+from typing import Any, Generator
 
-class EasClient:
+import httpx
+from graphql import OperationType
+from typing_extensions import deprecated
+
+from zepben.eas.client.decorators import async_func, catch_warnings, opt_in
+from zepben.eas.client.patched_generated_client import PatchedClient as Client
+
+from zepben.eas.lib.generated_graphql_client import WorkPackageInput, FeederLoadAnalysisInput, StudyInput, \
+    IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput, HcGeneratorConfigInput, \
+    HcModelConfigInput, OpenDssModelInput, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
+from zepben.eas.lib.generated_graphql_client.base_operation import GraphQLField
+from zepben.eas.lib.generated_graphql_client.custom_fields import FeederLoadAnalysisReportFields, IngestionRunFields, \
+    HcCalibrationFields, GqlTxTapRecordFields, OpenDssModelPageFields, OpenDssModelFields
+from zepben.eas.lib.generated_graphql_client.custom_mutations import Mutation
+from zepben.eas.lib.generated_graphql_client.custom_queries import Query
+
+def graph_ql_field_all_fields(cls) -> list[GraphQLField]:
+    """
+    Helper function to list all ``GraphQLField``s that a given class returns
+
+    :param cls: class to check
+    :return: list of GraphQLField's, ready to pass to ``cls().fields()``
+    """
+    def _inner() -> Generator[GraphQLField | MethodType, None, None]:
+        for k in dir(cls):
+            if k.startswith("_"):
+                continue
+            if k == "all_fields":
+                continue
+            v = getattr(cls, k)
+            if isinstance(v, GraphQLField):
+                yield v
+            elif inspect.ismethod(v):
+                yield v().fields(*v().all_fields())
+    return list(_inner())
+
+GraphQLField.all_fields = classmethod(graph_ql_field_all_fields)
+
+
+class EasClient(Client):
     """
     A class used to represent a client to the Evolve App Server, with methods that represent requests to its API.
     """
 
     def __init__(
         self,
+        *,
         host: str,
         port: int,
         protocol: str = "https",
-        access_token: Optional[str] = None,
+        access_token: str | None = None,
         verify_certificate: bool = True,
-        ca_filename: Optional[str] = None,
-        session: ClientSession = None,
-        json_serialiser=None
+        ca_filename: str | None = None,
+        asynchronous: bool = False,
+        enable_legacy_methods: bool = False,
     ):
         """
         Construct a client for the Evolve App Server. If the server is HTTPS, authentication may be configured.
@@ -62,372 +87,108 @@ class EasClient:
         HTTP/HTTPS parameters:
         :param verify_certificate: Set this to "False" to disable certificate verification.
         :param ca_filename: Path to CA file to use for verification. (Optional - by default will use system certs)
-        :param session: aiohttp ClientSession to use, if not provided a new session will be created for you. You should
-                        typically only use one aiohttp session per application.
-        :param json_serialiser: JSON serialiser to use for requests e.g. ujson.dumps. (Defaults to json.dumps)
+        :param asynchronous: all functions will be returned as ``Coroutine``s if True, or ran in an existing event loop if False
+        :param enable_legacy_methods: enable legacy methods support.
         """
+        self._opt_in_legacy = enable_legacy_methods
+        self._asynchronous = asynchronous
+
         self._protocol = protocol
         self._host = host
         self._port = port
-        self._verify_certificate = verify_certificate
-        self._ca_filename = ca_filename
-        self._access_token = access_token
+        self._base_url = f"{protocol}://{host}:{port}"
 
-        if session is None:
-            conn = aiohttp.TCPConnector(limit=200, limit_per_host=0)
-            timeout = aiohttp.ClientTimeout(total=60)
-            self.session = aiohttp.ClientSession(json_serialize=json_serialiser or dumps, connector=conn, timeout=timeout)
-        else:
-            self.session = session
+        verify = False
+        if verify_certificate:
+            try:
+                verify = ssl.create_default_context(cafile=ca_filename)
+            except ssl.SSLError:
+                verify = ssl.create_default_context(capath=ca_filename)
 
-    def close(self):
-        return get_event_loop().run_until_complete(self.aclose())
+        http_client = httpx.AsyncClient(
+            headers=dict(authorization=f"Bearer {access_token}") if access_token else None,
+            verify=verify,
+        )
+        super().__init__(
+            f"{self._base_url}/api/graphql",
+            http_client=http_client,
+        )
 
-    async def aclose(self):
-        await self.session.close()
+    @async_func
+    async def close(self):
+        await self.http_client.aclose()
 
-    def _get_request_headers(self, content_type: str = "application/json") -> dict:
-        headers = {"content-type": content_type}
-        if self._access_token:
-            headers["authorization"] = f"Bearer {self._access_token}"
-        return headers
+    @async_func
+    async def query(self, *fields: GraphQLField, operation_name: str = None) -> dict[str, Any]:
+        """Execute a query against the Evolve App Server."""
+        return await super().query(*fields, operation_name=operation_name)
 
-    def generator_config_to_json(self, generator_config: Optional[GeneratorConfig]) -> Optional[dict]:
-        return generator_config and {
-            "model": generator_config.model and {
-                "vmPu": generator_config.model.vm_pu,
-                "loadVMinPu": generator_config.model.load_vmin_pu,
-                "loadVMaxPu": generator_config.model.load_vmax_pu,
-                "genVMinPu": generator_config.model.gen_vmin_pu,
-                "genVMaxPu": generator_config.model.gen_vmax_pu,
-                "loadModel": generator_config.model.load_model,
-                "collapseSWER": generator_config.model.collapse_swer,
-                "calibration": generator_config.model.calibration,
-                "pFactorBaseExports": generator_config.model.p_factor_base_exports,
-                "pFactorForecastPv": generator_config.model.p_factor_forecast_pv,
-                "pFactorBaseImports": generator_config.model.p_factor_base_imports,
-                "fixSinglePhaseLoads": generator_config.model.fix_single_phase_loads,
-                "maxSinglePhaseLoad": generator_config.model.max_single_phase_load,
-                "fixOverloadingConsumers": generator_config.model.fix_overloading_consumers,
-                "maxLoadTxRatio": generator_config.model.max_load_tx_ratio,
-                "maxGenTxRatio": generator_config.model.max_gen_tx_ratio,
-                "fixUndersizedServiceLines": generator_config.model.fix_undersized_service_lines,
-                "maxLoadServiceLineRatio": generator_config.model.max_load_service_line_ratio,
-                "maxLoadLvLineRatio": generator_config.model.max_load_lv_line_ratio,
-                "simplifyNetwork": generator_config.model.simplify_network,
-                "collapseLvNetworks": generator_config.model.collapse_lv_networks,
-                "collapseNegligibleImpedances": generator_config.model.collapse_negligible_impedances,
-                "combineCommonImpedances": generator_config.model.combine_common_impedances,
-                "feederScenarioAllocationStrategy": generator_config.model.feeder_scenario_allocation_strategy and generator_config.model.feeder_scenario_allocation_strategy.name,
-                "closedLoopVRegEnabled": generator_config.model.closed_loop_v_reg_enabled,
-                "closedLoopVRegReplaceAll": generator_config.model.closed_loop_v_reg_replace_all,
-                "closedLoopVRegSetPoint": generator_config.model.closed_loop_v_reg_set_point,
-                "closedLoopVBand": generator_config.model.closed_loop_v_band,
-                "closedLoopTimeDelay": generator_config.model.closed_loop_time_delay,
-                "closedLoopVLimit": generator_config.model.closed_loop_v_limit,
-                "defaultTapChangerTimeDelay": generator_config.model.default_tap_changer_time_delay,
-                "defaultTapChangerSetPointPu": generator_config.model.default_tap_changer_set_point_pu,
-                "defaultTapChangerBand": generator_config.model.default_tap_changer_band,
-                "splitPhaseDefaultLoadLossPercentage": generator_config.model.split_phase_default_load_loss_percentage,
-                "splitPhaseLVKV": generator_config.model.split_phase_lv_kv,
-                "swerVoltageToLineVoltage": generator_config.model.swer_voltage_to_line_voltage,
-                "loadPlacement": generator_config.model.load_placement and generator_config.model.load_placement.name,
-                "loadIntervalLengthHours": generator_config.model.load_interval_length_hours,
-                "meterPlacementConfig": generator_config.model.meter_placement_config and {
-                    "feederHead": generator_config.model.meter_placement_config.feeder_head,
-                    "distTransformers": generator_config.model.meter_placement_config.dist_transformers,
-                    "switchMeterPlacementConfigs": generator_config.model.meter_placement_config.switch_meter_placement_configs and [
-                        {
-                            "meterSwitchClass": spc.meter_switch_class and spc.meter_switch_class.name,
-                            "namePattern": spc.name_pattern
-                        } for spc in
-                        generator_config.model.meter_placement_config.switch_meter_placement_configs
-                    ],
-                    "energyConsumerMeterGroup": generator_config.model.meter_placement_config.energy_consumer_meter_group
-                },
-                "seed": generator_config.model.seed,
-                "defaultLoadWatts": generator_config.model.default_load_watts,
-                "defaultGenWatts": generator_config.model.default_gen_watts,
-                "defaultLoadVar": generator_config.model.default_load_var,
-                "defaultGenVar": generator_config.model.default_gen_var,
-                "transformerTapSettings": generator_config.model.transformer_tap_settings,
-                "ctPrimScalingFactor": generator_config.model.ct_prim_scaling_factor,
-                "useSpanLevelThreshold": generator_config.model.use_span_level_threshold,
-                "ratingThreshold": generator_config.model.rating_threshold,
-                "simplifyPLSIThreshold": generator_config.model.simplify_plsi_threshold,
-                "emergAmpScaling": generator_config.model.emerg_amp_scaling,
-                "inverterControlConfig": generator_config.model.inverter_control_config and {
-                    "cutOffDate": generator_config.model.inverter_control_config.cut_off_date and generator_config.model.inverter_control_config.cut_off_date.isoformat(),
-                    "beforeCutOffProfile": generator_config.model.inverter_control_config.before_cut_off_profile,
-                    "afterCutOffProfile": generator_config.model.inverter_control_config.after_cut_off_profile
-                }
-            },
-            "solve": generator_config.solve and {
-                "normVMinPu": generator_config.solve.norm_vmin_pu,
-                "normVMaxPu": generator_config.solve.norm_vmax_pu,
-                "emergVMinPu": generator_config.solve.emerg_vmin_pu,
-                "emergVMaxPu": generator_config.solve.emerg_vmax_pu,
-                "baseFrequency": generator_config.solve.base_frequency,
-                "voltageBases": generator_config.solve.voltage_bases,
-                "maxIter": generator_config.solve.max_iter,
-                "maxControlIter": generator_config.solve.max_control_iter,
-                "mode": generator_config.solve.mode and generator_config.solve.mode.name,
-                "stepSizeMinutes": generator_config.solve.step_size_minutes
-            },
-            "rawResults": generator_config.raw_results and {
-                "energyMeterVoltagesRaw": generator_config.raw_results.energy_meter_voltages_raw,
-                "energyMetersRaw": generator_config.raw_results.energy_meters_raw,
-                "resultsPerMeter": generator_config.raw_results.results_per_meter,
-                "overloadsRaw": generator_config.raw_results.overloads_raw,
-                "voltageExceptionsRaw": generator_config.raw_results.voltage_exceptions_raw
-            },
-            "nodeLevelResults": generator_config.node_level_results and {
-                "collectVoltage": generator_config.node_level_results.collect_voltage,
-                "collectCurrent": generator_config.node_level_results.collect_current,
-                "collectPower": generator_config.node_level_results.collect_power,
-                "mridsToCollect": generator_config.node_level_results.mrids_to_collect,
-                "collectAllSwitches": generator_config.node_level_results.collect_all_switches,
-                "collectAllTransformers": generator_config.node_level_results.collect_all_transformers,
-                "collectAllConductors": generator_config.node_level_results.collect_all_conductors,
-                "collectAllEnergyConsumers": generator_config.node_level_results.collect_all_energy_consumers,
-            }
-        }
+    @async_func
+    async def mutation(self, *fields: GraphQLField, operation_name: str = None) -> dict[str, Any]:
+        """Execute a mutation against the Evolve App Server."""
+        return await super().mutation(*fields, operation_name=operation_name)
 
-    def work_package_config_to_json(self, work_package: WorkPackageConfig) -> dict:
-        return {
-            "feederConfigs": {
-                "configs": [
-                    {
-                        "feeder": config.feeder,
-                        "years": config.years,
-                        "scenarios": config.scenarios,
-                        "timePeriod": {
-                            "startTime": config.load_time.start_time.isoformat(),
-                            "endTime": config.load_time.end_time.isoformat(),
-                            "overrides": config.load_time.load_overrides and [
-                                {
-                                    "loadId": key,
-                                    "loadWattsOverride": value.load_watts,
-                                    "genWattsOverride": value.gen_watts,
-                                    "loadVarOverride": value.load_var,
-                                    "genVarOverride": value.gen_var,
-                                } for key, value in config.load_time.load_overrides.items()
-                            ]
-                        } if isinstance(config.load_time, TimePeriod) else None,
-                        "fixedTime": config.load_time and {
-                            "loadTime": config.load_time.load_time.isoformat(),
-                            "overrides": config.load_time.load_overrides and [
-                                {
-                                    "loadId": key,
-                                    "loadWattsOverride": value.load_watts,
-                                    "genWattsOverride": value.gen_watts,
-                                    "loadVarOverride": value.load_var,
-                                    "genVarOverride": value.gen_var,
-                                } for key, value in config.load_time.load_overrides.items()
-                            ]
-                        } if isinstance(config.load_time, FixedTime) else None,
-                    } for config in work_package.syf_config.configs
-                ]
-            } if isinstance(work_package.syf_config, FeederConfigs) else None,
-            "forecastConfig": {
-                "feeders": work_package.syf_config.feeders,
-                "years": work_package.syf_config.years,
-                "scenarios": work_package.syf_config.scenarios,
-                "timePeriod": {
-                    "startTime": work_package.syf_config.load_time.start_time.isoformat(),
-                    "endTime": work_package.syf_config.load_time.end_time.isoformat(),
-                    "overrides": work_package.syf_config.load_time.load_overrides and [
-                        {
-                            "loadId": key,
-                            "loadWattsOverride": value.load_watts,
-                            "genWattsOverride": value.gen_watts,
-                            "loadVarOverride": value.load_var,
-                            "genVarOverride": value.gen_var,
-                        } for key, value in work_package.syf_config.load_time.load_overrides.items()
-                    ]
-                } if isinstance(work_package.syf_config.load_time, TimePeriod) else None,
-                "fixedTime": work_package.syf_config.load_time and {
-                    "loadTime": work_package.syf_config.load_time.load_time.isoformat(),
-                    "overrides": work_package.syf_config.load_time.load_overrides and [
-                        {
-                            "loadId": key,
-                            "loadWattsOverride": value.load_watts,
-                            "genWattsOverride": value.gen_watts,
-                            "loadVarOverride": value.load_var,
-                            "genVarOverride": value.gen_var,
-                        } for key, value in work_package.syf_config.load_time.load_overrides.items()
-                    ]
-                } if isinstance(work_package.syf_config.load_time, FixedTime) else None
-            } if isinstance(work_package.syf_config, ForecastConfig) else None,
-            "qualityAssuranceProcessing": work_package.quality_assurance_processing,
-            "generatorConfig": self.generator_config_to_json(work_package.generator_config),
-            "executorConfig": {},
-            "resultProcessorConfig": work_package.result_processor_config and {
-                "storedResults": work_package.result_processor_config.stored_results and {
-                    "energyMeterVoltagesRaw": work_package.result_processor_config.stored_results.energy_meter_voltages_raw,
-                    "energyMetersRaw": work_package.result_processor_config.stored_results.energy_meters_raw,
-                    "overloadsRaw": work_package.result_processor_config.stored_results.overloads_raw,
-                    "voltageExceptionsRaw": work_package.result_processor_config.stored_results.voltage_exceptions_raw,
-                },
-                "metrics": work_package.result_processor_config.metrics and {
-                    "calculatePerformanceMetrics": work_package.result_processor_config.metrics.calculate_performance_metrics
-                },
-                "writerConfig": work_package.result_processor_config.writer_config and {
-                    "writerType": work_package.result_processor_config.writer_config.writer_type and work_package.result_processor_config.writer_config.writer_type.name,
-                    "outputWriterConfig": work_package.result_processor_config.writer_config.output_writer_config and {
-                        "enhancedMetricsConfig": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config and {
-                            "populateEnhancedMetrics": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_enhanced_metrics,
-                            "populateEnhancedMetricsProfile": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_enhanced_metrics_profile,
-                            "populateDurationCurves": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_duration_curves,
-                            "populateConstraints": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_constraints,
-                            "populateWeeklyReports": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.populate_weekly_reports,
-                            "calculateNormalForLoadThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_normal_for_load_thermal,
-                            "calculateEmergForLoadThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_emerg_for_load_thermal,
-                            "calculateNormalForGenThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_normal_for_gen_thermal,
-                            "calculateEmergForGenThermal": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_emerg_for_gen_thermal,
-                            "calculateCO2": work_package.result_processor_config.writer_config.output_writer_config.enhanced_metrics_config.calculate_co2
-                        }
-                    }
-                }
-            },
-            "intervention": work_package.intervention and (
-                {
-                    "baseWorkPackageId": work_package.intervention.base_work_package_id,
-                    "interventionType": work_package.intervention.intervention_type.name,
-                    "candidateGeneration": work_package.intervention.candidate_generation and {
-                        "type": work_package.intervention.candidate_generation.type.name,
-                        "interventionCriteriaName": work_package.intervention.candidate_generation.intervention_criteria_name,
-                        "averageVoltageSpreadThreshold": work_package.intervention.candidate_generation.average_voltage_spread_threshold,
-                        "voltageUnderLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_under_limit_hours_threshold,
-                        "voltageOverLimitHoursThreshold": work_package.intervention.candidate_generation.voltage_over_limit_hours_threshold,
-                        "tapWeightingFactorLowerThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_lower_threshold,
-                        "tapWeightingFactorUpperThreshold": work_package.intervention.candidate_generation.tap_weighting_factor_upper_threshold
-                    },
-                    "allocationCriteria": work_package.intervention.allocation_criteria,
-                    "specificAllocationInstance": work_package.intervention.specific_allocation_instance,
-                    "phaseRebalanceProportions": work_package.intervention.phase_rebalance_proportions and {
-                        "a": work_package.intervention.phase_rebalance_proportions.a,
-                        "b": work_package.intervention.phase_rebalance_proportions.b,
-                        "c": work_package.intervention.phase_rebalance_proportions.c
-                    },
-                    "dvms": work_package.intervention.dvms and {
-                        "lowerLimit": work_package.intervention.dvms.lower_limit,
-                        "upperLimit": work_package.intervention.dvms.upper_limit,
-                        "lowerPercentile": work_package.intervention.dvms.lower_percentile,
-                        "upperPercentile": work_package.intervention.dvms.upper_percentile,
-                        "maxIterations": work_package.intervention.dvms.max_iterations,
-                        "regulatorConfig": {
-                            "puTarget": work_package.intervention.dvms.regulator_config.pu_target,
-                            "puDeadbandPercent": work_package.intervention.dvms.regulator_config.pu_deadband_percent,
-                            "maxTapChangePerStep": work_package.intervention.dvms.regulator_config.max_tap_change_per_step,
-                            "allowPushToLimit": work_package.intervention.dvms.regulator_config.allow_push_to_limit
-                        }
-                    }
-                } |
-                (
-                    {"allocationLimitPerYear": work_package.intervention.allocation_limit_per_year}
-                    if work_package.intervention.allocation_limit_per_year is not None else {}
-                ) |
-                (
-                    {
-                        "yearRange": {
-                            "maxYear": work_package.intervention.year_range.max_year,
-                            "minYear": work_package.intervention.year_range.min_year
-                        }
-                    }
-                    if work_package.intervention.year_range is not None else {}
-                )
-            )
-        }
+    async def execute_custom_operation(self, *fields: GraphQLField, operation_type: OperationType, operation_name: str = None) -> dict[str, Any]:
+        return await super().execute_custom_operation(
+            *fields,
+            operation_type=operation_type,
+            operation_name=operation_name or '-'.join(f._field_name for f in fields)
+        )
 
-    def run_hosting_capacity_work_package(self, work_package: WorkPackageConfig):
+    @async_func
+    @catch_warnings
+    async def get_opendss_model_download_url(self, run_id: int):
         """
-        Send request to hosting capacity service to run work package
-
-        :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
-        :return: The HTTP response received from the Evolve App Server after attempting to run work package
+        Retrieve a download url for the specified opendss export run id
+        :param run_id: The opendss export run ID
+        :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
         """
-        return get_event_loop().run_until_complete(self.async_run_hosting_capacity_work_package(work_package))
+        response = (await self.http_client.get(
+            f"{self._base_url}/api/opendss-model/{run_id}",
+            headers=self.headers,
+            follow_redirects=False
+        ))
+        if response.status_code == HTTPStatus.FOUND:
+            return response.headers["Location"]
+        elif not response.ok:
+            response.raise_for_status()
 
-    def get_work_package_cost_estimation(self, work_package: WorkPackageConfig):
+    #####################################################
+    # Legacy Methods, to be removed in a future release #
+    #####################################################
+
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
+    def get_work_package_cost_estimation(self, work_package: WorkPackageInput):
         """
         Send request to hosting capacity service to get an estimate cost of supplied work package
 
         :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return get_event_loop().run_until_complete(self.async_get_work_package_cost_estimation(work_package))
+        return self.query(
+            Query.get_work_package_cost_estimation(work_package),
+        )
 
-    async def async_get_work_package_cost_estimation(self, work_package: WorkPackageConfig):
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
+    def run_hosting_capacity_work_package(self, work_package: WorkPackageInput, work_package_name: str):
         """
-        Send asynchronous request to hosting capacity service to get an estimate cost of supplied work package
+        Send request to hosting capacity service to run work package
 
         :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
+        :param work_package_name: The name of the work package to run.
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    query getWorkPackageCostEstimation($input: WorkPackageInput!) {
-                        getWorkPackageCostEstimation(input: $input)
-                    }
-                """,
-                "variables": {
-                    "workPackageName": work_package.name,
-                    "input": self.work_package_config_to_json(work_package)
-                }
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
+        return self.mutation(
+            Mutation.run_work_package(work_package, work_package_name=work_package_name),
+        )
 
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
-    async def async_run_hosting_capacity_work_package(self, work_package: WorkPackageConfig):
-        """
-        Send asynchronous request to hosting capacity service to run work package
-
-        :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
-        :return: The HTTP response received from the Evolve App Server after attempting to run work package
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    mutation runWorkPackage($input: WorkPackageInput!, $workPackageName: String!) {
-                        runWorkPackage(input: $input, workPackageName: $workPackageName)
-                    }
-                """,
-                "variables": {
-                    "workPackageName": work_package.name,
-                    "input": self.work_package_config_to_json(work_package)
-                }
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
     def cancel_hosting_capacity_work_package(self, work_package_id: str):
         """
         Send request to hosting capacity service to cancel a running work package
@@ -435,91 +196,24 @@ class EasClient:
         :param work_package_id: The id of the running work package to cancel
         :return: The HTTP response received from the Evolve App Server after attempting to cancel work package
         """
-        return get_event_loop().run_until_complete(self.async_cancel_hosting_capacity_work_package(work_package_id))
+        return self.mutation(
+            Mutation.cancel_work_package(work_package_id=work_package_id),
+        )
 
-    async def async_cancel_hosting_capacity_work_package(self, work_package_id: str):
-        """
-        Send asynchronous request to hosting capacity service to cancel a running work package
-
-        :param work_package_id: The id of the running work package to cancel
-        :return: The HTTP response received from the Evolve App Server after attempting to cancel work package
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    mutation cancelWorkPackage($workPackageId: ID!) {
-                        cancelWorkPackage(workPackageId: $workPackageId)
-                    }
-                """,
-                "variables": {"workPackageId": work_package_id}
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
-    def get_hosting_capacity_work_packages_progress(self):
+    def get_hosting_capacity_work_packages_progress(self):  # FIXME: why is this info not returned by get_work_package_by_id ?
         """
         Retrieve running work packages progress information from hosting capacity service
 
         :return: The HTTP response received from the Evolve App Server after requesting work packages progress info
         """
-        return get_event_loop().run_until_complete(self.async_get_hosting_capacity_work_packages_progress())
+        return self.query(
+                Query.get_active_work_packages(),
+            )
 
-    async def async_get_hosting_capacity_work_packages_progress(self):
-        """
-        Asynchronously retrieve running work packages progress information from hosting capacity service
 
-        :return: The HTTP response received from the Evolve App Server after requesting work packages progress info
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    query getWorkPackageProgress {
-                        getWorkPackageProgress {
-                            pending
-                            inProgress {
-                               id
-                               progressPercent
-                               pending
-                               generation
-                               execution
-                               resultProcessing
-                               failureProcessing
-                               complete
-                            }
-                        }
-                    }
-                """,
-                "variables": {}
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
     def run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
         """
         Send request to evolve app server to run a feeder load analysis study
@@ -527,64 +221,13 @@ class EasClient:
         :param feeder_load_analysis_input:: An instance of the `FeederLoadAnalysisConfig` data class representing the configuration for the run
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return get_event_loop().run_until_complete(
-            self.async_run_feeder_load_analysis_report(feeder_load_analysis_input))
+        return self.mutation(
+            Mutation.run_feeder_load_analysis(feeder_load_analysis_input),
+        )
 
-    async def async_run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
-        """
-        Asynchronously send request to evolve app server to run a feeder load analysis study
-
-        :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query":
-                    """
-                    mutation runFeederLoadAnalysis($input: FeederLoadAnalysisInput!) {
-                        runFeederLoadAnalysis(input: $input)
-                    }
-                """,
-                "variables": {
-                    "input": {
-                        "feeders": feeder_load_analysis_input.feeders,
-                        "substations": feeder_load_analysis_input.substations,
-                        "subGeographicalRegions": feeder_load_analysis_input.sub_geographical_regions,
-                        "geographicalRegions": feeder_load_analysis_input.geographical_regions,
-                        "startDate": feeder_load_analysis_input.start_date,
-                        "endDate": feeder_load_analysis_input.end_date,
-                        "fetchLvNetwork": feeder_load_analysis_input.fetch_lv_network,
-                        "processFeederLoads": feeder_load_analysis_input.process_feeder_loads,
-                        "processCoincidentLoads": feeder_load_analysis_input.process_coincident_loads,
-                        "produceConductorReport": True,  # We currently only support conductor report
-                        "aggregateAtFeederLevel": feeder_load_analysis_input.aggregate_at_feeder_level,
-                        "output": feeder_load_analysis_input.output,
-                        "flaForecastConfig":
-                            ({
-                                 "scenarioID": feeder_load_analysis_input.fla_forecast_config.scenario_id,
-                                 "year": feeder_load_analysis_input.fla_forecast_config.year,
-                                 "pvUpgradeThreshold": feeder_load_analysis_input.fla_forecast_config.pv_upgrade_threshold,
-                                 "bessUpgradeThreshold": feeder_load_analysis_input.fla_forecast_config.bess_upgrade_threshold,
-                                 "seed": feeder_load_analysis_input.fla_forecast_config.seed
-                             } if feeder_load_analysis_input.fla_forecast_config else None)
-                    }
-                }
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
     def get_feeder_load_analysis_report_status(self, report_id: str, full_spec: bool = False):
         """
         Send request to evolve app server to retrieve a feeder load analysis report status
@@ -593,306 +236,97 @@ class EasClient:
         :param full_spec: If true the response will include the request sent to generate the report
         :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report status
         """
-        return get_event_loop().run_until_complete(
-            self.async_get_feeder_load_analysis_report_status(report_id, full_spec))
+        return self.query(
+            Query.get_feeder_load_analysis_report_status(report_id, full_spec=full_spec).fields(
+                *FeederLoadAnalysisReportFields.all_fields()
+            ),
+        )
 
-    async def async_get_feeder_load_analysis_report_status(self, report_id: str, full_spec: bool = False):
-        """
-        Asynchronously send request to evolve app server to retrieve a feeder load analysis report status
-
-        :param report_id: Feeder load analysis report ID
-        :param full_spec: If true the response will include the request sent to generate the report
-        :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report status
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query":
-                    """
-                    query getFeederLoadAnalysisReportStatus($reportId: ID!, $fullSpec: Boolean!) {
-                        getFeederLoadAnalysisReportStatus(reportId: $reportId, fullSpec: $fullSpec) {
-                            id
-                            name
-                            createdAt
-                            createdBy
-                            completedAt
-                            state
-                            errors
-                            generationSpec {
-                                feeders
-                                substations
-                                subGeographicalRegions
-                                geographicalRegions
-                                startDate
-                                endDate
-                                fetchLvNetwork
-                                processFeederLoads
-                                processCoincidentLoads
-                                produceBasicReport
-                                produceConductorReport
-                                aggregateAtFeederLevel
-                                output
-                            }
-                        }
-                    }
-                """,
-                "variables": {
-                    "reportId": report_id,
-                    "fullSpec": full_spec,
-                }
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
-    def upload_study(self, study: Study):
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
+    def upload_study(self, study: StudyInput | list[StudyInput]):
         """
         Uploads a new study to the Evolve App Server
+
         :param study: An instance of a data class representing a new study
         """
-        return get_event_loop().run_until_complete(self.async_upload_study(study))
+        return self.mutation(
+            Mutation.add_studies(study if isinstance(study, list) else [study]),
+        )
 
-    async def async_upload_study(self, study: Study):
-        """
-        Uploads a new study to the Evolve App Server
-        :param study: An instance of a data class representing a new study
-        :return: The HTTP response received from the Evolve App Server after attempting to upload the study
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    mutation uploadStudy($study: StudyInput!) {
-                        addStudies(studies: [$study])
-                    }
-                """,
-                "variables": {
-                    "study": {
-                        "name": study.name,
-                        "description": study.description,
-                        "tags": study.tags,
-                        "styles": study.styles,
-                        "results": [{
-                            "name": result.name,
-                            "geoJsonOverlay": result.geo_json_overlay and {
-                                "data": result.geo_json_overlay.data,
-                                "sourceProperties": result.geo_json_overlay.source_properties,
-                                "styles": result.geo_json_overlay.styles
-                            },
-                            "stateOverlay": result.state_overlay and {
-                                "data": result.state_overlay.data,
-                                "styles": result.state_overlay.styles
-                            },
-                            "sections": [{
-                                "type": section.type,
-                                "name": section.name,
-                                "description": section.description,
-                                "columns": section.columns,
-                                "data": section.data
-                            } for section in result.sections]
-                        } for result in study.results]
-                    }
-                }
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
-    def run_ingestor(self, run_config: List[IngestorConfigInput]):
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
+    def run_ingestor(self, run_config: list[IngestorConfigInput]):
         """
         Send request to perform an ingestor run
+
         :param run_config: A list of IngestorConfigInput
         :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
         """
-        return get_event_loop().run_until_complete(
-            self.async_run_ingestor(run_config))
+        return self.mutation(
+            Mutation.execute_ingestor(run_config=run_config),
+        )
 
-    async def async_run_ingestor(self, run_config: List[IngestorConfigInput]):
-        """
-        Send asynchronous request to perform an ingestor run
-        :param run_config: A list of IngestorConfigInput
-        :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    mutation executeIngestor($runConfig: [IngestorConfigInput!]) {
-                        executeIngestor(runConfig: $runConfig)
-                    }
-                """,
-                "variables": {
-                    "runConfig": [asdict(x) for x in run_config],
-                }
-            }
-
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
     def get_ingestor_run(self, ingestor_run_id: int):
         """
         Send request to retrieve the record of a particular ingestor run.
+
         :param ingestor_run_id: The ID of the ingestor run to retrieve execution information about.
         :return: The HTTP response received from the Evolve App Server including the ingestor run information (if found).
         """
-        return get_event_loop().run_until_complete(
-            self.async_get_ingestor_run(ingestor_run_id))
+        return self.query(
+            Query.get_ingestor_run(ingestor_run_id).fields(
+                *IngestionRunFields.all_fields()
+            ),
+        )
 
-    async def async_get_ingestor_run(self, ingestor_run_id: int):
-        """
-        Send asynchronous request to retrieve the record of a particular ingestor run.
-        :param ingestor_run_id: The ID of the ingestor run to retrieve execution information about.
-        :return: The HTTP response received from the Evolve App Server including the ingestor run information (if found).
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    query getIngestorRun($id: Int!) {
-                        getIngestorRun(id: $id) {
-                        id
-                        containerRuntimeType,
-                        payload,
-                        token,
-                        status,
-                        startedAt,
-                        statusLastUpdatedAt,
-                        completedAt
-                        }
-                    }
-                """,
-                "variables": {
-                    "id": ingestor_run_id,
-                }
-            }
-
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    raise response.raise_for_status()
-
-    def get_ingestor_run_list(self, query_filter: Optional[IngestorRunsFilterInput] = None,
-                              query_sort: Optional[IngestorRunsSortCriteriaInput] = None):
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
+    def get_ingestor_run_list(
+            self,
+            query_filter: IngestorRunsFilterInput | None = None,
+            query_sort: IngestorRunsSortCriteriaInput | None = None
+    ):
         """
         Send request to retrieve a list of ingestor run records matching the provided filter parameters.
+
         :param query_filter: An `IngestorRunsFilterInput` object. Only records matching the provided values will be returned.
             If not supplied all records will be returned. (Optional)
         :param query_sort: An `IngestorRunsSortCriteriaInput` that can control the order of the returned record based on a number of fields. (Optional)
         :return: The HTTP response received from the Evolve App Server including all matching ingestor records found.
         """
-        return get_event_loop().run_until_complete(
-            self.async_get_ingestor_run_list(query_filter, query_sort))
+        return self.query(
+            Query.list_ingestor_runs(filter_=query_filter, sort=query_sort).fields(
+                IngestionRunFields.id,
+                IngestionRunFields.container_runtime_type,
+                IngestionRunFields.payload,
+                IngestionRunFields.token,
+                IngestionRunFields.status,
+                IngestionRunFields.started_at,
+                IngestionRunFields.status_last_updated_at,
+                IngestionRunFields.completed_at,
+            ),
+        )
 
-    async def async_get_ingestor_run_list(self, query_filter: Optional[IngestorRunsFilterInput] = None,
-                                          query_sort: Optional[IngestorRunsSortCriteriaInput] = None):
-        """
-        Send asynchronous request to retrieve a list of ingestor run records matching the provided filter parameters.
-        :param query_filter: An `IngestorRunsFilterInput` object. Only records matching the provided values will be returned.
-            If not supplied all records will be returned. (Optional)
-        :param query_sort: An `IngestorRunsSortCriteriaInput` that can control the order of the returned record based on a number of fields. (Optional)
-        :return: The HTTP response received from the Evolve App Server including all matching ingestor records found.
-        """
-
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    query listIngestorRuns($filter: IngestorRunsFilterInput, $sort: IngestorRunsSortCriteriaInput) {
-                        listIngestorRuns(filter: $filter, sort: $sort) {
-                        id
-                        containerRuntimeType,
-                        payload,
-                        token,
-                        status,
-                        startedAt,
-                        statusLastUpdatedAt,
-                        completedAt
-                        }
-                    }
-                """,
-                "variables": {
-                    **({"filter": {
-                        "id": query_filter.id,
-                        "status": query_filter.status and [state.name for state in query_filter.status],
-                        "completed": query_filter.completed,
-                        "containerRuntimeType": query_filter.container_runtime_type and [runtime.name for runtime in
-                                                                                         query_filter.container_runtime_type]
-                    }} if query_filter else {}),
-                    **({"sort": {
-                        "status": query_sort.status and query_sort.status.name,
-                        "startedAt": query_sort.started_at and query_sort.started_at.name,
-                        "statusLastUpdatedAt": query_sort.status_last_updated_at and query_sort.status_last_updated_at.name,
-                        "completedAt": query_sort.completed_at and query_sort.completed_at.name,
-                        "containerRuntimeType": query_sort.container_runtime_type and query_sort.container_runtime_type.name,
-                    }} if query_sort else {})
-                }
-            }
-
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    raise response.raise_for_status()
-
-    def run_hosting_capacity_calibration(self, calibration_name: str, local_calibration_time: datetime,
-                                         feeders: Optional[List[str]] = None,
-                                         transformer_tap_settings: Optional[str] = None,
-                                         generator_config: Optional[GeneratorConfig] = None):
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
+    def run_hosting_capacity_calibration(
+            self,
+            calibration_name: str,
+            local_calibration_time: datetime,
+            feeders: list[str] | None = None,
+            transformer_tap_settings: str | None = None,
+            generator_config: HcGeneratorConfigInput | None = None):
         """
         Send request to run hosting capacity calibration
+
         :param calibration_name: A string representation of the calibration name
         :param local_calibration_time: A datetime representation of the calibration time, in the timezone of your pqv data ("model time").
         :param feeders: A list of feeder ID's to run the calibration over. If not supplied then the calibration is run over all feeders in the network.
@@ -904,427 +338,155 @@ class EasClient:
 
         :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
         """
-        return get_event_loop().run_until_complete(
-            self.async_run_hosting_capacity_calibration(calibration_name, local_calibration_time, feeders,
-                                                        transformer_tap_settings,
-                                                        generator_config))
-
-    async def async_run_hosting_capacity_calibration(self, calibration_name: str,
-                                                     calibration_time_local: datetime,
-                                                     feeders: Optional[List[str]] = None,
-                                                     transformer_tap_settings: Optional[str] = None,
-                                                     generator_config: Optional[GeneratorConfig] = None):
-        """
-        Send asynchronous request to run hosting capacity calibration
-        :param calibration_name: A string representation of the calibration name
-        :param calibration_time_local: A datetime representation of the calibration time, in the timezone of your pqv data ("model time").
-        :param feeders: A list of feeder ID's to run the calibration over. If not supplied then the calibration is run over all feeders in the network.
-        :param transformer_tap_settings: A set of transformer tap settings to apply before running the calibration work package.
-                If provided, this will take precedence over any 'transformer_tap_settings' supplied in via the generator_config parameter
-        :param generator_config: A `GeneratorConfig` object that overrides the default values in the `WorkPackageConfig` used by calibration.
-                Note: The following fields cannot be overridden during calibration: generator_config.model.calibration, generator_config.model.meter_placement_config, generator_config.solve.step_size_minutes, and generator_config.raw_results.
-
-        :return: The HTTP response received from the Evolve App Server after attempting to run the calibration
-        """
-
-        # Only replace microsecond, as in database we only have down to second precision.
-        # tzinfo will be whatever the user passed through, which should be the timezone of their load data.
-        parsed_time = calibration_time_local.replace(microsecond=0, tzinfo=None)
-
         if transformer_tap_settings:
-            if generator_config:
-                if generator_config.model:
-                    generator_config.model.transformer_tap_settings = transformer_tap_settings
-                else:
-                    generator_config.model = ModelConfig(transformer_tap_settings=transformer_tap_settings)
-            else:
-                generator_config = GeneratorConfig(model=ModelConfig(transformer_tap_settings=transformer_tap_settings))
+            if generator_config is None:
+                generator_config = HcGeneratorConfigInput()
+            if generator_config.model is None:
+                generator_config.model = HcModelConfigInput()
+            if generator_config.model:
+                generator_config.model.transformer_tap_settings = transformer_tap_settings
 
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    mutation runCalibration($calibrationName: String!, $calibrationTimeLocal: LocalDateTime, $feeders: [String!], $generatorConfig: HcGeneratorConfigInput) {
-                        runCalibration(calibrationName: $calibrationName, calibrationTimeLocal: $calibrationTimeLocal, feeders: $feeders, generatorConfig: $generatorConfig)
-                    }
-                """,
-                "variables": {
-                    "calibrationName": calibration_name,
-                    "calibrationTimeLocal": parsed_time.isoformat(),
-                    "feeders": feeders,
-                    "generatorConfig": self.generator_config_to_json(generator_config)
-                }
-            }
+        return self.mutation(
+            Mutation.run_calibration(
+                calibration_name=calibration_name,
+                calibration_time_local=local_calibration_time,
+                feeders=feeders,
+                generator_config=generator_config,
+            ),
+        )
 
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    raise response.raise_for_status()
-
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
     def get_hosting_capacity_calibration_run(self, id: str):
         """
         Retrieve information of a hosting capacity calibration run
+
         :param id: The calibration run ID
         :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
-        return get_event_loop().run_until_complete(self.async_get_hosting_capacity_calibration_run(id))
+        return self.query(
+            Query.get_calibration_run(id).fields(
+                HcCalibrationFields.id,
+                HcCalibrationFields.name,
+                HcCalibrationFields.workflow_id,
+                HcCalibrationFields.run_id,
+                HcCalibrationFields.calibration_time_local,
+                HcCalibrationFields.start_at,
+                HcCalibrationFields.completed_at,
+                HcCalibrationFields.status,
+                HcCalibrationFields.feeders,
+                HcCalibrationFields.calibration_work_package_config,
+            ),
+        )
 
-    async def async_get_hosting_capacity_calibration_run(self, id: str):
-        """
-        Retrieve information of a hosting capacity calibration run
-        :param id: The calibration run ID
-        :return: The HTTP response received from the Evolve App Server after requesting calibration run info
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    query getCalibrationRun($id: ID!) {
-                        getCalibrationRun(id: $id) {
-                            id
-                            name
-                            workflowId
-                            runId
-                            calibrationTimeLocal
-                            startAt
-                            completedAt
-                            status
-                            feeders
-                            calibrationWorkPackageConfig
-                        }
-                    }
-                """,
-                "variables": {
-                    "id": id
-                }
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
     def get_hosting_capacity_calibration_sets(self):
         """
         Retrieve a list of all completed calibration runs initiated through Evolve App Server
+
         :return: The HTTP response received from the Evolve App Server after requesting completed calibration runs
         """
-        return get_event_loop().run_until_complete(self.async_get_hosting_capacity_calibration_sets())
+        return self.query(
+            Query.get_calibration_sets(),
+        )
 
-    async def async_get_hosting_capacity_calibration_sets(self):
-        """
-        Retrieve a list of all completed calibration runs initiated through Evolve App Server
-        :return: The HTTP response received from the Evolve App Server after requesting completed calibration runs
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    query { 
-                    getCalibrationSets
-                     }
-                """
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
-    def get_transformer_tap_settings(self, calibration_name: str, feeder: Optional[str] = None,
-                                     transformer_mrid: Optional[str] = None):
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
+    def get_transformer_tap_settings(
+            self,
+            calibration_name: str,
+            feeder: str | None = None,
+            transformer_mrid: str | None = None
+    ):
         """
         Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database
+
         :param calibration_name: The (user supplied)name of the calibration run to retrieve transformer tap settings from
         :param feeder: An optional filter to apply to the returned list of transformer tap settings
         :param transformer_mrid: An optional filter to return only the transformer tap settings for a particular transfomer mrid
         :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
         """
-        return get_event_loop().run_until_complete(
-            self.async_get_transformer_tap_settings(calibration_name, feeder, transformer_mrid))
+        return self.query(
+            Query.get_transformer_tap_settings(
+                calibration_name=calibration_name,
+                feeder=feeder,
+                transformer_mrid=transformer_mrid
+            ).fields(
+                GqlTxTapRecordFields.id,
+                GqlTxTapRecordFields.high_step,
+                GqlTxTapRecordFields.low_step,
+                GqlTxTapRecordFields.nominal_tap_num,
+                GqlTxTapRecordFields.tap_position,
+                GqlTxTapRecordFields.control_enabled,
+                GqlTxTapRecordFields.step_voltage_increment,
+            ),
+        )
 
-    async def async_get_transformer_tap_settings(self, calibration_name: str, feeder: Optional[str] = None,
-                                                 transformer_mrid: Optional[str] = None):
-        """
-        Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database
-        :param calibration_name: The (user supplied)name of the calibration run to retrieve transformer tap settings from
-        :param feeder: An optional filter to apply to the returned list of transformer tap settings
-        :param transformer_mrid: An optional filter to return only the transformer tap settings for a particular transfomer mrid
-        :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    query getTransformerTapSettings($calibrationName: String!, $feeder: String, $transformerMrid: String) {
-                        getTransformerTapSettings(calibrationName: $calibrationName, feeder: $feeder, transformerMrid: $transformerMrid) {
-                            id
-                            highStep
-                            lowStep
-                            nominalTapNum
-                            tapPosition
-                            controlEnabled
-                            stepVoltageIncrement
-                        }
-                     }
-                """,
-                "variables": {
-                    "calibrationName": calibration_name,
-                    "feeder": feeder,
-                    "transformerMrid": transformer_mrid
-                }
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
-    def run_opendss_export(self, config: OpenDssConfig):
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
+    def run_opendss_export(self, config: OpenDssModelInput):
         """
         Send request to run an opendss export
+
         :param config: The OpenDssConfig for running the export
         :return: The HTTP response received from the Evolve App Server after attempting to run the opendss export
         """
-        return get_event_loop().run_until_complete(self.async_run_opendss_export(config))
+        return self.mutation(
+            Mutation.create_open_dss_model(config),
+        )
 
-    async def async_run_opendss_export(self, config: OpenDssConfig):
-        """
-        Send asynchronous request to run an opendss export
-        :param config: The OpenDssConfig for running the export
-        :return: The HTTP response received from the Evolve App Server after attempting to run the opendss export
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    mutation createOpenDssModel($input: OpenDssModelInput!) {
-                        createOpenDssModel(input: $input)
-                    }
-                """,
-                "variables": {
-                    "input": {
-                        "modelName": config.model_name,
-                        "isPublic": config.is_public,
-                        "generationSpec": {
-                            "modelOptions": {
-                                "feeder": config.feeder,
-                                "scenario": config.scenario,
-                                "year": config.year
-                            },
-                            "modulesConfiguration": {
-                                "common": {
-                                    **({"fixedTime": {"loadTime": config.load_time.load_time.isoformat(),
-                                                      "overrides": config.load_time.load_overrides and [
-                                                          {
-                                                              "loadId": key,
-                                                              "loadWattsOverride": value.load_watts,
-                                                              "genWattsOverride": value.gen_watts,
-                                                              "loadVarOverride": value.load_var,
-                                                              "genVarOverride": value.gen_var,
-                                                          } for key, value in config.load_time.load_overrides.items()
-                                                      ]
-                                                      }} if isinstance(config.load_time, FixedTime) else {}),
-                                    **({"timePeriod": {
-                                        "startTime": config.load_time.start_time.isoformat(),
-                                        "endTime": config.load_time.end_time.isoformat(),
-                                        "overrides": config.load_time.load_overrides and [
-                                            {
-                                                "loadId": key,
-                                                "loadWattsOverride": value.load_watts,
-                                                "genWattsOverride": value.gen_watts,
-                                                "loadVarOverride": value.load_var,
-                                                "genVarOverride": value.gen_var,
-                                            } for key, value in config.load_time.load_overrides.items()
-                                        ]
-                                    }} if isinstance(config.load_time, TimePeriod) else {})
-                                },
-                                "generator": self.generator_config_to_json(config.generator_config),
-                            }
-                        }
-                    }
-                }
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
     def get_paged_opendss_models(
         self,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        query_filter: Optional[GetOpenDssModelsFilterInput] = None,
-        query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
+        limit: int | None = None,
+        offset: int | None = None,
+        query_filter: GetOpenDssModelsFilterInput | None = None,
+        query_sort: GetOpenDssModelsSortCriteriaInput | None = None):
         """
         Retrieve a paginated opendss export run information
+
         :param limit: The number of opendss export runs to retrieve
         :param offset: The number of opendss export runs to skip
         :param query_filter: The filter to apply to the query
         :param query_sort: The sorting to apply to the query
         :return: The HTTP response received from the Evolve App Server after requesting opendss export run information
         """
-        return get_event_loop().run_until_complete(
-            self.async_get_paged_opendss_models(limit, offset, query_filter, query_sort))
+        return self.query(
+            Query.paged_open_dss_models(
+                limit=limit,
+                offset=offset,
+                filter_=query_filter,
+                sort=query_sort
+            ).fields(
+                OpenDssModelPageFields.total_count,
+                OpenDssModelPageFields.offset,
+                OpenDssModelPageFields.models().fields(
+                    OpenDssModelFields.id,
+                    OpenDssModelFields.name,
+                    OpenDssModelFields.created_at,
+                    OpenDssModelFields.state,
+                    OpenDssModelFields.download_url,
+                    OpenDssModelFields.is_public,
+                    OpenDssModelFields.errors,
+                    OpenDssModelFields.generation_spec
+                ),
+            ),
+        )
 
-    async def async_get_paged_opendss_models(
-        self,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        query_filter: Optional[GetOpenDssModelsFilterInput] = None,
-        query_sort: Optional[GetOpenDssModelsSortCriteriaInput] = None):
-        """
-        Retrieve a paginated opendss export run information
-        :param limit: The number of opendss export runs to retrieve
-        :param offset: The number of opendss export runs to skip
-        :param query_filter: The filter to apply to the query
-        :param query_sort: The sorting to apply to the query
-        :return: The HTTP response received from the Evolve App Server after requesting opendss export run information
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-            json = {
-                "query": """
-                    query pagedOpenDssModels($limit: Int, $offset: Long, $filter: GetOpenDssModelsFilterInput, $sort: GetOpenDssModelsSortCriteriaInput) {
-                    pagedOpenDssModels(limit: $limit, offset: $offset, filter: $filter,sort: $sort) {
-                        totalCount
-                        offset,
-                        models {
-                            id
-                            name
-                            createdAt
-                            createdBy
-                            state
-                            downloadUrl
-                            isPublic
-                            errors
-                            generationSpec
-                        }
-                    }
-                }
-                """,
-                "variables": {
-                    **({"limit": limit} if limit is not None else {}),
-                    **({"offset": offset} if offset is not None else {}),
-                    **({"filter": {
-                        "name": query_filter.name,
-                        "isPublic": query_filter.is_public,
-                        "state": query_filter.state and [state.name for state in query_filter.state]
-                    }} if query_filter else {}),
-                    **({"sort": {
-                        "name": query_sort.name and query_sort.name.name,
-                        "createdAt": query_sort.created_at and query_sort.created_at.name,
-                        "state": query_sort.state and query_sort.state.name,
-                        "isPublic": query_sort.is_public and query_sort.is_public.name
-                    }} if query_sort else {})
-                }
-            }
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.post(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port, path="/api/graphql"),
-                headers=self._get_request_headers(),
-                json=json,
-                ssl=sslcontext if self._verify_certificate else False
-            ) as response:
-                if response.ok:
-                    return await response.json()
-                else:
-                    response.raise_for_status()
-
-    def get_opendss_model_download_url(self, run_id: int):
-        """
-        Retrieve a download url for the specified opendss export run id
-        :param run_id: The opendss export run ID
-        :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
-        """
-        return get_event_loop().run_until_complete(self.async_get_opendss_model_download_url(run_id))
-
-    async def async_get_opendss_model_download_url(self, run_id: int):
-        """
-        Retrieve a download url for the specified opendss export run id
-        :param run_id: The opendss export run ID
-        :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
-        """
-        with warnings.catch_warnings():
-            if not self._verify_certificate:
-                warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-
-            if self._verify_certificate:
-                sslcontext = ssl.create_default_context(cafile=self._ca_filename)
-
-            async with self.session.get(
-                construct_url(protocol=self._protocol, host=self._host, port=self._port,
-                              path=f"/api/opendss-model/{run_id}"),
-                headers=self._get_request_headers(),
-                ssl=sslcontext if self._verify_certificate else False,
-                allow_redirects=False
-            ) as response:
-                if response.status == HTTPStatus.FOUND:
-                    return response.headers["Location"]
-                elif not response.ok:
-                    response.raise_for_status()
-
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
     def get_opendss_model(self, model_id: int):
         """
         Retrieve information of a OpenDss model export
-        :param model_id: The OpenDss model export ID
-        :return: The HTTP response received from the Evolve App Server after requesting the openDss model info
-        """
-        return get_event_loop().run_until_complete(self.async_get_opendss_model(model_id))
 
-    async def async_get_opendss_model(self, model_id: int):
-        """
-        Retrieve information of a OpenDss model export
         :param model_id: The OpenDss model export ID
         :return: The HTTP response received from the Evolve App Server after requesting the openDss model info
         """
@@ -1333,7 +495,7 @@ class EasClient:
         page_size = 20
 
         while True:
-            response = await self.async_get_paged_opendss_models(page_size, offset)
+            response = self.get_paged_opendss_models(page_size, offset)
             total_count = int(response["data"]["pagedOpenDssModels"]["totalCount"])
             page_count = len(response["data"]["pagedOpenDssModels"]["models"])
             for model in response["data"]["pagedOpenDssModels"]["models"]:

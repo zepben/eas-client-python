@@ -1,0 +1,222 @@
+from enum import Enum
+
+
+class CandidateGenerationType(str, Enum):
+    CRITERIA = "CRITERIA"
+    TAP_OPTIMIZATION = "TAP_OPTIMIZATION"
+
+
+class ColumnGroup(str, Enum):
+    PII = "PII"
+    NON_PII = "NON_PII"
+
+
+class ColumnName(str, Enum):
+    ZONE_SUBSTATION = "ZONE_SUBSTATION"
+    FEEDER = "FEEDER"
+    TRANSFORMER_ID = "TRANSFORMER_ID"
+    TRANSFORMER_DESCRIPTION = "TRANSFORMER_DESCRIPTION"
+    METER_NUMBER = "METER_NUMBER"
+    SERVICE_ADDRESS = "SERVICE_ADDRESS"
+    SUPPLY_POINT_ID = "SUPPLY_POINT_ID"
+    NMI = "NMI"
+    LV_FEEDER = "LV_FEEDER"
+    MOBILE_NUMBER = "MOBILE_NUMBER"
+    PHONE_NUMBER = "PHONE_NUMBER"
+    POSTAL_ADDRESS = "POSTAL_ADDRESS"
+    TNI = "TNI"
+    DLF = "DLF"
+    FIRST_NAME = "FIRST_NAME"
+    LAST_NAME = "LAST_NAME"
+    CUSTOMER_TYPE = "CUSTOMER_TYPE"
+    IS_ENERGY_FEEDBACK = "IS_ENERGY_FEEDBACK"
+    IS_EMBEDDED_NETWORK = "IS_EMBEDDED_NETWORK"
+    DISTRIBUTOR = "DISTRIBUTOR"
+    SENSITIVITY_CATEGORY = "SENSITIVITY_CATEGORY"
+    MOVE_IN_DATE = "MOVE_IN_DATE"
+    NMI_CLASS = "NMI_CLASS"
+    SERVICE_PROVISION_STATUS = "SERVICE_PROVISION_STATUS"
+    TARIFF = "TARIFF"
+
+
+class ContainerType(str, Enum):
+    TOTAL = "TOTAL"
+    GeographicalRegion = "GeographicalRegion"
+    SubGeographicalRegion = "SubGeographicalRegion"
+    SubstationTotal = "SubstationTotal"
+    Substation = "Substation"
+    FeederTotal = "FeederTotal"
+    Feeder = "Feeder"
+    LvFeeder = "LvFeeder"
+
+
+class DaysRequired(str, Enum):
+    WEEKDAYS = "WEEKDAYS"
+    WEEKENDS = "WEEKENDS"
+    ANYDAYS = "ANYDAYS"
+    WEEKDAYSEXHOLIDAYS = "WEEKDAYSEXHOLIDAYS"
+
+
+class DiffType(str, Enum):
+    NETWORK_PERFORMANCE_METRICS = "NETWORK_PERFORMANCE_METRICS"
+    NETWORK_PERFORMANCE_METRICS_ENHANCED = "NETWORK_PERFORMANCE_METRICS_ENHANCED"
+
+
+class HcFeederScenarioAllocationStrategy(str, Enum):
+    RANDOM = "RANDOM"
+    ADDITIVE = "ADDITIVE"
+
+
+class HcLoadPlacement(str, Enum):
+    PER_ENERGY_CONSUMER = "PER_ENERGY_CONSUMER"
+    PER_USAGE_POINT = "PER_USAGE_POINT"
+
+
+class HcSolveMode(str, Enum):
+    YEARLY = "YEARLY"
+    DAILY = "DAILY"
+
+
+class HcSwitchClass(str, Enum):
+    BREAKER = "BREAKER"
+    DISCONNECTOR = "DISCONNECTOR"
+    FUSE = "FUSE"
+    JUMPER = "JUMPER"
+    LOAD_BREAK_SWITCH = "LOAD_BREAK_SWITCH"
+    RECLOSER = "RECLOSER"
+
+
+class HcWriterType(str, Enum):
+    POSTGRES = "POSTGRES"
+    PARQUET = "PARQUET"
+
+
+class HostingCapacityFileType(str, Enum):
+    INPUT_DATABASE = "INPUT_DATABASE"
+
+
+class IngestorRunState(str, Enum):
+    INITIALIZED = "INITIALIZED"
+    QUEUED = "QUEUED"
+    STARTED = "STARTED"
+    RUNNING = "RUNNING"
+    SUCCESS = "SUCCESS"
+    FAILURE = "FAILURE"
+    FAILED_TO_START = "FAILED_TO_START"
+
+
+class IngestorRuntimeKind(str, Enum):
+    AZURE_CONTAINER_APP_JOB = "AZURE_CONTAINER_APP_JOB"
+    DOCKER = "DOCKER"
+    ECS = "ECS"
+    KUBERNETES = "KUBERNETES"
+    TEMPORAL_KUBERNETES = "TEMPORAL_KUBERNETES"
+
+
+class InterventionClass(str, Enum):
+    TARIFF_REFORM = "TARIFF_REFORM"
+    CONTROLLED_LOAD_HOT_WATER = "CONTROLLED_LOAD_HOT_WATER"
+    COMMUNITY_BESS = "COMMUNITY_BESS"
+    DISTRIBUTION_TX_OLTC = "DISTRIBUTION_TX_OLTC"
+    LV_STATCOMS = "LV_STATCOMS"
+    DVMS = "DVMS"
+    PHASE_REBALANCING = "PHASE_REBALANCING"
+    DISTRIBUTION_TAP_OPTIMIZATION = "DISTRIBUTION_TAP_OPTIMIZATION"
+    UNKNOWN = "UNKNOWN"
+
+
+class MeasurementZoneType(str, Enum):
+    UNKNOWN = "UNKNOWN"
+    TRANSFORMER = "TRANSFORMER"
+    BREAKER = "BREAKER"
+    DISCONNECTOR = "DISCONNECTOR"
+    FUSE = "FUSE"
+    JUMPER = "JUMPER"
+    LOAD_BREAK_SWITCH = "LOAD_BREAK_SWITCH"
+    RECLOSER = "RECLOSER"
+    ENERGY_CONSUMER = "ENERGY_CONSUMER"
+    FEEDER_HEAD = "FEEDER_HEAD"
+    CALIBRATION = "CALIBRATION"
+
+
+class OpportunitiesNeed(str, Enum):
+    EXPORTDECREASE = "EXPORTDECREASE"
+    EXPORTINCREASE = "EXPORTINCREASE"
+    CONSUMPTIONDECREASE = "CONSUMPTIONDECREASE"
+    CONSUMPTIONINCREASE = "CONSUMPTIONINCREASE"
+
+
+class OpportunitiesType(str, Enum):
+    CAPACITY = "CAPACITY"
+    VOLTAGESUPPORT = "VOLTAGESUPPORT"
+
+
+class SectionType(str, Enum):
+    TABLE = "TABLE"
+
+
+class SerializationType(str, Enum):
+    TABLE_JSON = "TABLE_JSON"
+    TABLE_CSV = "TABLE_CSV"
+    COMPRESSED_BYTES = "COMPRESSED_BYTES"
+
+
+class SincalFileType(str, Enum):
+    TEMPLATE = "TEMPLATE"
+    IN_FEEDER_MAPPING_DATABASE = "IN_FEEDER_MAPPING_DATABASE"
+    LOCAL_STANDARD_DATABASE = "LOCAL_STANDARD_DATABASE"
+    PROTECTION_STANDARD_DATABASE = "PROTECTION_STANDARD_DATABASE"
+    FRONTEND_CONFIG = "FRONTEND_CONFIG"
+    BACKEND_CONFIG = "BACKEND_CONFIG"
+
+
+class SortOrder(str, Enum):
+    ASC = "ASC"
+    DESC = "DESC"
+    ASC_NULLS_FIRST = "ASC_NULLS_FIRST"
+    DESC_NULLS_FIRST = "DESC_NULLS_FIRST"
+    ASC_NULLS_LAST = "ASC_NULLS_LAST"
+    DESC_NULLS_LAST = "DESC_NULLS_LAST"
+
+
+class VariantFileType(str, Enum):
+    POWER_FACTORY_DGS = "POWER_FACTORY_DGS"
+
+
+class VariantStatus(str, Enum):
+    Pending = "Pending"
+    Converting = "Converting"
+    AwaitingConflictDetection = "AwaitingConflictDetection"
+    ConflictDetection = "ConflictDetection"
+    ReadyForSubmission = "ReadyForSubmission"
+    Done = "Done"
+    Deleted = "Deleted"
+    Errored = "Errored"
+
+
+class VariantWorkflowStatus(str, Enum):
+    Scheduled = "Scheduled"
+    Extracting = "Extracting"
+    Converting = "Converting"
+    ConflictDetection = "ConflictDetection"
+    WaitingForSubmission = "WaitingForSubmission"
+    Submitting = "Submitting"
+    Done = "Done"
+    Errored = "Errored"
+
+
+class WorkPackageState(str, Enum):
+    SETUP = "SETUP"
+    PRRP = "PRRP"
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+    TIMEDOUT = "TIMEDOUT"
+
+
+class WorkflowStatus(str, Enum):
+    STARTED = "STARTED"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"

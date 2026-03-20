@@ -1,56 +1,59 @@
 # Evolve App Server Python Client #
 
-This library provides a wrapper to the Evolve App Server's API, allowing users of the evolve SDK to authenticate with
+This library provides a wrapper to the Evolve App Server's API, allowing users of the Evolve SDK to authenticate with
 the Evolve App Server and upload studies.
 
 # Usage #
 
 ```python
 from geojson import FeatureCollection
-from zepben.eas import EasClient, Study, Result, Section, GeoJsonOverlay
+from zepben.eas import EasClient, StudyInput, StudyResultInput, GeoJsonOverlayInput, ResultSectionInput, SectionType, Mutation
 
 eas_client = EasClient(
     host="<host>",
     port=1234,
     access_token="<access_token>",
-    client_id="<client_id>",
-    username="<username>",
-    password="<password>",
-    client_secret="<client_secret>"
+    asynchronous=False,
 )
 
-eas_client.upload_study(
-    Study(
-        name="<study name>",
-        description="<study description>",
-        tags=["<tag>", "<tag2>"],
-        results=[
-            Result(
-                name="<result_name>",
-                geo_json_overlay=GeoJsonOverlay(
-                    data=FeatureCollection( ... ),
-                    styles=["style1"]
-                ),
-                sections=Section(
-                    type="TABLE",
-                    name="<table name>",
-                    description = "<table description>",
-                    columns=[
-                        { "key": "<column 1 key>", "name": "<column 1 name>" },
-                        { "key": "<column 2 key>", "name": "<column 2 name>" },
-                    ],
-                    data=[
-                        { "<column 1 key>": "<column 1 row 1 value>", "<column 2 key>": "<column 2 row 1 value>" },
-                        { "<column 1 key>": "<column 1 row 2 value>", "<column 2 key>": "<column 2 row 2 value>" }
-                    ]
-                )
+eas_client.mutation(
+    Mutation.add_studies(
+        [
+            StudyInput(
+                name="<study name>",
+                description="<study description>",
+                tags=["<tag>", "<tag2>"],
+                results=[
+                    StudyResultInput(
+                        name="<result_name>",
+                        geoJsonOverlay=GeoJsonOverlayInput(
+                            data=FeatureCollection(...),
+                            styles=["style1"]
+                        ),
+                        sections=[
+                            ResultSectionInput(
+                                type=SectionType.TABLE,
+                                name="<table name>",
+                                description="<table description>",
+                                columns=[
+                                    {"key": "<column 1 key>", "name": "<column 1 name>"},
+                                    {"key": "<column 2 key>", "name": "<column 2 name>"},
+                                ],
+                                data=[
+                                    {"<column 1 key>": "<column 1 row 1 value>", "<column 2 key>": "<column 2 row 1 value>"},
+                                    {"<column 1 key>": "<column 1 row 2 value>", "<column 2 key>": "<column 2 row 2 value>"}
+                                ]
+                            )
+                        ]
+                    )
+                ],
+                styles=[
+                    {
+                        "id": "style1",
+                        # other Mapbox GL JS style properties
+                    }
+                ]
             )
-        ],
-        styles=[
-            {
-                "id": "style1",
-                # other Mapbox GL JS style properties
-            }
         ]
     )
 )
@@ -59,62 +62,71 @@ eas_client.close()
 ```
 
 ## AsyncIO ##
-Asyncio is also supported using aiohttp. A session will be created for you when you create an EasClient if not provided via the `session` parameter to EasClient.
-
-To use the asyncio API use `async_upload_study` like so:
+The EasClient can operate in async mode if specified, like so:
 
 ```python
 from aiohttp import ClientSession
 from geojson import FeatureCollection
-from zepben.eas import EasClient, Study, Result, Section, GeoJsonOverlay
+from zepben.eas import EasClient, StudyInput, StudyResultInput, GeoJsonOverlayInput, ResultSectionInput, SectionType, Mutation
+
 
 async def upload():
     eas_client = EasClient(
         host="<host>",
         port=1234,
         access_token="<access_token>",
-        client_id="<client_id>",
-        username="<username>",
-        password="<password>",
-        client_secret="<client_secret>",
-        session=ClientSession(...)
+        asynchronous=True,  # returns all methods as plain async methods
     )
 
-    await eas_client.async_upload_study(
-        Study(
-            name="<study name>",
-            description="<study description>",
-            tags=["<tag>", "<tag2>"],
-            results=[
-                Result(
-                    name="<result_name>",
-                    geo_json_overlay=GeoJsonOverlay(
-                        data=FeatureCollection( ... ),
-                        styles=["style1"]
-                    ),
-                    sections=Section(
-                        type="TABLE",
-                        name="<table name>",
-                        description = "<table description>",
-                        columns=[
-                            { "key": "<column 1 key>", "name": "<column 1 name>" },
-                            { "key": "<column 2 key>", "name": "<column 2 name>" },
-                        ],
-                        data=[
-                            { "<column 1 key>": "<column 1 row 1 value>", "<column 2 key>": "<column 2 row 1 value>" },
-                            { "<column 1 key>": "<column 1 row 2 value>", "<column 2 key>": "<column 2 row 2 value>" }
-                        ]
-                    )
+    await eas_client.mutation(
+        Mutation.add_studies(
+            [
+                StudyInput(
+                    name="<study name>",
+                    description="<study description>",
+                    tags=["<tag>", "<tag2>"],
+                    results=[
+                        StudyResultInput(
+                            name="<result_name>",
+                            geoJsonOverlay=GeoJsonOverlayInput(
+                                data=FeatureCollection(...),
+                                styles=["style1"]
+                            ),
+                            sections=[
+                                ResultSectionInput(
+                                    type=SectionType.TABLE,
+                                    name="<table name>",
+                                    description="<table description>",
+                                    columns=[
+                                        {"key": "<column 1 key>", "name": "<column 1 name>"},
+                                        {"key": "<column 2 key>", "name": "<column 2 name>"},
+                                    ],
+                                    data=[
+                                        {"<column 1 key>": "<column 1 row 1 value>", "<column 2 key>": "<column 2 row 1 value>"},
+                                        {"<column 1 key>": "<column 1 row 2 value>", "<column 2 key>": "<column 2 row 2 value>"}
+                                    ]
+                                )
+                            ]
+                        )
+                    ],
+                    styles=[
+                        {
+                            "id": "style1",
+                            # other Mapbox GL JS style properties
+                        }
+                    ]
                 )
-            ],
-            styles=[
-                {
-                    "id": "style1",
-                    # other Mapbox GL JS style properties
-                }
             ]
         )
     )
 
-    await eas_client.aclose()
+    await eas_client.close()
+```
+
+# Development #
+
+To regenerate the graphql client you will need to install `zepben.eas` with `eas-codegen` optional dependencies, then run:
+
+```shell
+ariadne-codegen
 ```
