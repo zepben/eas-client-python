@@ -108,7 +108,8 @@ def test_get_work_package_cost_estimation_no_verify_success(httpserver: HTTPServ
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
@@ -193,7 +194,8 @@ def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPSer
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runWorkPackage": "workPackageId"}})
@@ -272,7 +274,8 @@ def test_cancel_hosting_capacity_work_package_no_verify_success(httpserver: HTTP
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
@@ -306,7 +309,8 @@ def test_get_hosting_capacity_work_package_progress_no_verify_success(httpserver
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
@@ -340,7 +344,8 @@ def test_upload_study_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
@@ -390,7 +395,8 @@ def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServ
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -434,7 +440,8 @@ def test_get_hosting_capacity_calibration_run_no_verify_success(httpserver: HTTP
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -485,7 +492,8 @@ def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_succes
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -507,7 +515,8 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -549,7 +558,8 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -591,7 +601,8 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -610,7 +621,8 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -640,7 +652,8 @@ def test_get_hosting_capacity_calibration_sets_no_verify_success(httpserver: HTT
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -955,7 +968,8 @@ def test_run_opendss_export_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(run_opendss_export_request_handler)
@@ -1024,7 +1038,8 @@ def test_get_paged_opendss_models_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -1069,7 +1084,8 @@ def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
@@ -1119,7 +1135,8 @@ def test_run_ingestor_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -1134,9 +1151,9 @@ def get_ingestor_run_request_handler(request):
     actual_body = json.loads(request.data.decode())
     query = " ".join(actual_body['query'].split())
 
-    assert query == ("query getIngestorRun($id_0: Int!) { getIngestorRun(id: $id_0) { id "
-                     "containerRuntimeType payload token status startedAt statusLastUpdatedAt "
-                     "completedAt } }")
+    assert query == ("query getIngestorRun($id_0: Int!) { getIngestorRun(id: $id_0) { completedAt "
+                     "containerRuntimeType id payload startedAt status statusLastUpdatedAt token } "
+                     "}")
     assert actual_body['variables'] == {"id_0": 1}
 
     return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
@@ -1146,7 +1163,8 @@ def test_get_ingestor_run_no_verify_success(httpserver: HTTPServer):
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_request_handler)
@@ -1171,7 +1189,8 @@ def test_get_ingestor_run_list_empty_filter_no_verify_success(httpserver: HTTPSe
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_list_request_empty_handler)
@@ -1212,7 +1231,8 @@ def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPSer
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
-        verify_certificate=False
+        verify_certificate=False,
+        enable_legacy_methods=True,
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
@@ -1339,7 +1359,8 @@ def _invalid_ca(port):
             host=LOCALHOST,
             port=port,
             verify_certificate=True,
-            ca_filename=ca_filename
+            ca_filename=ca_filename,
+            enable_legacy_methods=True,
         )
 
 
@@ -1349,5 +1370,6 @@ def _valid_ca(port, ca: trustme.CA):
             host=LOCALHOST,
             port=port,
             verify_certificate=True,
-            ca_filename=ca_filename
+            ca_filename=ca_filename,
+            enable_legacy_methods=True,
         )

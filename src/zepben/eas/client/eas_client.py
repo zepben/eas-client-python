@@ -6,27 +6,50 @@
 
 __all__ = ["EasClient"]
 
+import inspect
 import ssl
-from asyncio import get_event_loop
 from datetime import datetime
 from http import HTTPStatus
-from typing import Any
+from types import MethodType
+from typing import Any, Generator
 
 import httpx
 from graphql import OperationType
+from typing_extensions import deprecated
 
-from zepben.eas.client.decorators import async_func, catch_warnings
+from zepben.eas.client.decorators import async_func, catch_warnings, opt_in
 from zepben.eas.client.patched_generated_client import PatchedClient as Client
 
 from zepben.eas.lib.generated_graphql_client import WorkPackageInput, FeederLoadAnalysisInput, StudyInput, \
     IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput, HcGeneratorConfigInput, \
     HcModelConfigInput, OpenDssModelInput, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
 from zepben.eas.lib.generated_graphql_client.base_operation import GraphQLField
-from zepben.eas.lib.generated_graphql_client.custom_fields import FeederLoadAnalysisSpecFields, \
-    FeederLoadAnalysisReportFields, IngestionRunFields, HcCalibrationFields, GqlTxTapRecordFields, \
-    OpenDssModelPageFields, OpenDssModelFields
+from zepben.eas.lib.generated_graphql_client.custom_fields import FeederLoadAnalysisReportFields, IngestionRunFields, \
+    HcCalibrationFields, GqlTxTapRecordFields, OpenDssModelPageFields, OpenDssModelFields
 from zepben.eas.lib.generated_graphql_client.custom_mutations import Mutation
 from zepben.eas.lib.generated_graphql_client.custom_queries import Query
+
+def graph_ql_field_all_fields(cls) -> list[GraphQLField]:
+    """
+    Helper function to list all ``GraphQLField``s that a given class returns
+
+    :param cls: class to check
+    :return: list of GraphQLField's, ready to pass to ``cls().fields()``
+    """
+    def _inner() -> Generator[GraphQLField | MethodType, None, None]:
+        for k in dir(cls):
+            if k.startswith("_"):
+                continue
+            if k == "all_fields":
+                continue
+            v = getattr(cls, k)
+            if isinstance(v, GraphQLField):
+                yield v
+            elif inspect.ismethod(v):
+                yield v().fields(*v().all_fields())
+    return list(_inner())
+
+GraphQLField.all_fields = classmethod(graph_ql_field_all_fields)
 
 
 class EasClient(Client):
@@ -44,6 +67,7 @@ class EasClient(Client):
         verify_certificate: bool = True,
         ca_filename: str | None = None,
         asynchronous: bool = False,
+        enable_legacy_methods: bool = False,
     ):
         """
         Construct a client for the Evolve App Server. If the server is HTTPS, authentication may be configured.
@@ -64,8 +88,11 @@ class EasClient(Client):
         :param verify_certificate: Set this to "False" to disable certificate verification.
         :param ca_filename: Path to CA file to use for verification. (Optional - by default will use system certs)
         :param asynchronous: all functions will be returned as ``Coroutine``s if True, or ran in an existing event loop if False
+        :param enable_legacy_methods: enable legacy methods support.
         """
+        self._opt_in_legacy = enable_legacy_methods
         self._asynchronous = asynchronous
+
         self._protocol = protocol
         self._host = host
         self._port = port
@@ -87,17 +114,16 @@ class EasClient(Client):
             http_client=http_client,
         )
 
-
-    def close(self):
-        return get_event_loop().run_until_complete(self.aclose())
-
-    async def aclose(self):
+    @async_func
+    async def close(self):
         await self.http_client.aclose()
 
+    @async_func
     async def query(self, *fields: GraphQLField, operation_name: str = None) -> dict[str, Any]:
         """Execute a query against the Evolve App Server."""
         return await super().query(*fields, operation_name=operation_name)
 
+    @async_func
     async def mutation(self, *fields: GraphQLField, operation_name: str = None) -> dict[str, Any]:
         """Execute a mutation against the Evolve App Server."""
         return await super().mutation(*fields, operation_name=operation_name)
@@ -111,40 +137,66 @@ class EasClient(Client):
 
     @async_func
     @catch_warnings
-    async def get_work_package_cost_estimation(self, work_package: WorkPackageInput):
+    async def get_opendss_model_download_url(self, run_id: int):
+        """
+        Retrieve a download url for the specified opendss export run id
+        :param run_id: The opendss export run ID
+        :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
+        """
+        response = (await self.http_client.get(
+            f"{self._base_url}/api/opendss-model/{run_id}",
+            headers=self.headers,
+            follow_redirects=False
+        ))
+        if response.status_code == HTTPStatus.FOUND:
+            return response.headers["Location"]
+        elif not response.ok:
+            response.raise_for_status()
+
+    #####################################################
+    # Legacy Methods, to be removed in a future release #
+    #####################################################
+
+    @deprecated("Use query()/mutation() methods directly instead.")
+    @catch_warnings
+    @opt_in
+    def get_work_package_cost_estimation(self, work_package: WorkPackageInput):
         """
         Send request to hosting capacity service to get an estimate cost of supplied work package
 
         :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return await self.query(
+        return self.query(
             Query.get_work_package_cost_estimation(work_package),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def run_hosting_capacity_work_package(self, work_package: WorkPackageInput, work_package_name: str):
+    @opt_in
+    def run_hosting_capacity_work_package(self, work_package: WorkPackageInput, work_package_name: str):
         """
         Send request to hosting capacity service to run work package
 
         :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
+        :param work_package_name: The name of the work package to run.
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return await self.mutation(
+        return self.mutation(
             Mutation.run_work_package(work_package, work_package_name=work_package_name),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def cancel_hosting_capacity_work_package(self, work_package_id: str):
+    @opt_in
+    def cancel_hosting_capacity_work_package(self, work_package_id: str):
         """
         Send request to hosting capacity service to cancel a running work package
 
         :param work_package_id: The id of the running work package to cancel
         :return: The HTTP response received from the Evolve App Server after attempting to cancel work package
         """
-        return await self.mutation(
+        return self.mutation(
             Mutation.cancel_work_package(work_package_id=work_package_id),
         )
 
@@ -154,28 +206,29 @@ class EasClient(Client):
 
         :return: The HTTP response received from the Evolve App Server after requesting work packages progress info
         """
-        return get_event_loop().run_until_complete(
-            self.query(
+        return self.query(
                 Query.get_active_work_packages(),
             )
-        )
 
-    @async_func
+
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
+    @opt_in
+    def run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
         """
         Send request to evolve app server to run a feeder load analysis study
 
         :param feeder_load_analysis_input:: An instance of the `FeederLoadAnalysisConfig` data class representing the configuration for the run
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return await self.mutation(
+        return self.mutation(
             Mutation.run_feeder_load_analysis(feeder_load_analysis_input),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def get_feeder_load_analysis_report_status(self, report_id: str, full_spec: bool = False):
+    @opt_in
+    def get_feeder_load_analysis_report_status(self, report_id: str, full_spec: bool = False):
         """
         Send request to evolve app server to retrieve a feeder load analysis report status
 
@@ -183,92 +236,72 @@ class EasClient(Client):
         :param full_spec: If true the response will include the request sent to generate the report
         :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report status
         """
-        return await self.query(
+        return self.query(
             Query.get_feeder_load_analysis_report_status(report_id, full_spec=full_spec).fields(
-                FeederLoadAnalysisReportFields.id,
-                FeederLoadAnalysisReportFields.name,
-                FeederLoadAnalysisReportFields.created_at,
-                FeederLoadAnalysisReportFields.created_by,
-                FeederLoadAnalysisReportFields.completed_at,
-                FeederLoadAnalysisReportFields.state,
-                FeederLoadAnalysisReportFields.errors,
-                FeederLoadAnalysisReportFields.generation_spec().fields(
-                    FeederLoadAnalysisSpecFields.feeders,
-                    FeederLoadAnalysisSpecFields.substations,
-                    FeederLoadAnalysisSpecFields.sub_geographical_regions,
-                    FeederLoadAnalysisSpecFields.geographical_regions,
-                    FeederLoadAnalysisSpecFields.start_date,
-                    FeederLoadAnalysisSpecFields.end_date,
-                    FeederLoadAnalysisSpecFields.fetch_lv_network,
-                    FeederLoadAnalysisSpecFields.process_feeder_loads,
-                    FeederLoadAnalysisSpecFields.process_coincident_loads,
-                    FeederLoadAnalysisSpecFields.produce_basic_report,
-                    FeederLoadAnalysisSpecFields.produce_conductor_report,
-                    FeederLoadAnalysisSpecFields.aggregate_at_feeder_level,
-                    FeederLoadAnalysisSpecFields.output
-                ),
+                *FeederLoadAnalysisReportFields.all_fields()
             ),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def upload_study(self, study: StudyInput | list[StudyInput]):
+    @opt_in
+    def upload_study(self, study: StudyInput | list[StudyInput]):
         """
         Uploads a new study to the Evolve App Server
+
         :param study: An instance of a data class representing a new study
         """
-        return await self.mutation(
+        return self.mutation(
             Mutation.add_studies(study if isinstance(study, list) else [study]),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def run_ingestor(self, run_config: list[IngestorConfigInput]):
+    @opt_in
+    def run_ingestor(self, run_config: list[IngestorConfigInput]):
         """
         Send request to perform an ingestor run
+
         :param run_config: A list of IngestorConfigInput
         :return: The HTTP response received from the Evolve App Server after attempting to run the ingestor
         """
-        return await self.mutation(
+        return self.mutation(
             Mutation.execute_ingestor(run_config=run_config),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def get_ingestor_run(self, ingestor_run_id: int):
+    @opt_in
+    def get_ingestor_run(self, ingestor_run_id: int):
         """
         Send request to retrieve the record of a particular ingestor run.
+
         :param ingestor_run_id: The ID of the ingestor run to retrieve execution information about.
         :return: The HTTP response received from the Evolve App Server including the ingestor run information (if found).
         """
-        return await self.query(
+        return self.query(
             Query.get_ingestor_run(ingestor_run_id).fields(
-                IngestionRunFields.id,
-                IngestionRunFields.container_runtime_type,
-                IngestionRunFields.payload,
-                IngestionRunFields.token,
-                IngestionRunFields.status,
-                IngestionRunFields.started_at,
-                IngestionRunFields.status_last_updated_at,
-                IngestionRunFields.completed_at,
+                *IngestionRunFields.all_fields()
             ),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def get_ingestor_run_list(
+    @opt_in
+    def get_ingestor_run_list(
             self,
             query_filter: IngestorRunsFilterInput | None = None,
             query_sort: IngestorRunsSortCriteriaInput | None = None
     ):
         """
         Send request to retrieve a list of ingestor run records matching the provided filter parameters.
+
         :param query_filter: An `IngestorRunsFilterInput` object. Only records matching the provided values will be returned.
             If not supplied all records will be returned. (Optional)
         :param query_sort: An `IngestorRunsSortCriteriaInput` that can control the order of the returned record based on a number of fields. (Optional)
         :return: The HTTP response received from the Evolve App Server including all matching ingestor records found.
         """
-        return await self.query(
+        return self.query(
             Query.list_ingestor_runs(filter_=query_filter, sort=query_sort).fields(
                 IngestionRunFields.id,
                 IngestionRunFields.container_runtime_type,
@@ -281,9 +314,10 @@ class EasClient(Client):
             ),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def run_hosting_capacity_calibration(
+    @opt_in
+    def run_hosting_capacity_calibration(
             self,
             calibration_name: str,
             local_calibration_time: datetime,
@@ -292,6 +326,7 @@ class EasClient(Client):
             generator_config: HcGeneratorConfigInput | None = None):
         """
         Send request to run hosting capacity calibration
+
         :param calibration_name: A string representation of the calibration name
         :param local_calibration_time: A datetime representation of the calibration time, in the timezone of your pqv data ("model time").
         :param feeders: A list of feeder ID's to run the calibration over. If not supplied then the calibration is run over all feeders in the network.
@@ -311,7 +346,7 @@ class EasClient(Client):
             if generator_config.model:
                 generator_config.model.transformer_tap_settings = transformer_tap_settings
 
-        return await self.mutation(
+        return self.mutation(
             Mutation.run_calibration(
                 calibration_name=calibration_name,
                 calibration_time_local=local_calibration_time,
@@ -320,15 +355,17 @@ class EasClient(Client):
             ),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def get_hosting_capacity_calibration_run(self, id: str):
+    @opt_in
+    def get_hosting_capacity_calibration_run(self, id: str):
         """
         Retrieve information of a hosting capacity calibration run
+
         :param id: The calibration run ID
         :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
-        return await self.query(
+        return self.query(
             Query.get_calibration_run(id).fields(
                 HcCalibrationFields.id,
                 HcCalibrationFields.name,
@@ -343,20 +380,23 @@ class EasClient(Client):
             ),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def get_hosting_capacity_calibration_sets(self):
+    @opt_in
+    def get_hosting_capacity_calibration_sets(self):
         """
         Retrieve a list of all completed calibration runs initiated through Evolve App Server
+
         :return: The HTTP response received from the Evolve App Server after requesting completed calibration runs
         """
-        return await self.query(
+        return self.query(
             Query.get_calibration_sets(),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def get_transformer_tap_settings(
+    @opt_in
+    def get_transformer_tap_settings(
             self,
             calibration_name: str,
             feeder: str | None = None,
@@ -364,12 +404,13 @@ class EasClient(Client):
     ):
         """
         Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database
+
         :param calibration_name: The (user supplied)name of the calibration run to retrieve transformer tap settings from
         :param feeder: An optional filter to apply to the returned list of transformer tap settings
         :param transformer_mrid: An optional filter to return only the transformer tap settings for a particular transfomer mrid
         :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
         """
-        return await self.query(
+        return self.query(
             Query.get_transformer_tap_settings(
                 calibration_name=calibration_name,
                 feeder=feeder,
@@ -385,21 +426,24 @@ class EasClient(Client):
             ),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def run_opendss_export(self, config: OpenDssModelInput):
+    @opt_in
+    def run_opendss_export(self, config: OpenDssModelInput):
         """
         Send request to run an opendss export
+
         :param config: The OpenDssConfig for running the export
         :return: The HTTP response received from the Evolve App Server after attempting to run the opendss export
         """
-        return await self.mutation(
+        return self.mutation(
             Mutation.create_open_dss_model(config),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def get_paged_opendss_models(
+    @opt_in
+    def get_paged_opendss_models(
         self,
         limit: int | None = None,
         offset: int | None = None,
@@ -407,13 +451,14 @@ class EasClient(Client):
         query_sort: GetOpenDssModelsSortCriteriaInput | None = None):
         """
         Retrieve a paginated opendss export run information
+
         :param limit: The number of opendss export runs to retrieve
         :param offset: The number of opendss export runs to skip
         :param query_filter: The filter to apply to the query
         :param query_sort: The sorting to apply to the query
         :return: The HTTP response received from the Evolve App Server after requesting opendss export run information
         """
-        return await self.query(
+        return self.query(
             Query.paged_open_dss_models(
                 limit=limit,
                 offset=offset,
@@ -435,29 +480,13 @@ class EasClient(Client):
             ),
         )
 
-    @async_func
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
-    async def get_opendss_model_download_url(self, run_id: int):
-        """
-        Retrieve a download url for the specified opendss export run id
-        :param run_id: The opendss export run ID
-        :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
-        """
-        response = (await self.http_client.get(
-            f"{self._base_url}/api/opendss-model/{run_id}",
-            headers=self.headers,
-            follow_redirects=False
-        ))
-        if response.status_code == HTTPStatus.FOUND:
-            return response.headers["Location"]
-        elif not response.ok:
-            response.raise_for_status()
-
-    @async_func
-    @catch_warnings
-    async def get_opendss_model(self, model_id: int):
+    @opt_in
+    def get_opendss_model(self, model_id: int):
         """
         Retrieve information of a OpenDss model export
+
         :param model_id: The OpenDss model export ID
         :return: The HTTP response received from the Evolve App Server after requesting the openDss model info
         """
@@ -466,7 +495,7 @@ class EasClient(Client):
         page_size = 20
 
         while True:
-            response = await self.get_paged_opendss_models(page_size, offset)
+            response = self.get_paged_opendss_models(page_size, offset)
             total_count = int(response["data"]["pagedOpenDssModels"]["totalCount"])
             page_count = len(response["data"]["pagedOpenDssModels"]["models"])
             for model in response["data"]["pagedOpenDssModels"]["models"]:

@@ -1,13 +1,13 @@
 # Evolve App Server Python Client #
 
-This library provides a wrapper to the Evolve App Server's API, allowing users of the evolve SDK to authenticate with
+This library provides a wrapper to the Evolve App Server's API, allowing users of the Evolve SDK to authenticate with
 the Evolve App Server and upload studies.
 
 # Usage #
 
 ```python
 from geojson import FeatureCollection
-from zepben.eas import EasClient, StudyInput, StudyResultInput, GeoJsonOverlayInput, ResultSectionInput, SectionType
+from zepben.eas import EasClient, StudyInput, StudyResultInput, GeoJsonOverlayInput, ResultSectionInput, SectionType, Mutation
 
 eas_client = EasClient(
     host="<host>",
@@ -16,40 +16,44 @@ eas_client = EasClient(
     asynchronous=False,
 )
 
-eas_client.upload_study(
-    StudyInput(
-        name="<study name>",
-        description="<study description>",
-        tags=["<tag>", "<tag2>"],
-        results=[
-            StudyResultInput(
-                name="<result_name>",
-                geoJsonOverlay=GeoJsonOverlayInput(
-                    data=FeatureCollection(...),
-                    styles=["style1"]
-                ),
-                sections=[
-                    ResultSectionInput(
-                        type=SectionType.TABLE,
-                        name="<table name>",
-                        description="<table description>",
-                        columns=[
-                            {"key": "<column 1 key>", "name": "<column 1 name>"},
-                            {"key": "<column 2 key>", "name": "<column 2 name>"},
-                        ],
-                        data=[
-                            {"<column 1 key>": "<column 1 row 1 value>", "<column 2 key>": "<column 2 row 1 value>"},
-                            {"<column 1 key>": "<column 1 row 2 value>", "<column 2 key>": "<column 2 row 2 value>"}
+eas_client.mutation(
+    Mutation.add_studies(
+        [
+            StudyInput(
+                name="<study name>",
+                description="<study description>",
+                tags=["<tag>", "<tag2>"],
+                results=[
+                    StudyResultInput(
+                        name="<result_name>",
+                        geoJsonOverlay=GeoJsonOverlayInput(
+                            data=FeatureCollection(...),
+                            styles=["style1"]
+                        ),
+                        sections=[
+                            ResultSectionInput(
+                                type=SectionType.TABLE,
+                                name="<table name>",
+                                description="<table description>",
+                                columns=[
+                                    {"key": "<column 1 key>", "name": "<column 1 name>"},
+                                    {"key": "<column 2 key>", "name": "<column 2 name>"},
+                                ],
+                                data=[
+                                    {"<column 1 key>": "<column 1 row 1 value>", "<column 2 key>": "<column 2 row 1 value>"},
+                                    {"<column 1 key>": "<column 1 row 2 value>", "<column 2 key>": "<column 2 row 2 value>"}
+                                ]
+                            )
                         ]
                     )
+                ],
+                styles=[
+                    {
+                        "id": "style1",
+                        # other Mapbox GL JS style properties
+                    }
                 ]
             )
-        ],
-        styles=[
-            {
-                "id": "style1",
-                # other Mapbox GL JS style properties
-            }
         ]
     )
 )
@@ -63,7 +67,7 @@ The EasClient can operate in async mode if specified, like so:
 ```python
 from aiohttp import ClientSession
 from geojson import FeatureCollection
-from zepben.eas import EasClient, StudyInput, StudyResultInput, GeoJsonOverlayInput, ResultSectionInput, SectionType
+from zepben.eas import EasClient, StudyInput, StudyResultInput, GeoJsonOverlayInput, ResultSectionInput, SectionType, Mutation
 
 
 async def upload():
@@ -74,45 +78,49 @@ async def upload():
         asynchronous=True,  # returns all methods as plain async methods
     )
 
-    await eas_client.upload_study(
-        StudyInput(
-            name="<study name>",
-            description="<study description>",
-            tags=["<tag>", "<tag2>"],
-            results=[
-                StudyResultInput(
-                    name="<result_name>",
-                    geoJsonOverlay=GeoJsonOverlayInput(
-                        data=FeatureCollection(...),
-                        styles=["style1"]
-                    ),
-                    sections=[
-                        ResultSectionInput(
-                          type=SectionType.TABLE,
-                          name="<table name>",
-                          description="<table description>",
-                          columns=[
-                              {"key": "<column 1 key>", "name": "<column 1 name>"},
-                              {"key": "<column 2 key>", "name": "<column 2 name>"},
-                          ],
-                          data=[
-                              {"<column 1 key>": "<column 1 row 1 value>", "<column 2 key>": "<column 2 row 1 value>"},
-                              {"<column 1 key>": "<column 1 row 2 value>", "<column 2 key>": "<column 2 row 2 value>"}
-                          ]
+    await eas_client.mutation(
+        Mutation.add_studies(
+            [
+                StudyInput(
+                    name="<study name>",
+                    description="<study description>",
+                    tags=["<tag>", "<tag2>"],
+                    results=[
+                        StudyResultInput(
+                            name="<result_name>",
+                            geoJsonOverlay=GeoJsonOverlayInput(
+                                data=FeatureCollection(...),
+                                styles=["style1"]
+                            ),
+                            sections=[
+                                ResultSectionInput(
+                                    type=SectionType.TABLE,
+                                    name="<table name>",
+                                    description="<table description>",
+                                    columns=[
+                                        {"key": "<column 1 key>", "name": "<column 1 name>"},
+                                        {"key": "<column 2 key>", "name": "<column 2 name>"},
+                                    ],
+                                    data=[
+                                        {"<column 1 key>": "<column 1 row 1 value>", "<column 2 key>": "<column 2 row 1 value>"},
+                                        {"<column 1 key>": "<column 1 row 2 value>", "<column 2 key>": "<column 2 row 2 value>"}
+                                    ]
+                                )
+                            ]
                         )
+                    ],
+                    styles=[
+                        {
+                            "id": "style1",
+                            # other Mapbox GL JS style properties
+                        }
                     ]
                 )
-            ],
-            styles=[
-                {
-                    "id": "style1",
-                    # other Mapbox GL JS style properties
-                }
             ]
         )
     )
 
-    await eas_client.aclose()
+    await eas_client.close()
 ```
 
 # Development #
