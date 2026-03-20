@@ -123,6 +123,48 @@ async def upload():
     await eas_client.close()
 ```
 
+# I'm used to the old client, what do i do? #
+
+## Migrating existing code ##
+
+Most of the objects passed into requests are similar.
+The new EasClient is fully type hinted and self documenting.
+
+For example.
+
+```python
+from zepben.eas import EasClient, WorkPackageInput, HcExecutorConfigInput, FeederConfigsInput, FeederConfigInput
+
+client = EasClient(host='host', port=1234)
+client.get_work_package_cost_estimation(
+    WorkPackageInput(
+        feederConfigs=FeederConfigsInput(
+            configs=[
+                FeederConfigInput(
+                    feeder='myFeeder',
+                    years=[2024, 2025],
+                    scenarios=['scenario1']
+                )
+            ]
+        )
+    )
+)
+```
+
+Hovering over any kwarg or looking at any class definition will show all possible parameters, and their expected types.
+
+## Enabling legacy convenience methods ##
+
+Legacy convenience methods can be enabled by passing `enable_legacy_methods` to `__init__` of `EasClient`. eg:
+
+```python
+from zepben.eas import EasClient
+
+client = EasClient(enable_legacy_methods=True)
+```
+
+This will enable all `deprecated` and `opt_in` methods on the class, they are disabled by default.
+
 # Development #
 
 To regenerate the graphql client you will need to install `zepben.eas` with `eas-codegen` optional dependencies, then run:
