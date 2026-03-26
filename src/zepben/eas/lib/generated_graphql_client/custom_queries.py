@@ -65,7 +65,7 @@ from .input_types import (
     ProcessedDiffSortCriteriaInput,
     WorkPackageInput,
 )
-from .enums import HostingCapacityFileType, WorkflowStatus, ContainerType, SincalFileType, VariantFileType
+from . import HostingCapacityFileType, ContainerType, SincalFileType, VariantFileType, WorkflowStatus
 
 
 class Query:

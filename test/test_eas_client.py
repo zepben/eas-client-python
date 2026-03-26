@@ -16,9 +16,7 @@ import trustme
 from pytest_httpserver import HTTPServer
 from werkzeug import Response
 
-from zepben.eas import EasClient
-from zepben.eas.client.enums import OpenDssModelState
-from zepben.eas.lib.generated_graphql_client import WorkPackageInput, ForecastConfigInput, TimePeriodInput, \
+from zepben.eas import EasClient, OpenDssModelState, WorkPackageInput, ForecastConfigInput, TimePeriodInput, \
     FeederConfigInput, FeederConfigsInput, FixedTimeInput, FixedTimeLoadOverrideInput, TimePeriodLoadOverrideInput, \
     StudyInput, StudyResultInput, InterventionConfigInput, YearRangeInput, InterventionClass, \
     CandidateGenerationConfigInput, CandidateGenerationType, HcGeneratorConfigInput, HcModelConfigInput, \

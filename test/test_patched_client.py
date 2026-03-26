@@ -4,9 +4,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from zepben.eas import EasClient, FeederLoadAnalysisReportFields
-from zepben.eas.client.patched_generated_client import PatchedClient
-from zepben.eas.lib.generated_graphql_client.custom_fields import FeederLoadAnalysisSpecFields
+from zepben.eas import FeederLoadAnalysisReportFields, EasClient, FeederLoadAnalysisSpecFields
 
 
 class MockResponse:
@@ -23,7 +21,7 @@ class MockResponse:
 def test_patched_client_used_in_eas_client():
 
     client = EasClient(host="test_host", port=9876)
-    assert isinstance(client, PatchedClient)
+    assert isinstance(client, EasClient)
 
 
 def test_patched_client_overrides_get_data_to_return_the_whole_json_response():

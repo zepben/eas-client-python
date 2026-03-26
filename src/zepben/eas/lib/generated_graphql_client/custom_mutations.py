@@ -19,7 +19,7 @@ from .input_types import (
     StudyInput,
     WorkPackageInput,
 )
-from .enums import SincalFileType, VariantFileType
+from . import SincalFileType, VariantFileType
 
 
 class Mutation:

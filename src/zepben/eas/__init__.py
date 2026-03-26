@@ -11,3 +11,4 @@ from zepben.eas.client.enums import *
 from zepben.eas.lib.generated_graphql_client import *
 from zepben.eas.lib.generated_graphql_client.custom_mutations import *
 from zepben.eas.lib.generated_graphql_client.custom_queries import *
+from zepben.eas.lib.generated_graphql_client.custom_fields import *

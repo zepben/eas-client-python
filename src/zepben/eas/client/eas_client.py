@@ -4,52 +4,64 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
+
 __all__ = ["EasClient"]
+
+import sys
+
+
+if sys.version_info < (3, 13):
+    from typing_extensions import deprecated
+else:
+    from warnings import deprecated
 
 import inspect
 import ssl
 from datetime import datetime
 from http import HTTPStatus
 from types import MethodType
-from typing import Any, Generator
+from typing import Any, Generator, cast
 
 import httpx
 from graphql import OperationType
-from typing_extensions import deprecated
 
-from zepben.eas.client.decorators import async_func, catch_warnings, opt_in
-from zepben.eas.client.patched_generated_client import PatchedClient as Client
+from zepben.eas.client.decorators import async_func, catch_warnings, opt_in, add_method_to
 
-from zepben.eas.lib.generated_graphql_client import WorkPackageInput, FeederLoadAnalysisInput, StudyInput, \
-    IngestorConfigInput, IngestorRunsFilterInput, IngestorRunsSortCriteriaInput, HcGeneratorConfigInput, \
-    HcModelConfigInput, OpenDssModelInput, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
+from zepben.eas.lib.generated_graphql_client import GraphQLClientHttpError, GraphQLClientInvalidResponseError, \
+    GraphQLClientGraphQLMultiError, Client, WorkPackageInput, FeederLoadAnalysisInput, StudyInput, IngestorConfigInput, \
+    IngestorRunsFilterInput, IngestorRunsSortCriteriaInput, HcGeneratorConfigInput, HcModelConfigInput, OpenDssModelInput, \
+    GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
 from zepben.eas.lib.generated_graphql_client.base_operation import GraphQLField
 from zepben.eas.lib.generated_graphql_client.custom_fields import FeederLoadAnalysisReportFields, IngestionRunFields, \
     HcCalibrationFields, GqlTxTapRecordFields, OpenDssModelPageFields, OpenDssModelFields
 from zepben.eas.lib.generated_graphql_client.custom_mutations import Mutation
 from zepben.eas.lib.generated_graphql_client.custom_queries import Query
 
-def graph_ql_field_all_fields(cls) -> list[GraphQLField]:
+
+# noinspection PyDecorator,PyNestedDecorators
+@add_method_to(GraphQLField)
+@classmethod
+def all_fields(cls) -> Generator[GraphQLField | MethodType, None, None]:
     """
-    Helper function to list all ``GraphQLField``s that a given class returns
+    returns a generator over all ``GraphQLField``s that a given class returns
 
     :param cls: class to check
-    :return: list of GraphQLField's, ready to pass to ``cls().fields()``
+    :return: generator over all GraphQLField's in a given class
     """
-    def _inner() -> Generator[GraphQLField | MethodType, None, None]:
-        for k in dir(cls):
-            if k.startswith("_"):
-                continue
-            if k == "all_fields":
-                continue
-            v = getattr(cls, k)
-            if isinstance(v, GraphQLField):
-                yield v
-            elif inspect.ismethod(v):
-                yield v().fields(*v().all_fields())
-    return list(_inner())
+    for k in dir(cls):
+        # we only want "public" attrs.
+        if k.startswith("_"):
+            continue
+        # obviously we don't want to return ourselves.
+        if k == "all_fields":
+            continue
 
-GraphQLField.all_fields = classmethod(graph_ql_field_all_fields)
+        v = getattr(cls, k)
+        if isinstance(v, GraphQLField):
+            yield v
+        elif inspect.ismethod(v):
+            yield v().fields(*v().all_fields())
 
 
 class EasClient(Client):
@@ -132,7 +144,7 @@ class EasClient(Client):
         return await super().execute_custom_operation(
             *fields,
             operation_type=operation_type,
-            operation_name=operation_name or '-'.join(f._field_name for f in fields)
+            operation_name=operation_name or str('-'.join(f._field_name for f in fields))
         )
 
     @async_func
@@ -153,9 +165,49 @@ class EasClient(Client):
         elif not response.ok:
             response.raise_for_status()
 
+    # This method replaces the implementation in zepben.eas.lib.generated_graphql_client.client.Client to
+    def get_data(self, response: httpx.Response) -> dict[str, Any]:
+        if not response.is_success:
+            raise GraphQLClientHttpError(
+                status_code=response.status_code, response=response
+            )
+
+        # ::Parent Implementation::
+        #
+        # if (not isinstance(response_json, dict)) or (
+        #         "data" not in response_json and "errors" not in response_json
+        # ):
+        #     raise GraphQLClientInvalidResponseError(response=response)
+        #
+        # data = response_json.get("data")
+        # errors = response_json.get("errors")
+
+        # ::Start New Implementation::
+        try:
+            response_json = response.json()
+        except ValueError as exc:
+            raise GraphQLClientInvalidResponseError(response=response) from exc
+
+        try:
+            errors = response_json.get("errors")
+        except AttributeError:
+            errors = None
+        # ::End New Implementation::
+
+        if errors:
+            raise GraphQLClientGraphQLMultiError.from_errors_dicts(
+                errors_dicts=errors, data=response_json
+            )
+
+        return cast(dict[str, Any], response_json)
+
     #####################################################
     # Legacy Methods, to be removed in a future release #
     #####################################################
+
+    @deprecated("use self.close() instead")
+    async def aclose(self):
+        await self.close()
 
     @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
@@ -200,6 +252,9 @@ class EasClient(Client):
             Mutation.cancel_work_package(work_package_id=work_package_id),
         )
 
+    @deprecated
+    @catch_warnings
+    @opt_in
     def get_hosting_capacity_work_packages_progress(self):  # FIXME: why is this info not returned by get_work_package_by_id ?
         """
         Retrieve running work packages progress information from hosting capacity service
@@ -207,8 +262,8 @@ class EasClient(Client):
         :return: The HTTP response received from the Evolve App Server after requesting work packages progress info
         """
         return self.query(
-                Query.get_active_work_packages(),
-            )
+            Query.get_active_work_packages(),
+        )
 
 
     @deprecated("Use query()/mutation() methods directly instead.")
@@ -495,6 +550,7 @@ class EasClient(Client):
         page_size = 20
 
         while True:
+            # noinspection PyDeprecation
             response = self.get_paged_opendss_models(page_size, offset)
             total_count = int(response["data"]["pagedOpenDssModels"]["totalCount"])
             page_count = len(response["data"]["pagedOpenDssModels"]["models"])

@@ -7,7 +7,6 @@
 [build-system]
 requires = [
     "setuptools",
-    "wheel",
     "build>=1.2.0"
 ]
 build-backend = "setuptools.build_meta"
@@ -25,6 +24,10 @@ authors = [
 ]
 dependencies = [
     "geojson==2.5.0",
+    "httpx",
+    "graphql-core==3.2.8",
+    "pydantic",
+    "pydantic_core",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -47,7 +50,6 @@ test = [
     "trustme==0.9.0"
 ]
 eas-codegen = [
-#    "ariadne-codegen @ git+https://github.com/chestm007/ariadne-codegen"  # This could break a pypi upload. Waiting on https://github.com/mirumee/ariadne-codegen/pull/413 to be merged.
     "ariadne-codegen==0.18.0"
 ]
 
