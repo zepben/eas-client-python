@@ -252,7 +252,7 @@ class EasClient(Client):
             Mutation.cancel_work_package(work_package_id=work_package_id),
         )
 
-    @deprecated
+    @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
     @opt_in
     def get_hosting_capacity_work_packages_progress(self):  # FIXME: why is this info not returned by get_work_package_by_id ?
