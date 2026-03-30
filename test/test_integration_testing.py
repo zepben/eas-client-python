@@ -4,11 +4,12 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import asyncio
+from typing import TypeVar
 
 import pytest
 
 from zepben.eas import EasClient, OpenDssModelInput, OpenDssModelGenerationSpecInput, OpenDssModelOptionsInput, \
-    OpenDssModulesConfigInput, OpenDssCommonConfigInput
+    OpenDssModulesConfigInput, OpenDssCommonConfigInput, Query, IngestionRunFields, GraphQLQuery, IngestionJobFields
 
 
 @pytest.mark.skip("Local testing if you really want it...")
@@ -32,7 +33,7 @@ def test_can_connect_to_local_eas_async_asyncio_run_calling():
         protocol="http",
         verify_certificate=False,
         asynchronous=True,
-        enable_legacy_methods = True,
+        enable_legacy_methods=True,
     )
     assert asyncio.run(client.get_ingestor_run_list()) == {'data': {'listIngestorRuns': []}}
 
@@ -57,3 +58,17 @@ async def test_can_connect_to_local_eas_async_calling_func():
             )
         )
     ))
+
+
+T = TypeVar("T")
+R = TypeVar("R")
+
+
+def my_query(query: GraphQLQuery[T, R], field: R, *additional_fields: R) -> T:
+    return query.fields(field, *additional_fields)
+
+
+def test_do_things():
+    my_query(Query.list_ingestor_runs(filter_=None, sort=None), IngestionRunFields.completed_at, IngestionRunFields.status)
+    my_query(Query.list_ingestor_runs(filter_=None, sort=None), IngestionJobFields.application, 1)
+    my_query(Query.list_ingestor_runs(filter_=None, sort=None))
