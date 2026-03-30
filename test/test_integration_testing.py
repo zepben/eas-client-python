@@ -11,6 +11,7 @@ from zepben.eas import EasClient, OpenDssModelInput, OpenDssModelGenerationSpecI
     OpenDssModulesConfigInput, OpenDssCommonConfigInput
 
 
+@pytest.mark.skip("Local testing if you really want it...")
 def test_can_connect_to_local_eas_non_async():
     client = EasClient(
         host="localhost",
@@ -23,6 +24,7 @@ def test_can_connect_to_local_eas_non_async():
     assert client.get_ingestor_run_list() == {'data': {'listIngestorRuns': []}}
 
 
+@pytest.mark.skip("Local testing if you really want it...")
 def test_can_connect_to_local_eas_async_asyncio_run_calling():
     client = EasClient(
         host="localhost",
@@ -35,6 +37,7 @@ def test_can_connect_to_local_eas_async_asyncio_run_calling():
     assert asyncio.run(client.get_ingestor_run_list()) == {'data': {'listIngestorRuns': []}}
 
 
+@pytest.mark.skip("Local testing if you really want it...")
 @pytest.mark.asyncio
 async def test_can_connect_to_local_eas_async_calling_func():
     client = EasClient(
@@ -54,4 +57,3 @@ async def test_can_connect_to_local_eas_async_calling_func():
             )
         )
     ))
-
