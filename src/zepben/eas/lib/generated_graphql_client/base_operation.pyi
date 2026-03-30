@@ -6,7 +6,7 @@
 
 from _typeshed import Incomplete
 from types import MethodType
-from typing import Generator, Any
+from typing import Generator
 
 def __getattr__(name) -> Incomplete: ...
 
