@@ -6,9 +6,9 @@
 
 __all__ = ['catch_warnings', 'async_func', 'opt_in', "add_method_to"]
 
+import asyncio
 import functools
 import warnings
-from asyncio import get_event_loop
 from typing import Callable
 
 
@@ -27,7 +27,11 @@ def async_func(func: Callable) -> Callable:
     def wrapper(self, *args, **kwargs):
         if self._asynchronous:
             return func(self, *args, **kwargs)
-        return get_event_loop().run_until_complete(func(self, *args, **kwargs))
+
+        try:
+            return asyncio.get_running_loop().run_until_complete(func(self, *args, **kwargs))
+        except RuntimeError:
+            return asyncio.run(func(self, *args, **kwargs))
     return wrapper
 
 def add_method_to(class_to_extend: type) -> Callable:
