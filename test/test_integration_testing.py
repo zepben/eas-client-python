@@ -62,38 +62,8 @@ async def test_can_connect_to_local_eas_async_calling_func():
         )
     ))
 
-
-T = TypeVar("T")
-R = TypeVar("R")
-
-
-def my_query(query: "GraphQLQuery[T, R]", field: R, *additional_fields: R) -> T:
-    return query.fields(field, *additional_fields)
-
-ast.ClassDef(
-    "MyClass",
-    [],
-    [],
-    [
-        ast.FunctionDef(
-            "MyFunction",
-            ast.arguments(
-                posonlyargs=[],
-                args=[],
-                vararg=None,
-                kwonlyargs=[],
-                kw_defaults=[],
-                defaults=[],
-            ),
-            [],
-            [],
-            None,
-        )
-    ],
-    [],
-)
-
-def test_do_things():
+@pytest.mark.asyncio
+async def test_do_things():
     from zepben.eas.lib.generated_graphql_client import custom_queries
     with open(custom_queries.__file__) as f:
         orig_ast = ast.parse(
@@ -131,6 +101,11 @@ class GraphQLQuery(Generic[TGraphQLQueryField, TGraphQLField]):
     with open(custom_queries.__file__ + 'i', 'w') as f:
         f.write(ast.unparse(orig_ast))
 
-    my_query(Query.list_ingestor_runs(filter_=None, sort=None), IngestionRunFields.completed_at, IngestionRunFields.status)
-    my_query(Query.list_ingestor_runs(filter_=None, sort=None), IngestionJobFields.application, 1)
+    client = EasClient(
+        host="localhost",
+        port=7654,
+        asynchronous=True
+    )
+    await client.do_query(Query.list_ingestor_runs(filter_=None, sort=None), IngestionRunFields.completed_at, IngestionRunFields.status)
+    await client.do_query(Query.list_ingestor_runs(filter_=None, sort=None), IngestionJobFields.application, 1)
     # my_query(Query.list_ingestor_runs(filter_=None, sort=None))

@@ -21,7 +21,7 @@ import ssl
 from datetime import datetime
 from http import HTTPStatus
 from types import MethodType
-from typing import Any, Generator, cast
+from typing import Any, Generator, cast, TypeVar, TYPE_CHECKING
 
 import httpx
 from graphql import OperationType
@@ -37,6 +37,12 @@ from zepben.eas.lib.generated_graphql_client.custom_fields import FeederLoadAnal
     HcCalibrationFields, GqlTxTapRecordFields, OpenDssModelPageFields, OpenDssModelFields
 from zepben.eas.lib.generated_graphql_client.custom_mutations import Mutation
 from zepben.eas.lib.generated_graphql_client.custom_queries import Query
+
+if TYPE_CHECKING:
+    from zepben.eas import GraphQLQuery
+
+T = TypeVar("T")
+R = TypeVar("R")
 
 
 # noinspection PyDecorator,PyNestedDecorators
@@ -130,10 +136,9 @@ class EasClient(Client):
     async def close(self):
         await self.http_client.aclose()
 
-    @async_func
-    async def query(self, *fields: GraphQLField, operation_name: str = None) -> dict[str, Any]:
+    async def do_query(self, query: GraphQLQuery[T, R], field: R, *additional_fields: R, operation_name: str = None) -> T:
         """Execute a query against the Evolve App Server."""
-        return await super().query(*fields, operation_name=operation_name)
+        return await super().query(query.fields(field, *additional_fields), operation_name=operation_name)
 
     @async_func
     async def mutation(self, *fields: GraphQLField, operation_name: str = None) -> dict[str, Any]:
