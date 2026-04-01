@@ -25,9 +25,10 @@ def catch_warnings(func: Callable) -> Callable:
 
 # Type hinting async_func will break the type hinting.
 #
+# from typing import ParamSpec, TypeVar
 # P = ParamSpec("P")
 # R = TypeVar("R")
-# def async_func(func: Callable[P, R)) -> Callable[P, R]:
+# def async_func(func: Callable[P, R]) -> Callable[P, R]:
 def async_func(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):

@@ -1,6 +1,5 @@
 from typing import Any, Optional, Union
 
-from . import SerializationType
 from .base_operation import GraphQLField
 from .custom_typing_fields import (
     AppOptionsGraphQLField,
@@ -75,6 +74,7 @@ from .custom_typing_fields import (
     WorkPackageProgressDetailsGraphQLField,
     WorkPackageTreeGraphQLField,
 )
+from .enums import SerializationType
 
 
 class AppOptionsFields(GraphQLField):

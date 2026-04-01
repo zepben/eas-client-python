@@ -13,6 +13,7 @@ from .enums import (
     IngestorRunState,
     IngestorRuntimeKind,
     InterventionClass,
+    OpenDssModelState,
     SectionType,
     SortOrder,
 )
@@ -195,7 +196,7 @@ class GeoJsonOverlayInput(BaseModel):
 class GetOpenDssModelsFilterInput(BaseModel):
     is_public: Optional[bool] = Field(alias="isPublic", default=None)
     name: Optional[str] = None
-    state: Optional[list[str]] = None
+    state: Optional[list[OpenDssModelState]] = None
 
 
 class GetOpenDssModelsSortCriteriaInput(BaseModel):

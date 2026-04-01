@@ -45,7 +45,7 @@ class GraphQLField:
         """Builds the selection set for the current GraphQL field,
         including subfields and inline fragments."""
         selections: list[Union[FieldNode, InlineFragmentNode]] = [subfield.to_ast(idx, used_names) for subfield in self._subfields]
-        for name, subfields in self._inline_fragments.items():
+        for (name, subfields) in self._inline_fragments.items():
             selections.append(InlineFragmentNode(type_condition=NamedTypeNode(name=NameNode(value=name)), selection_set=SelectionSetNode(selections=[subfield.to_ast(idx, used_names) for subfield in subfields])))
         return selections
 
@@ -67,7 +67,7 @@ class GraphQLField:
         ensuring unique names.
         """
         self.formatted_variables = {}
-        for k, v in self._variables.items():
+        for (k, v) in self._variables.items():
             unique_name = self._format_variable_name(idx, k, used_names)
             self.formatted_variables[unique_name] = {'name': k, 'type': v['type'], 'value': v['value']}
 
@@ -76,7 +76,7 @@ class GraphQLField:
         if used_names is None:
             used_names = set()
         self._collect_all_variables(idx, used_names)
-        return FieldNode(name=NameNode(value=self._build_field_name()), arguments=[GraphQLArgument(v['name'], k).to_ast() for k, v in self.formatted_variables.items()], selection_set=SelectionSetNode(selections=self._build_selections(idx, used_names)) if self._subfields or self._inline_fragments else None)
+        return FieldNode(name=NameNode(value=self._build_field_name()), arguments=[GraphQLArgument(v['name'], k).to_ast() for (k, v) in self.formatted_variables.items()], selection_set=SelectionSetNode(selections=self._build_selections(idx, used_names)) if self._subfields or self._inline_fragments else None)
 
     def get_formatted_variables(self) -> dict[str, dict[str, Any]]:
         """

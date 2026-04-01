@@ -7,7 +7,6 @@
 import warnings
 
 from zepben.eas.client.eas_client import *
-from zepben.eas.client.enums import *
 
 try:
     from zepben.eas.lib.generated_graphql_client import *

@@ -57,7 +57,7 @@ class AsyncBaseClient:
         await self.http_client.aclose()
 
     async def execute(self, query: str, operation_name: Optional[str]=None, variables: Optional[dict[str, Any]]=None, **kwargs: Any) -> httpx.Response:
-        processed_variables, files, files_map = self._process_variables(variables)
+        (processed_variables, files, files_map) = self._process_variables(variables)
         if files and files_map:
             return await self._execute_multipart(query=query, operation_name=operation_name, variables=processed_variables, files=files, files_map=files_map, **kwargs)
         return await self._execute_json(query=query, operation_name=operation_name, variables=processed_variables, **kwargs)
@@ -103,7 +103,7 @@ class AsyncBaseClient:
         return self._get_files_from_variables(serializable_variables)
 
     def _convert_dict_to_json_serializable(self, dict_: dict[str, Any]) -> dict[str, Any]:
-        return {key: self._convert_value(value) for key, value in dict_.items() if value is not UNSET}
+        return {key: self._convert_value(value) for (key, value) in dict_.items() if value is not UNSET}
 
     def _convert_value(self, value: Any) -> Any:
         if isinstance(value, BaseModel):
@@ -119,13 +119,13 @@ class AsyncBaseClient:
         def separate_files(path: str, obj: Any) -> Any:
             if isinstance(obj, list):
                 nulled_list = []
-                for index, value in enumerate(obj):
+                for (index, value) in enumerate(obj):
                     value = separate_files(f'{path}.{index}', value)
                     nulled_list.append(value)
                 return nulled_list
             if isinstance(obj, dict):
                 nulled_dict = {}
-                for key, value in obj.items():
+                for (key, value) in obj.items():
                     value = separate_files(f'{path}.{key}', value)
                     nulled_dict[key] = value
                 return nulled_dict
@@ -140,7 +140,7 @@ class AsyncBaseClient:
                 return None
             return obj
         nulled_variables = separate_files('variables', variables)
-        files: dict[str, tuple[str, IO[bytes], str]] = {str(i): (file_.filename, cast(IO[bytes], file_.content), file_.content_type) for i, file_ in enumerate(files_list)}
+        files: dict[str, tuple[str, IO[bytes], str]] = {str(i): (file_.filename, cast(IO[bytes], file_.content), file_.content_type) for (i, file_) in enumerate(files_list)}
         return (nulled_variables, files, files_map)
 
     async def _execute_multipart(self, query: str, operation_name: Optional[str], variables: dict[str, Any], files: dict[str, tuple[str, IO[bytes], str]], files_map: dict[str, list[str]], **kwargs: Any) -> httpx.Response:

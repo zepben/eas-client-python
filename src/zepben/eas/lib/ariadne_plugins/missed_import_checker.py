@@ -8,16 +8,11 @@ from ariadne_codegen import Plugin
 
 
 class MissedImportCheckerPlugin(Plugin):
+    """This is masking a problem"""
 
     def generate_client_import(self, import_: ast.ImportFrom) -> ast.ImportFrom:
-        if (iname := import_.names[0].name) in (
-                'SincalFileType',
-                'VariantFileType',
-                'ContainerType',
-                'HostingCapacityFileType',
-                'WorkflowStatus',
-        ):
-            if import_.module is None:
-                print(f"[ZBEX] Assuming class import {iname} is from module 'enums.py'")
-                import_.module = 'enums'
+        # Somethings wrong with how the import is being generated without `module`
+        if import_.module is None:
+            print(f"[ZBEX] Assuming class import {import_.names[0].name} is from module 'enums.py'")
+            import_.module = 'enums'
         return import_

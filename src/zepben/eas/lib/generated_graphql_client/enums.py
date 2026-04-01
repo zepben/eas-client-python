@@ -139,6 +139,13 @@ class MeasurementZoneType(str, Enum):
     CALIBRATION = "CALIBRATION"
 
 
+class OpenDssModelState(str, Enum):
+    COULD_NOT_START = "COULD_NOT_START"
+    CREATION = "CREATION"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
 class OpportunitiesNeed(str, Enum):
     EXPORTDECREASE = "EXPORTDECREASE"
     EXPORTINCREASE = "EXPORTINCREASE"
