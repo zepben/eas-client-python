@@ -170,7 +170,7 @@ This will enable all `deprecated` and `opt_in` methods on the class, they are di
 To regenerate the graphql client you will need to install `zepben.eas` with `eas-codegen` optional dependencies:
 
 ```shell
-pip install zepben.eas[eas-codegen]
+pip install -e ".[eas-codegen]"
 ```
 
 With these installed and EAS running locally on port 7654, you can then generate the client:
