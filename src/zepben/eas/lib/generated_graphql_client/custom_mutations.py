@@ -1,9 +1,3 @@
-#  Copyright 2026 Zeppelin Bend Pty Ltd
-#
-#  This Source Code Form is subject to the terms of the Mozilla Public
-#  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
 from typing import Any, Optional
 
 from .custom_fields import (
@@ -12,6 +6,7 @@ from .custom_fields import (
     UserCustomerListColumnConfigFields,
 )
 from .custom_typing_fields import GraphQLField
+from .enums import SincalFileType, VariantFileType
 from .input_types import (
     AppOptionsInput,
     FeederLoadAnalysisInput,
@@ -25,7 +20,6 @@ from .input_types import (
     StudyInput,
     WorkPackageInput,
 )
-from . import SincalFileType, VariantFileType
 
 
 class Mutation:
@@ -150,7 +144,7 @@ class Mutation:
         diff_id: str,
         *,
         name: Optional[str] = None,
-        description: Optional[str] = None
+        description: Optional[str] = None,
     ) -> GraphQLField:
         """Edits a hosting capacity diff package and return boolean. Returns "true" on successful update"""
         arguments: dict[str, dict[str, Any]] = {
@@ -169,7 +163,7 @@ class Mutation:
         work_package_id: str,
         *,
         name: Optional[str] = None,
-        description: Optional[str] = None
+        description: Optional[str] = None,
     ) -> GraphQLField:
         """Edits a hosting capacity work package and return boolean. Returns "true" on successful update"""
         arguments: dict[str, dict[str, Any]] = {
@@ -194,7 +188,7 @@ class Mutation:
         feeder: Optional[str] = None,
         year: Optional[int] = None,
         season: Optional[str] = None,
-        time_of_day: Optional[str] = None
+        time_of_day: Optional[str] = None,
     ) -> DiffResultFields:
         """Generate and store the differences of enhanced network performance metrics between two work packages and returns the number of entries generated with the ID of this diff package."""
         arguments: dict[str, dict[str, Any]] = {
@@ -226,7 +220,7 @@ class Mutation:
         diff_name: Optional[str] = None,
         scenario: Optional[str] = None,
         feeder: Optional[str] = None,
-        year: Optional[int] = None
+        year: Optional[int] = None,
     ) -> DiffResultFields:
         """Generate and store the differences of network performance metrics between two work packages and returns the number of entries generated with the ID of this diff package."""
         arguments: dict[str, dict[str, Any]] = {
@@ -265,7 +259,7 @@ class Mutation:
         *,
         calibration_time_local: Optional[Any] = None,
         feeders: Optional[list[str]] = None,
-        generator_config: Optional[HcGeneratorConfigInput] = None
+        generator_config: Optional[HcGeneratorConfigInput] = None,
     ) -> GraphQLField:
         """Runs a calibration and returns a run ID."""
         arguments: dict[str, dict[str, Any]] = {

@@ -1,9 +1,3 @@
-#  Copyright 2026 Zeppelin Bend Pty Ltd
-#
-#  This Source Code Form is subject to the terms of the Mozilla Public
-#  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
 import asyncio
 import enum
 import json
@@ -341,15 +335,19 @@ class AsyncBaseClient:
         operation_name: Optional[str] = None,
         variables: Optional[dict[str, Any]] = None,
     ) -> None:
+        payload_inner: dict[str, Any] = {
+            "query": query,
+            "operationName": operation_name,
+        }
+        if variables:
+            payload_inner["variables"] = self._convert_dict_to_json_serializable(
+                variables
+            )
         payload: dict[str, Any] = {
             "id": operation_id,
             "type": GraphQLTransportWSMessageType.SUBSCRIBE.value,
-            "payload": {"query": query, "operationName": operation_name},
+            "payload": payload_inner,
         }
-        if variables:
-            payload["payload"]["variables"] = self._convert_dict_to_json_serializable(
-                variables
-            )
         await websocket.send(json.dumps(payload))
 
     async def _handle_ws_message(

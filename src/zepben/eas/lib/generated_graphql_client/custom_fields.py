@@ -1,9 +1,3 @@
-#  Copyright 2026 Zeppelin Bend Pty Ltd
-#
-#  This Source Code Form is subject to the terms of the Mozilla Public
-#  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
 from typing import Any, Optional, Union
 
 from . import SerializationType
@@ -214,7 +208,7 @@ class CustomerDetailsResponseFields(GraphQLField):
 
     def fields(
         self,
-        *subfields: Union[CustomerDetailsResponseGraphQLField, "CustomerDetailsFields"]
+        *subfields: Union[CustomerDetailsResponseGraphQLField, "CustomerDetailsFields"],
     ) -> "CustomerDetailsResponseFields":
         """Subfields should come from the CustomerDetailsResponseFields class"""
         self._subfields.extend(subfields)
@@ -293,7 +287,7 @@ class DurationCurveByTerminalFields(GraphQLField):
 
     def fields(
         self,
-        *subfields: Union[DurationCurveByTerminalGraphQLField, "DurationCurveFields"]
+        *subfields: Union[DurationCurveByTerminalGraphQLField, "DurationCurveFields"],
     ) -> "DurationCurveByTerminalFields":
         """Subfields should come from the DurationCurveByTerminalFields class"""
         self._subfields.extend(subfields)
@@ -393,7 +387,7 @@ class FeederLoadAnalysisReportFields(GraphQLField):
         self,
         *subfields: Union[
             FeederLoadAnalysisReportGraphQLField, "FeederLoadAnalysisSpecFields"
-        ]
+        ],
     ) -> "FeederLoadAnalysisReportFields":
         """Subfields should come from the FeederLoadAnalysisReportFields class"""
         self._subfields.extend(subfields)
@@ -487,7 +481,7 @@ class GeoJsonFeatureFields(GraphQLField):
             GeoJsonFeatureGraphQLField,
             "GeoJsonGeometryFields",
             "GeoJsonPropertiesFields",
-        ]
+        ],
     ) -> "GeoJsonFeatureFields":
         """Subfields should come from the GeoJsonFeatureFields class"""
         self._subfields.extend(subfields)
@@ -739,7 +733,7 @@ class HcScenarioConfigsPageFields(GraphQLField):
         self,
         *subfields: Union[
             HcScenarioConfigsPageGraphQLField, "ScenarioConfigurationFields"
-        ]
+        ],
     ) -> "HcScenarioConfigsPageFields":
         """Subfields should come from the HcScenarioConfigsPageFields class"""
         self._subfields.extend(subfields)
@@ -788,7 +782,7 @@ class HcWorkPackageFields(GraphQLField):
             HcWorkPackageGraphQLField,
             "GqlUserFields",
             "WorkPackageProgressDetailsFields",
-        ]
+        ],
     ) -> "HcWorkPackageFields":
         """Subfields should come from the HcWorkPackageFields class"""
         self._subfields.extend(subfields)
@@ -1082,7 +1076,7 @@ class OpportunityFields(GraphQLField):
         self,
         *subfields: Union[
             OpportunityGraphQLField, "EquipmentFields", "GeoJsonFeatureFields"
-        ]
+        ],
     ) -> "OpportunityFields":
         """Subfields should come from the OpportunityFields class"""
         self._subfields.extend(subfields)
@@ -1133,7 +1127,7 @@ class PowerFactoryModelFields(GraphQLField):
         self,
         *subfields: Union[
             PowerFactoryModelGraphQLField, "PowerFactoryModelGenerationSpecFields"
-        ]
+        ],
     ) -> "PowerFactoryModelFields":
         """Subfields should come from the PowerFactoryModelFields class"""
         self._subfields.extend(subfields)
@@ -1170,7 +1164,7 @@ class PowerFactoryModelGenerationSpecFields(GraphQLField):
             "GqlDistributionTransformerConfigFields",
             "GqlLoadConfigFields",
             "GqlScenarioConfigFields",
-        ]
+        ],
     ) -> "PowerFactoryModelGenerationSpecFields":
         """Subfields should come from the PowerFactoryModelGenerationSpecFields class"""
         self._subfields.extend(subfields)
@@ -1196,7 +1190,7 @@ class PowerFactoryModelPageFields(GraphQLField):
 
     def fields(
         self,
-        *subfields: Union[PowerFactoryModelPageGraphQLField, "PowerFactoryModelFields"]
+        *subfields: Union[PowerFactoryModelPageGraphQLField, "PowerFactoryModelFields"],
     ) -> "PowerFactoryModelPageFields":
         """Subfields should come from the PowerFactoryModelPageFields class"""
         self._subfields.extend(subfields)
@@ -1231,7 +1225,7 @@ class PowerFactoryModelTemplateFields(GraphQLField):
         *subfields: Union[
             PowerFactoryModelTemplateGraphQLField,
             "PowerFactoryModelGenerationSpecFields",
-        ]
+        ],
     ) -> "PowerFactoryModelTemplateFields":
         """Subfields should come from the PowerFactoryModelTemplateFields class"""
         self._subfields.extend(subfields)
@@ -1259,7 +1253,7 @@ class PowerFactoryModelTemplatePageFields(GraphQLField):
         self,
         *subfields: Union[
             PowerFactoryModelTemplatePageGraphQLField, "PowerFactoryModelTemplateFields"
-        ]
+        ],
     ) -> "PowerFactoryModelTemplatePageFields":
         """Subfields should come from the PowerFactoryModelTemplatePageFields class"""
         self._subfields.extend(subfields)
@@ -1472,7 +1466,7 @@ class SincalGlobalInputsConfigFields(GraphQLField):
         self,
         *subfields: Union[
             SincalGlobalInputsConfigGraphQLField, "SincalConfigFileFields"
-        ]
+        ],
     ) -> "SincalGlobalInputsConfigFields":
         """Subfields should come from the SincalGlobalInputsConfigFields class"""
         self._subfields.extend(subfields)
@@ -1500,7 +1494,7 @@ class SincalModelFields(GraphQLField):
 
     def fields(
         self,
-        *subfields: Union[SincalModelGraphQLField, "SincalModelGenerationSpecFields"]
+        *subfields: Union[SincalModelGraphQLField, "SincalModelGenerationSpecFields"],
     ) -> "SincalModelFields":
         """Subfields should come from the SincalModelFields class"""
         self._subfields.extend(subfields)
@@ -1577,7 +1571,7 @@ class SincalModelPresetFields(GraphQLField):
         self,
         *subfields: Union[
             SincalModelPresetGraphQLField, "SincalModelGenerationSpecFields"
-        ]
+        ],
     ) -> "SincalModelPresetFields":
         """Subfields should come from the SincalModelPresetFields class"""
         self._subfields.extend(subfields)
@@ -1603,7 +1597,7 @@ class SincalModelPresetPageFields(GraphQLField):
 
     def fields(
         self,
-        *subfields: Union[SincalModelPresetPageGraphQLField, "SincalModelPresetFields"]
+        *subfields: Union[SincalModelPresetPageGraphQLField, "SincalModelPresetFields"],
     ) -> "SincalModelPresetPageFields":
         """Subfields should come from the SincalModelPresetPageFields class"""
         self._subfields.extend(subfields)
@@ -1705,7 +1699,7 @@ class StudyResultFields(GraphQLField):
             "GeoJsonOverlayFields",
             "ResultSectionInterface",
             "StateOverlayFields",
-        ]
+        ],
     ) -> "StudyResultFields":
         """Subfields should come from the StudyResultFields class"""
         self._subfields.extend(subfields)
@@ -1783,7 +1777,7 @@ class UserCustomerListColumnConfigFields(GraphQLField):
         self,
         *subfields: Union[
             UserCustomerListColumnConfigGraphQLField, "CustomerListColumnConfigFields"
-        ]
+        ],
     ) -> "UserCustomerListColumnConfigFields":
         """Subfields should come from the UserCustomerListColumnConfigFields class"""
         self._subfields.extend(subfields)
@@ -1933,7 +1927,7 @@ class WorkPackageProgressDetailsFields(GraphQLField):
             WorkPackageProgressDetailsGraphQLField,
             "WorkPackageModelGroupingsFields",
             "WorkPackageModelTotalsFields",
-        ]
+        ],
     ) -> "WorkPackageProgressDetailsFields":
         """Subfields should come from the WorkPackageProgressDetailsFields class"""
         self._subfields.extend(subfields)
