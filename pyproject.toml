@@ -67,5 +67,6 @@ introspection_input_value_deprecations=true
 plugins=[
     "zepben.eas.lib.ariadne_plugins.custom_query_type_hinter.CustomQueryTypeHinterPlugin",
     "zepben.eas.lib.ariadne_plugins.missed_import_checker.MissedImportCheckerPlugin",
-    "zepben.eas.lib.ariadne_plugins.gql_all_fields.GqlAllFieldsPlugin"
+    "zepben.eas.lib.ariadne_plugins.gql_all_fields.GqlAllFieldsPlugin",
+    "zepben.eas.lib.ariadne_plugins.license_headers.LicenseHeadersPlugin",
 ]
