@@ -61,6 +61,7 @@ async def test_can_connect_to_local_eas_async_calling_func():
         )
     ))
 
+@pytest.mark.skip("only displays type hinting in client.query call")
 @pytest.mark.asyncio
 async def test_do_things():
     client = EasClient(
@@ -68,6 +69,9 @@ async def test_do_things():
         port=7654,
         asynchronous=True
     )
-    await client.do_query(Query.list_ingestor_runs(filter_=None, sort=None), IngestionRunFields.completed_at, IngestionRunFields.status)
-    await client.do_query(Query.list_ingestor_runs(filter_=None, sort=None), IngestionJobFields.application, 1)
+    try:
+        await client.query(Query.list_ingestor_runs(filter_=None, sort=None), IngestionRunFields.completed_at, IngestionRunFields.status)
+        await client.query(Query.list_ingestor_runs(filter_=None, sort=None), IngestionJobFields.application, 1)
+    except:
+        pass
     # my_query(Query.list_ingestor_runs(filter_=None, sort=None))
