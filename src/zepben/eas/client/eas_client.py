@@ -9,65 +9,44 @@ from __future__ import annotations
 __all__ = ["EasClient"]
 
 import sys
-
+import warnings
 
 if sys.version_info < (3, 13):
     from typing_extensions import deprecated
 else:
     from warnings import deprecated
 
-import inspect
 import ssl
 from datetime import datetime
 from http import HTTPStatus
-from types import MethodType
-from typing import Any, Generator, cast, TypeVar, TYPE_CHECKING
+from typing import Any, cast, TypeVar, TYPE_CHECKING
 
 import httpx
 from graphql import OperationType
 
-from zepben.eas.client.decorators import async_func, catch_warnings, opt_in, add_method_to
+from zepben.eas.client.decorators import async_func, catch_warnings, opt_in
 
-from zepben.eas.lib.generated_graphql_client import GraphQLClientHttpError, GraphQLClientInvalidResponseError, \
-    GraphQLClientGraphQLMultiError, Client, WorkPackageInput, FeederLoadAnalysisInput, StudyInput, IngestorConfigInput, \
-    IngestorRunsFilterInput, IngestorRunsSortCriteriaInput, HcGeneratorConfigInput, HcModelConfigInput, OpenDssModelInput, \
-    GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
-from zepben.eas.lib.generated_graphql_client.base_operation import GraphQLField
-from zepben.eas.lib.generated_graphql_client.custom_fields import FeederLoadAnalysisReportFields, IngestionRunFields, \
-    HcCalibrationFields, GqlTxTapRecordFields, OpenDssModelPageFields, OpenDssModelFields
-from zepben.eas.lib.generated_graphql_client.custom_mutations import Mutation
-from zepben.eas.lib.generated_graphql_client.custom_queries import Query
+try:
+    from zepben.eas.lib.generated_graphql_client import GraphQLClientHttpError, GraphQLClientInvalidResponseError, \
+        GraphQLClientGraphQLMultiError, Client, WorkPackageInput, FeederLoadAnalysisInput, StudyInput, IngestorConfigInput, \
+        IngestorRunsFilterInput, IngestorRunsSortCriteriaInput, HcGeneratorConfigInput, HcModelConfigInput, OpenDssModelInput, \
+        GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
+    from zepben.eas.lib.generated_graphql_client.base_operation import GraphQLField
+    from zepben.eas.lib.generated_graphql_client.custom_fields import FeederLoadAnalysisReportFields, IngestionRunFields, \
+        HcCalibrationFields, GqlTxTapRecordFields, OpenDssModelPageFields, OpenDssModelFields
+    from zepben.eas.lib.generated_graphql_client.custom_mutations import Mutation
+    from zepben.eas.lib.generated_graphql_client.custom_queries import Query
+
+
+except ImportError:
+    warnings.warn("could not import generated graphql client.")
+    Client = object
 
 if TYPE_CHECKING:
     from zepben.eas import GraphQLQuery
 
 T = TypeVar("T")
 R = TypeVar("R")
-
-
-# noinspection PyDecorator,PyNestedDecorators
-@add_method_to(GraphQLField)
-@classmethod
-def all_fields(cls) -> Generator[GraphQLField | MethodType, None, None]:
-    """
-    returns a generator over all ``GraphQLField``s that a given class returns
-
-    :param cls: class to check
-    :return: generator over all GraphQLField's in a given class
-    """
-    for k in dir(cls):
-        # we only want "public" attrs.
-        if k.startswith("_"):
-            continue
-        # obviously we don't want to return ourselves.
-        if k == "all_fields":
-            continue
-
-        v = getattr(cls, k)
-        if isinstance(v, GraphQLField):
-            yield v
-        elif inspect.ismethod(v):
-            yield v().fields(*v().all_fields())
 
 
 class EasClient(Client):
@@ -526,19 +505,18 @@ class EasClient(Client):
                 offset=offset,
                 filter_=query_filter,
                 sort=query_sort
-            ).fields(
-                OpenDssModelPageFields.total_count,
-                OpenDssModelPageFields.offset,
-                OpenDssModelPageFields.models().fields(
-                    OpenDssModelFields.id,
-                    OpenDssModelFields.name,
-                    OpenDssModelFields.created_at,
-                    OpenDssModelFields.state,
-                    OpenDssModelFields.download_url,
-                    OpenDssModelFields.is_public,
-                    OpenDssModelFields.errors,
-                    OpenDssModelFields.generation_spec
-                ),
+            ),
+            OpenDssModelPageFields.total_count,
+            OpenDssModelPageFields.offset,
+            OpenDssModelPageFields.models().fields(
+                OpenDssModelFields.id,
+                OpenDssModelFields.name,
+                OpenDssModelFields.created_at,
+                OpenDssModelFields.state,
+                OpenDssModelFields.download_url,
+                OpenDssModelFields.is_public,
+                OpenDssModelFields.errors,
+                OpenDssModelFields.generation_spec
             ),
         )
 

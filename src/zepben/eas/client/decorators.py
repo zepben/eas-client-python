@@ -4,12 +4,12 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-__all__ = ['catch_warnings', 'async_func', 'opt_in', "add_method_to"]
+__all__ = ['catch_warnings', 'async_func', 'opt_in']
 
 import asyncio
 import functools
 import warnings
-from typing import Callable, ParamSpec, TypeVar, cast
+from typing import Callable
 
 
 def catch_warnings(func: Callable) -> Callable:
@@ -39,15 +39,6 @@ def async_func(func):
         except RuntimeError:
             return asyncio.run(func(self, *args, **kwargs))
     return wrapper
-
-def add_method_to(class_to_extend: type) -> Callable:
-    """
-
-    :rtype: Callable
-    """
-    def decorator(func: Callable):
-        setattr(class_to_extend, func.__name__, func)
-    return decorator
 
 def opt_in(func: Callable) -> Callable:
     @functools.wraps(func)

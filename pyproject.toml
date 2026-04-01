@@ -49,7 +49,7 @@ test = [
     "pytest-httpserver==1.0.8",
     "trustme==0.9.0"
 ]
-eas-codegen = [
+codegen = [
     "ariadne-codegen @ git+https://github.com/chestm007/ariadne-codegen"  # This could break a pypi upload. Waiting on https://github.com/mirumee/ariadne-codegen/pull/413 to be merged.
 ]
 
@@ -65,5 +65,7 @@ target_package_name='generated_graphql_client'
 introspection_descriptions=true
 introspection_input_value_deprecations=true
 plugins=[
-    "zepben.eas.lib.ariadne_plugins.custom_query_type_hinter.CustomQueryTypeHinterPlugin"
+    "zepben.eas.lib.ariadne_plugins.custom_query_type_hinter.CustomQueryTypeHinterPlugin",
+    "zepben.eas.lib.ariadne_plugins.missed_import_checker.MissedImportCheckerPlugin",
+    "zepben.eas.lib.ariadne_plugins.gql_all_fields.GqlAllFieldsPlugin"
 ]

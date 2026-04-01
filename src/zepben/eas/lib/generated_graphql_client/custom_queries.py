@@ -1,7 +1,5 @@
 from typing import Any, Optional
 
-from zepben.eas.lib.ariadne_plugins.types import GraphQLQuery
-
 from .custom_fields import (
     AppOptionsFields,
     CustomerDetailsResponseFields,
@@ -44,49 +42,7 @@ from .custom_fields import (
     VariantWorkPackageFields,
     WorkPackageTreeFields,
 )
-from .custom_typing_fields import (
-    AppOptionsGraphQLField,
-    CustomerDetailsResponseGraphQLField,
-    DurationCurveByTerminalGraphQLField,
-    FeederLoadAnalysisReportGraphQLField,
-    GqlTxTapRecordGraphQLField,
-    GqlUserGraphQLField,
-    GqlUserResponseGraphQLField,
-    GraphQLField,
-    HcCalibrationGraphQLField,
-    HcScenarioConfigsPageGraphQLField,
-    HcWorkPackageGraphQLField,
-    HcWorkPackagePageGraphQLField,
-    IngestionJobGraphQLField,
-    IngestionRunGraphQLField,
-    IngestorRunPageGraphQLField,
-    JobSourceGraphQLField,
-    MachineUserGraphQLField,
-    MetricGraphQLField,
-    NetworkModelsGraphQLField,
-    OpenDssModelPageGraphQLField,
-    OpportunitiesByYearGraphQLField,
-    OpportunityGraphQLField,
-    OpportunityLocationGraphQLField,
-    PowerFactoryModelGraphQLField,
-    PowerFactoryModelPageGraphQLField,
-    PowerFactoryModelTemplateGraphQLField,
-    PowerFactoryModelTemplatePageGraphQLField,
-    ProcessedDiffGraphQLField,
-    ProcessedDiffPageGraphQLField,
-    SincalGlobalInputsConfigGraphQLField,
-    SincalModelGraphQLField,
-    SincalModelPageGraphQLField,
-    SincalModelPresetGraphQLField,
-    SincalModelPresetPageGraphQLField,
-    StudyGraphQLField,
-    StudyPageGraphQLField,
-    StudyResultGraphQLField,
-    UploadUrlResponseGraphQLField,
-    UserCustomerListColumnConfigGraphQLField,
-    VariantWorkPackageGraphQLField,
-    WorkPackageTreeGraphQLField,
-)
+from .custom_typing_fields import GraphQLField
 from .enums import (
     ContainerType,
     HostingCapacityFileType,
@@ -1019,3 +975,50 @@ class Query:
         return VariantWorkPackageFields(
             field_name="getVariantUploadInfo", arguments=cleared_arguments
         )
+
+
+from zepben.eas.lib.ariadne_plugins.types import GraphQLQuery
+
+from .custom_typing_fields import (
+    AppOptionsGraphQLField,
+    CustomerDetailsResponseGraphQLField,
+    DurationCurveByTerminalGraphQLField,
+    FeederLoadAnalysisReportGraphQLField,
+    GqlTxTapRecordGraphQLField,
+    GqlUserGraphQLField,
+    GqlUserResponseGraphQLField,
+    GraphQLField,
+    HcCalibrationGraphQLField,
+    HcScenarioConfigsPageGraphQLField,
+    HcWorkPackageGraphQLField,
+    HcWorkPackagePageGraphQLField,
+    IngestionJobGraphQLField,
+    IngestionRunGraphQLField,
+    IngestorRunPageGraphQLField,
+    JobSourceGraphQLField,
+    MachineUserGraphQLField,
+    MetricGraphQLField,
+    NetworkModelsGraphQLField,
+    OpenDssModelPageGraphQLField,
+    OpportunitiesByYearGraphQLField,
+    OpportunityGraphQLField,
+    OpportunityLocationGraphQLField,
+    PowerFactoryModelGraphQLField,
+    PowerFactoryModelPageGraphQLField,
+    PowerFactoryModelTemplateGraphQLField,
+    PowerFactoryModelTemplatePageGraphQLField,
+    ProcessedDiffGraphQLField,
+    ProcessedDiffPageGraphQLField,
+    SincalGlobalInputsConfigGraphQLField,
+    SincalModelGraphQLField,
+    SincalModelPageGraphQLField,
+    SincalModelPresetGraphQLField,
+    SincalModelPresetPageGraphQLField,
+    StudyGraphQLField,
+    StudyPageGraphQLField,
+    StudyResultGraphQLField,
+    UploadUrlResponseGraphQLField,
+    UserCustomerListColumnConfigGraphQLField,
+    VariantWorkPackageGraphQLField,
+    WorkPackageTreeGraphQLField,
+)
