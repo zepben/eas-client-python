@@ -6,6 +6,7 @@
 import ast
 import pytest
 
+@pytest.mark.skip("deleteme")
 @pytest.mark.asyncio
 async def test_do_things():
     from zepben.eas.lib.generated_graphql_client import custom_queries

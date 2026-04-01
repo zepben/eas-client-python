@@ -9,7 +9,7 @@ __all__ = ['catch_warnings', 'async_func', 'opt_in', "add_method_to"]
 import asyncio
 import functools
 import warnings
-from typing import Callable
+from typing import Callable, ParamSpec, TypeVar, cast
 
 
 def catch_warnings(func: Callable) -> Callable:
@@ -23,7 +23,13 @@ def catch_warnings(func: Callable) -> Callable:
     return wrapper
 
 
-def async_func(func: Callable) -> Callable:
+# Type hinting async_func will break the type hinting.
+#
+# P = ParamSpec("P")
+# R = TypeVar("R")
+# def async_func(func: Callable[P, R)) -> Callable[P, R]:
+def async_func(func):
+    @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         if self._asynchronous:
             return func(self, *args, **kwargs)

@@ -136,9 +136,11 @@ class EasClient(Client):
     async def close(self):
         await self.http_client.aclose()
 
-    async def do_query(self, query: GraphQLQuery[T, R], field: R, *additional_fields: R, operation_name: str = None) -> T:
+    @async_func
+    async def do_query(self, query: GraphQLQuery[T, R], *additional_fields: R, operation_name: str = None) -> T:
         """Execute a query against the Evolve App Server."""
-        return await super().query(query.fields(field, *additional_fields), operation_name=operation_name)
+        query = query.fields(*additional_fields) if hasattr(query, "fields") else query
+        return await super().query(query, operation_name=operation_name)
 
     @async_func
     async def mutation(self, *fields: GraphQLField, operation_name: str = None) -> dict[str, Any]:
@@ -224,7 +226,7 @@ class EasClient(Client):
         :param work_package: An instance of the `WorkPackageConfig` data class representing the work package configuration for the run
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
-        return self.query(
+        return self.do_query(
             Query.get_work_package_cost_estimation(work_package),
         )
 
@@ -266,7 +268,7 @@ class EasClient(Client):
 
         :return: The HTTP response received from the Evolve App Server after requesting work packages progress info
         """
-        return self.query(
+        return self.do_query(
             Query.get_active_work_packages(),
         )
 
@@ -296,7 +298,7 @@ class EasClient(Client):
         :param full_spec: If true the response will include the request sent to generate the report
         :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report status
         """
-        return self.query(
+        return self.do_query(
             Query.get_feeder_load_analysis_report_status(report_id, full_spec=full_spec).fields(
                 *FeederLoadAnalysisReportFields.all_fields()
             ),
@@ -339,7 +341,7 @@ class EasClient(Client):
         :param ingestor_run_id: The ID of the ingestor run to retrieve execution information about.
         :return: The HTTP response received from the Evolve App Server including the ingestor run information (if found).
         """
-        return self.query(
+        return self.do_query(
             Query.get_ingestor_run(ingestor_run_id).fields(
                 *IngestionRunFields.all_fields()
             ),
@@ -361,7 +363,7 @@ class EasClient(Client):
         :param query_sort: An `IngestorRunsSortCriteriaInput` that can control the order of the returned record based on a number of fields. (Optional)
         :return: The HTTP response received from the Evolve App Server including all matching ingestor records found.
         """
-        return self.query(
+        return self.do_query(
             Query.list_ingestor_runs(filter_=query_filter, sort=query_sort).fields(
                 IngestionRunFields.id,
                 IngestionRunFields.container_runtime_type,
@@ -425,7 +427,7 @@ class EasClient(Client):
         :param id: The calibration run ID
         :return: The HTTP response received from the Evolve App Server after requesting calibration run info
         """
-        return self.query(
+        return self.do_query(
             Query.get_calibration_run(id).fields(
                 HcCalibrationFields.id,
                 HcCalibrationFields.name,
@@ -449,7 +451,7 @@ class EasClient(Client):
 
         :return: The HTTP response received from the Evolve App Server after requesting completed calibration runs
         """
-        return self.query(
+        return self.do_query(
             Query.get_calibration_sets(),
         )
 
@@ -470,7 +472,7 @@ class EasClient(Client):
         :param transformer_mrid: An optional filter to return only the transformer tap settings for a particular transfomer mrid
         :return: The HTTP response received from the Evolve App Server after requesting transformer tap settings for the calibration id
         """
-        return self.query(
+        return self.do_query(
             Query.get_transformer_tap_settings(
                 calibration_name=calibration_name,
                 feeder=feeder,
@@ -518,7 +520,7 @@ class EasClient(Client):
         :param query_sort: The sorting to apply to the query
         :return: The HTTP response received from the Evolve App Server after requesting opendss export run information
         """
-        return self.query(
+        return self.do_query(
             Query.paged_open_dss_models(
                 limit=limit,
                 offset=offset,
