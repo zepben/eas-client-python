@@ -1,13 +1,33 @@
 # EAS Python client
 ## [0.30.0] - UNRELEASED
 ### Breaking Changes
-* None.
+* Deprecated methods in EasClient:
+  * aclose
+  * get_work_package_cost_estimation
+  * run_hosting_capacity_work_package
+  * cancel_hosting_capacity_work_package
+  * get_hosting_capacity_work_packages_progress
+  * run_feeder_load_analysis_report
+  * get_feeder_load_analysis_report_status
+  * upload_study
+  * run_ingestor
+  * get_ingestor_run
+  * get_ingestor_run_list
+  * run_hosting_capacity_calibration
+  * get_hosting_capacity_calibration_run
+  * get_hosting_capacity_calibration_sets
+  * get_transformer_tap_settings
+  * run_opendss_export
+  * get_paged_opendss_models
+  * get_opendss_model
+* Most Input object will need to be migrated over to the new data model
 
 ### New Features
 * None.
 
 ### Enhancements
-* None.
+* EasClient has new `query` and `mutation` methods that will accept `Query` and `Mutation` objects respectively.
+  * Available queries and mutations can be found as `@classmethods` on `Queries` and `Mutations`.
 
 ### Fixes
 * None.

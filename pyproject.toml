@@ -1,4 +1,4 @@
-#  Copyright 2025 Zeppelin Bend Pty Ltd
+#  Copyright 2026 Zeppelin Bend Pty Ltd
 #
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,14 +7,13 @@
 [build-system]
 requires = [
     "setuptools",
-    "wheel",
     "build>=1.2.0"
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "zepben.eas"
-version = "0.30.0b1"
+version = "1.0.0b1"
 description = "Python SDK for interacting with the Evolve App Server"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = "MPL-2.0"
@@ -25,10 +24,10 @@ authors = [
 ]
 dependencies = [
     "geojson==2.5.0",
-    "requests<3.0.0,>=2.26.0",
-    "urllib3==2.5.0",
-    "zepben.ewb==1.1.0",
-    "aiohttp[speedups]==3.9.0",
+    "httpx",
+    "graphql-core==3.2.8",
+    "pydantic",
+    "pydantic_core",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -50,6 +49,23 @@ test = [
     "pytest-httpserver==1.0.8",
     "trustme==0.9.0"
 ]
+codegen = [
+    "ariadne-codegen @ git+https://github.com/chestm007/ariadne-codegen"  # This could break a pypi upload. Waiting on https://github.com/mirumee/ariadne-codegen/pull/413 to be merged.
+]
 
 [tool.setuptools.packages.find]
 where = ["src/"]
+
+[tool.ariadne-codegen]
+remote_schema_url = "http://127.0.0.1:7654/api/graphql"  # Set to address of Evolve App Server
+enable_custom_operations=true
+include_comments=false
+target_package_path='src/zepben/eas/lib'
+target_package_name='generated_graphql_client'
+introspection_descriptions=true
+introspection_input_value_deprecations=true
+plugins=[
+    "zepben.eas.lib.ariadne_plugins.custom_query_type_hinter.CustomQueryTypeHinterPlugin",
+    "zepben.eas.lib.ariadne_plugins.missed_import_checker.MissedImportCheckerPlugin",
+    "zepben.eas.lib.ariadne_plugins.gql_all_fields.GqlAllFieldsPlugin"
+]
