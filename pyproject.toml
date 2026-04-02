@@ -24,7 +24,7 @@ authors = [
 ]
 dependencies = [
     "geojson==2.5.0",
-    "httpx",
+    "httpx==0.28.1",
     "graphql-core==3.2.8",
     "pydantic",
     "pydantic_core",
@@ -46,6 +46,7 @@ Homepage = "https://zepben.com"
 test = [
     "pytest",
     "pytest-cov",
+    "pytest-asyncio",
     "pytest-httpserver==1.0.8",
     "trustme==0.9.0"
 ]
@@ -67,5 +68,6 @@ introspection_input_value_deprecations=true
 plugins=[
     "zepben.eas.lib.ariadne_plugins.custom_query_type_hinter.CustomQueryTypeHinterPlugin",
     "zepben.eas.lib.ariadne_plugins.missed_import_checker.MissedImportCheckerPlugin",
-    "zepben.eas.lib.ariadne_plugins.gql_all_fields.GqlAllFieldsPlugin"
+    "zepben.eas.lib.ariadne_plugins.gql_all_fields.GqlAllFieldsPlugin",
+    "zepben.eas.lib.ariadne_plugins.license_headers.LicenseHeadersPlugin",
 ]
