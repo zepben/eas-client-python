@@ -116,9 +116,9 @@ class EasClient(Client):
         await self.http_client.aclose()
 
     @async_func
-    async def query(self, query: GraphQLQuery[T, R], *additional_fields: R, operation_name: str = None) -> T:
+    async def query(self, query: GraphQLQuery[T, R], *returned_fields: R, operation_name: str = None) -> T:
         """Execute a query against the Evolve App Server."""
-        query = query.fields(*additional_fields) if hasattr(query, "fields") else query
+        query = query.fields(*returned_fields) if hasattr(query, "fields") else query
         return await super().query(query, operation_name=operation_name)
 
     @async_func
