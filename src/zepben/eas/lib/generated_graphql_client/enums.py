@@ -165,6 +165,13 @@ class OpportunitiesType(str, Enum):
     VOLTAGESUPPORT = "VOLTAGESUPPORT"
 
 
+class PowerFactoryModelState(str, Enum):
+    COULD_NOT_START = "COULD_NOT_START"
+    CREATION = "CREATION"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
 class SectionType(str, Enum):
     TABLE = "TABLE"
 
@@ -182,6 +189,14 @@ class SincalFileType(str, Enum):
     PROTECTION_STANDARD_DATABASE = "PROTECTION_STANDARD_DATABASE"
     FRONTEND_CONFIG = "FRONTEND_CONFIG"
     BACKEND_CONFIG = "BACKEND_CONFIG"
+
+
+class SincalModelState(str, Enum):
+    COULD_NOT_START = "COULD_NOT_START"
+    CREATION = "CREATION"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    PARTIAL = "PARTIAL"
 
 
 class SortOrder(str, Enum):

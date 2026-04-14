@@ -51,7 +51,8 @@ test = [
     "trustme==0.9.0"
 ]
 codegen = [
-    "ariadne-codegen @ git+https://github.com/chestm007/ariadne-codegen"  # This could break a pypi upload. Waiting on https://github.com/mirumee/ariadne-codegen/pull/413 to be merged.
+    #"ariadne-codegen>0.18.0"  # Waiting on https://github.com/mirumee/ariadne-codegen/pull/413 to be merged.
+    "zepben-ariadne-codegen==0.18.0.1"  # Waiting on https://github.com/mirumee/ariadne-codegen/pull/413 to be merged.
 ]
 
 [tool.setuptools.packages.find]

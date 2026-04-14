@@ -21,7 +21,9 @@ from .enums import (
     IngestorRuntimeKind,
     InterventionClass,
     OpenDssModelState,
+    PowerFactoryModelState,
     SectionType,
+    SincalModelState,
     SortOrder,
 )
 
@@ -227,7 +229,7 @@ class GetPowerFactoryModelTemplatesSortCriteriaInput(BaseModel):
 class GetPowerFactoryModelsFilterInput(BaseModel):
     is_public: Optional[bool] = Field(alias="isPublic", default=None)
     name: Optional[str] = None
-    state: Optional[list[str]] = None
+    state: Optional[list[PowerFactoryModelState]] = None
 
 
 class GetPowerFactoryModelsSortCriteriaInput(BaseModel):
@@ -251,7 +253,7 @@ class GetSincalModelPresetsSortCriteriaInput(BaseModel):
 class GetSincalModelsFilterInput(BaseModel):
     is_public: Optional[bool] = Field(alias="isPublic", default=None)
     name: Optional[str] = None
-    state: Optional[list[str]] = None
+    state: Optional[list[SincalModelState]] = None
 
 
 class GetSincalModelsSortCriteriaInput(BaseModel):
