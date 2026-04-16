@@ -176,5 +176,5 @@ pip install -e ".[eas-codegen]"
 With these installed and EAS running locally on port 7654, you can then generate the client:
 
 ```shell
-ariadne-codegen
+python ariadne-codegen.py
 ```

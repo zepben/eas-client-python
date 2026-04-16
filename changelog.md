@@ -30,7 +30,7 @@
   * Available queries and mutations can be found as `@classmethods` on `Queries` and `Mutations`.
 
 ### Fixes
-* None.
+* Patched ariadne-codegen while waiting for release of dependent code.
 
 ### Notes
 * None.
