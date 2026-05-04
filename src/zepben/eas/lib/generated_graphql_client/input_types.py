@@ -396,6 +396,12 @@ class HcModelConfigInput(BaseModel):
     collapse_negligible_impedances: Optional[bool] = Field(
         alias="collapseNegligibleImpedances", default=None
     )
+    negligible_impedance_min_hv_threshold: Optional[float] = Field(
+        alias="negligibleImpedanceMinHvThreshold", default=None
+    )
+    negligible_impedance_min_lv_threshold: Optional[float] = Field(
+        alias="negligibleImpedanceMinLvThreshold", default=None
+    )
     collapse_swer: Optional[bool] = Field(alias="collapseSWER", default=None)
     combine_common_impedances: Optional[bool] = Field(
         alias="combineCommonImpedances", default=None

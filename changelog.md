@@ -28,6 +28,7 @@
 ### Enhancements
 * EasClient has new `query` and `mutation` methods that will accept `Query` and `Mutation` objects respectively.
   * Available queries and mutations can be found as `@classmethods` on `Queries` and `Mutations`.
+* Added support for `negligibleImpedanceMinHvThreshold` and `negligibleImpedanceMinLvThreshold` in `ModelConfig`.
 
 ### Fixes
 * Patched ariadne-codegen while waiting for release of dependent code.
