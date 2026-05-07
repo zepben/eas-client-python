@@ -4,7 +4,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from zepben.eas import FeederLoadAnalysisReportFields, EasClient, FeederLoadAnalysisSpecFields
+from zepben.eas import (
+    FeederLoadAnalysisReportFields,
+    EasClient,
+    FeederLoadAnalysisSpecFields,
+)
 
 
 class MockResponse:
@@ -27,7 +31,7 @@ def test_patched_client_used_in_eas_client():
 def test_patched_client_overrides_get_data_to_return_the_whole_json_response():
 
     client = EasClient(host="test_host", port=9876)
-    assert client.get_data(MockResponse()) == {'json': 'probably'}
+    assert client.get_data(MockResponse()) == {"json": "probably"}
 
 
 def test_all_fields():

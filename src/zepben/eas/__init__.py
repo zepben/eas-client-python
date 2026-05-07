@@ -4,16 +4,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
-import warnings
 
 from zepben.eas.client.eas_client import *
 
-try:
-    from zepben.eas.lib.generated_graphql_client import *
-    from zepben.eas.lib.generated_graphql_client.custom_mutations import *
-    from zepben.eas.lib.generated_graphql_client.custom_queries import *
-    from zepben.eas.lib.generated_graphql_client.custom_fields import *
-except ImportError:
-    warnings.warn(
-        "Could not import `zepben.eas.lib.generated_graphql_client`. "
-    )
+from zepben.eas.lib import *
+from zepben.eas.lib.custom_mutations import *
+from zepben.eas.lib.custom_queries import *
+from zepben.eas.lib.custom_fields import *
+from zepben.eas.lib.enums import *

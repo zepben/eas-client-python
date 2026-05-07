@@ -16,27 +16,62 @@ import trustme
 from pytest_httpserver import HTTPServer
 from werkzeug import Response
 
-from zepben.eas import EasClient, OpenDssModelState, WorkPackageInput, ForecastConfigInput, TimePeriodInput, \
-    FeederConfigInput, FeederConfigsInput, FixedTimeInput, FixedTimeLoadOverrideInput, TimePeriodLoadOverrideInput, \
-    StudyInput, StudyResultInput, InterventionConfigInput, YearRangeInput, InterventionClass, \
-    CandidateGenerationConfigInput, CandidateGenerationType, HcGeneratorConfigInput, HcModelConfigInput, \
-    HcSolveConfigInput, GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput, SortOrder, IngestorConfigInput, \
-    IngestorRunsFilterInput, IngestorRunState, IngestorRuntimeKind, IngestorRunsSortCriteriaInput, OpenDssModelInput, \
-    OpenDssModelGenerationSpecInput, OpenDssModelOptionsInput, OpenDssModulesConfigInput, OpenDssCommonConfigInput, \
-    HcFeederScenarioAllocationStrategy, HcLoadPlacement, HcMeterPlacementConfigInput, HcSwitchMeterPlacementConfigInput, \
-    HcSwitchClass, HcInverterControlConfigInput, HcSolveMode, HcRawResultsConfigInput, HcNodeLevelResultsConfigInput
+from zepben.eas import (
+    EasClient,
+    OpenDssModelState,
+    WorkPackageInput,
+    ForecastConfigInput,
+    TimePeriodInput,
+    FeederConfigInput,
+    FeederConfigsInput,
+    FixedTimeInput,
+    FixedTimeLoadOverrideInput,
+    TimePeriodLoadOverrideInput,
+    StudyInput,
+    StudyResultInput,
+    InterventionConfigInput,
+    YearRangeInput,
+    InterventionClass,
+    CandidateGenerationConfigInput,
+    CandidateGenerationType,
+    HcGeneratorConfigInput,
+    HcModelConfigInput,
+    HcSolveConfigInput,
+    GetOpenDssModelsFilterInput,
+    GetOpenDssModelsSortCriteriaInput,
+    SortOrder,
+    IngestorConfigInput,
+    IngestorRunsFilterInput,
+    IngestorRunState,
+    IngestorRuntimeKind,
+    IngestorRunsSortCriteriaInput,
+    OpenDssModelInput,
+    OpenDssModelGenerationSpecInput,
+    OpenDssModelOptionsInput,
+    OpenDssModulesConfigInput,
+    OpenDssCommonConfigInput,
+    HcFeederScenarioAllocationStrategy,
+    HcLoadPlacement,
+    HcMeterPlacementConfigInput,
+    HcSwitchMeterPlacementConfigInput,
+    HcSwitchClass,
+    HcInverterControlConfigInput,
+    HcSolveMode,
+    HcRawResultsConfigInput,
+    HcNodeLevelResultsConfigInput,
+)
 
-mock_host = ''.join(random.choices(string.ascii_lowercase, k=10))
+mock_host = "".join(random.choices(string.ascii_lowercase, k=10))
 mock_port = random.randrange(1024)
-mock_client_id = ''.join(random.choices(string.ascii_lowercase, k=10))
-mock_client_secret = ''.join(random.choices(string.ascii_lowercase, k=10))
-mock_username = ''.join(random.choices(string.ascii_lowercase, k=10))
-mock_password = ''.join(random.choices(string.ascii_lowercase, k=10))
-mock_protocol = ''.join(random.choices(string.ascii_lowercase, k=10))
-mock_access_token = ''.join(random.choices(string.ascii_lowercase, k=10))
+mock_client_id = "".join(random.choices(string.ascii_lowercase, k=10))
+mock_client_secret = "".join(random.choices(string.ascii_lowercase, k=10))
+mock_username = "".join(random.choices(string.ascii_lowercase, k=10))
+mock_password = "".join(random.choices(string.ascii_lowercase, k=10))
+mock_protocol = "".join(random.choices(string.ascii_lowercase, k=10))
+mock_access_token = "".join(random.choices(string.ascii_lowercase, k=10))
 mock_verify_certificate = bool(random.getrandbits(1))
 
-mock_audience = ''.join(random.choices(string.ascii_lowercase, k=10))
+mock_audience = "".join(random.choices(string.ascii_lowercase, k=10))
 
 LOCALHOST = "127.0.0.1"
 
@@ -60,7 +95,7 @@ def test_create_eas_client_success():
         host=mock_host,
         port=mock_port,
         protocol=mock_protocol,
-        verify_certificate=mock_verify_certificate
+        verify_certificate=mock_verify_certificate,
     )
 
     assert eas_client is not None
@@ -111,10 +146,11 @@ def test_get_work_package_cost_estimation_no_verify_success(httpserver: HTTPServ
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-        {"data": {"getWorkPackageCostEstimation": "123.45"}})
+        {"data": {"getWorkPackageCostEstimation": "123.45"}}
+    )
     res = eas_client.get_work_package_cost_estimation(
         WorkPackageInput(
-            #"wp_name",
+            # "wp_name",
             forecastConfig=ForecastConfigInput(
                 feeders=["feeder"],
                 years=[1],
@@ -122,8 +158,8 @@ def test_get_work_package_cost_estimation_no_verify_success(httpserver: HTTPServ
                 timePeriod=TimePeriodInput(
                     startTime=datetime(2022, 1, 1, 10),
                     endTime=datetime(2022, 1, 2, 12),
-                    overrides=None
-                )
+                    overrides=None,
+                ),
             )
         )
     )
@@ -131,11 +167,14 @@ def test_get_work_package_cost_estimation_no_verify_success(httpserver: HTTPServ
     assert res == {"data": {"getWorkPackageCostEstimation": "123.45"}}
 
 
-def test_get_work_package_cost_estimation_invalid_certificate_failure(httpserver: HTTPServer):
+def test_get_work_package_cost_estimation_invalid_certificate_failure(
+    httpserver: HTTPServer,
+):
     eas_client = _invalid_ca(httpserver.port)
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-        {"data": {"getWorkPackageCostEstimation": "123.45"}})
+        {"data": {"getWorkPackageCostEstimation": "123.45"}}
+    )
     with pytest.raises(httpx.ConnectError):
         eas_client.get_work_package_cost_estimation(
             WorkPackageInput(
@@ -146,18 +185,21 @@ def test_get_work_package_cost_estimation_invalid_certificate_failure(httpserver
                     timePeriod=TimePeriodInput(
                         startTime=datetime(2022, 1, 1, 10),
                         endTime=datetime(2022, 1, 2, 12),
-                        overrides=None
-                    )
+                        overrides=None,
+                    ),
                 )
             )
         )
 
 
-def test_get_work_package_cost_estimation_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+def test_get_work_package_cost_estimation_valid_certificate_success(
+    httpserver: HTTPServer, ca: trustme.CA
+):
     eas_client = _valid_ca(httpserver.port, ca)
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-        {"data": {"getWorkPackageCostEstimation": "123.45"}})
+        {"data": {"getWorkPackageCostEstimation": "123.45"}}
+    )
     res = eas_client.get_work_package_cost_estimation(
         WorkPackageInput(
             feederConfigs=FeederConfigsInput(
@@ -174,10 +216,10 @@ def test_get_work_package_cost_estimation_valid_certificate_success(httpserver: 
                                     genVarOverride=[1],
                                     genWattsOverride=[2],
                                     loadVarOverride=[3],
-                                    loadWattsOverride=[4]
+                                    loadWattsOverride=[4],
                                 )
-                            ]
-                        )
+                            ],
+                        ),
                     )
                 ]
             )
@@ -196,7 +238,9 @@ def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPSer
         enable_legacy_methods=True,
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"data": {"runWorkPackage": "workPackageId"}})
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"data": {"runWorkPackage": "workPackageId"}}
+    )
     res = eas_client.run_hosting_capacity_work_package(
         WorkPackageInput(
             forecastConfig=ForecastConfigInput(
@@ -206,20 +250,24 @@ def test_run_hosting_capacity_work_package_no_verify_success(httpserver: HTTPSer
                 timePeriod=TimePeriodInput(
                     startTime=datetime(2022, 1, 1),
                     endTime=datetime(2022, 1, 2),
-                    overrides=None
-                )
+                    overrides=None,
+                ),
             )
-        ), work_package_name="wp_name",
+        ),
+        work_package_name="wp_name",
     )
     httpserver.check_assertions()
     assert res == {"data": {"runWorkPackage": "workPackageId"}}
 
 
-def test_run_hosting_capacity_work_package_invalid_certificate_failure(httpserver: HTTPServer):
+def test_run_hosting_capacity_work_package_invalid_certificate_failure(
+    httpserver: HTTPServer,
+):
     eas_client = _invalid_ca(httpserver.port)
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-        {"data": {"runWorkPackage": "workPackageId"}})
+        {"data": {"runWorkPackage": "workPackageId"}}
+    )
     with pytest.raises(httpx.ConnectError):
         eas_client.run_hosting_capacity_work_package(
             WorkPackageInput(
@@ -230,18 +278,22 @@ def test_run_hosting_capacity_work_package_invalid_certificate_failure(httpserve
                     timePeriod=TimePeriodInput(
                         startTime=datetime(2022, 1, 1),
                         endTime=datetime(2022, 1, 2),
-                        overrides=None
-                    )
+                        overrides=None,
+                    ),
                 )
-            ), work_package_name="wp_name",
+            ),
+            work_package_name="wp_name",
         )
 
 
-def test_run_hosting_capacity_work_package_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+def test_run_hosting_capacity_work_package_valid_certificate_success(
+    httpserver: HTTPServer, ca: trustme.CA
+):
     eas_client = _valid_ca(httpserver.port, ca)
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-        {"data": {"runWorkPackage": "workPackageId"}})
+        {"data": {"runWorkPackage": "workPackageId"}}
+    )
     res = eas_client.run_hosting_capacity_work_package(
         WorkPackageInput(
             forecastConfig=ForecastConfigInput(
@@ -257,12 +309,13 @@ def test_run_hosting_capacity_work_package_valid_certificate_success(httpserver:
                             loadWattsOverride=[1.0],
                             genWattsOverride=[2.0],
                             loadVarOverride=[3.0],
-                            genVarOverride=[4.0]
+                            genVarOverride=[4.0],
                         )
-                    ]
-                )
+                    ],
+                ),
             )
-        ), work_package_name="wp_name",
+        ),
+        work_package_name="wp_name",
     )
     httpserver.check_assertions()
     assert res == {"data": {"runWorkPackage": "workPackageId"}}
@@ -279,31 +332,41 @@ def test_cancel_hosting_capacity_work_package_no_verify_success(httpserver: HTTP
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
         {"data": {"cancelHostingCapacity": "workPackageId"}}
     )
-    res = eas_client.cancel_hosting_capacity_work_package(work_package_id="workPackageId")
+    res = eas_client.cancel_hosting_capacity_work_package(
+        work_package_id="workPackageId"
+    )
     httpserver.check_assertions()
     assert res == {"data": {"cancelHostingCapacity": "workPackageId"}}
 
 
-def test_cancel_hosting_capacity_work_package_invalid_certificate_failure(httpserver: HTTPServer):
+def test_cancel_hosting_capacity_work_package_invalid_certificate_failure(
+    httpserver: HTTPServer,
+):
     eas_client = _invalid_ca(httpserver.port)
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-        {"data": {"cancelWorkPackage": "workPackageId"}})
+        {"data": {"cancelWorkPackage": "workPackageId"}}
+    )
     with pytest.raises(httpx.ConnectError):
         eas_client.cancel_hosting_capacity_work_package("workPackageId")
 
 
-def test_cancel_hosting_capacity_work_package_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+def test_cancel_hosting_capacity_work_package_valid_certificate_success(
+    httpserver: HTTPServer, ca: trustme.CA
+):
     eas_client = _valid_ca(httpserver.port, ca)
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-        {"data": {"cancelWorkPackage": "workPackageId"}})
+        {"data": {"cancelWorkPackage": "workPackageId"}}
+    )
     res = eas_client.cancel_hosting_capacity_work_package("workPackageId")
     httpserver.check_assertions()
     assert res == {"data": {"cancelWorkPackage": "workPackageId"}}
 
 
-def test_get_hosting_capacity_work_package_progress_no_verify_success(httpserver: HTTPServer):
+def test_get_hosting_capacity_work_package_progress_no_verify_success(
+    httpserver: HTTPServer,
+):
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
@@ -319,20 +382,26 @@ def test_get_hosting_capacity_work_package_progress_no_verify_success(httpserver
     assert res == {"data": {"getWorkPackageProgress": {}}}
 
 
-def test_get_hosting_capacity_work_package_progress_invalid_certificate_failure(httpserver: HTTPServer):
+def test_get_hosting_capacity_work_package_progress_invalid_certificate_failure(
+    httpserver: HTTPServer,
+):
     eas_client = _invalid_ca(httpserver.port)
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-        {"data": {"getWorkPackageProgress": {}}})
+        {"data": {"getWorkPackageProgress": {}}}
+    )
     with pytest.raises(httpx.ConnectError):
         eas_client.get_hosting_capacity_work_packages_progress()
 
 
-def test_get_hosting_capacity_work_package_progress_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+def test_get_hosting_capacity_work_package_progress_valid_certificate_success(
+    httpserver: HTTPServer, ca: trustme.CA
+):
     eas_client = _valid_ca(httpserver.port, ca)
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
-        {"data": {"getWorkPackageProgress": {}}})
+        {"data": {"getWorkPackageProgress": {}}}
+    )
     res = eas_client.get_hosting_capacity_work_packages_progress()
     httpserver.check_assertions()
     assert res == {"data": {"getWorkPackageProgress": {}}}
@@ -346,14 +415,16 @@ def test_upload_study_no_verify_success(httpserver: HTTPServer):
         enable_legacy_methods=True,
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"result": "success"}
+    )
     res = eas_client.upload_study(
         StudyInput(
             name="Test study",
             description="description",
             tags=["tag"],
             results=[StudyResultInput(name="Huge success", sections=[])],
-            styles=[]
+            styles=[],
         )
     )
     httpserver.check_assertions()
@@ -363,30 +434,56 @@ def test_upload_study_no_verify_success(httpserver: HTTPServer):
 def test_upload_study_invalid_certificate_failure(httpserver: HTTPServer):
     eas_client = _invalid_ca(httpserver.port)
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"result": "success"}
+    )
     with pytest.raises(httpx.ConnectError):
-        eas_client.upload_study(StudyInput(name="Test study", description="description", tags=["tag"], results=[StudyResultInput(name="Huge success", sections=[])], styles=[]))
+        eas_client.upload_study(
+            StudyInput(
+                name="Test study",
+                description="description",
+                tags=["tag"],
+                results=[StudyResultInput(name="Huge success", sections=[])],
+                styles=[],
+            )
+        )
 
 
 def test_upload_study_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
     eas_client = _valid_ca(httpserver.port, ca)
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
-    res = eas_client.upload_study(StudyInput(name="Test study", description="description", tags=["tag"], results=[StudyResultInput(name="Huge success", sections=[])], styles=[]))
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"result": "success"}
+    )
+    res = eas_client.upload_study(
+        StudyInput(
+            name="Test study",
+            description="description",
+            tags=["tag"],
+            results=[StudyResultInput(name="Huge success", sections=[])],
+            styles=[],
+        )
+    )
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
 
 def hosting_capacity_run_calibration_request_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    assert query == "mutation runCalibration($calibrationName_0: String!, $calibrationTimeLocal_0: LocalDateTime) { runCalibration( calibrationName: $calibrationName_0 calibrationTimeLocal: $calibrationTimeLocal_0 ) }"
-    assert actual_body['variables'] == {"calibrationName_0": "TEST CALIBRATION",
-                                        "calibrationTimeLocal_0": datetime(2025, month=7, day=12).isoformat(),
-                                        }
+    assert (
+        query
+        == "mutation runCalibration($calibrationName_0: String!, $calibrationTimeLocal_0: LocalDateTime) { runCalibration( calibrationName: $calibrationName_0 calibrationTimeLocal: $calibrationTimeLocal_0 ) }"
+    )
+    assert actual_body["variables"] == {
+        "calibrationName_0": "TEST CALIBRATION",
+        "calibrationTimeLocal_0": datetime(2025, month=7, day=12).isoformat(),
+    }
 
-    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+    return Response(
+        json.dumps({"result": "success"}), status=200, content_type="application/json"
+    )
 
 
 def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServer):
@@ -398,40 +495,58 @@ def test_run_hosting_capacity_calibration_no_verify_success(httpserver: HTTPServ
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        hosting_capacity_run_calibration_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
+        hosting_capacity_run_calibration_request_handler
+    )
+    res = eas_client.run_hosting_capacity_calibration(
+        "TEST CALIBRATION", datetime(2025, month=7, day=12)
+    )
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
 
-def test_run_hosting_capacity_calibration_invalid_certificate_failure(httpserver: HTTPServer):
+def test_run_hosting_capacity_calibration_invalid_certificate_failure(
+    httpserver: HTTPServer,
+):
     eas_client = _invalid_ca(httpserver.port)
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"result": "success"}
+    )
     with pytest.raises(httpx.ConnectError):
-        eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
+        eas_client.run_hosting_capacity_calibration(
+            "TEST CALIBRATION", datetime(2025, month=7, day=12)
+        )
 
 
-def test_run_hosting_capacity_calibration_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+def test_run_hosting_capacity_calibration_valid_certificate_success(
+    httpserver: HTTPServer, ca: trustme.CA
+):
     eas_client = _valid_ca(httpserver.port, ca)
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        hosting_capacity_run_calibration_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION", datetime(2025, month=7, day=12))
+        hosting_capacity_run_calibration_request_handler
+    )
+    res = eas_client.run_hosting_capacity_calibration(
+        "TEST CALIBRATION", datetime(2025, month=7, day=12)
+    )
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
 
 def get_hosting_capacity_run_calibration_request_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    assert query == ("query getCalibrationRun($id_0: ID!) { getCalibrationRun(id: $id_0) { id name "
-                     "workflowId runId calibrationTimeLocal startAt completedAt status feeders "
-                     "calibrationWorkPackageConfig } }")
-    assert actual_body['variables'] == {"id_0": "calibration-id"}
+    assert query == (
+        "query getCalibrationRun($id_0: ID!) { getCalibrationRun(id: $id_0) { id name "
+        "workflowId runId calibrationTimeLocal startAt completedAt status feeders "
+        "calibrationWorkPackageConfig } }"
+    )
+    assert actual_body["variables"] == {"id_0": "calibration-id"}
 
-    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+    return Response(
+        json.dumps({"result": "success"}), status=200, content_type="application/json"
+    )
 
 
 def test_get_hosting_capacity_calibration_run_no_verify_success(httpserver: HTTPServer):
@@ -443,25 +558,33 @@ def test_get_hosting_capacity_calibration_run_no_verify_success(httpserver: HTTP
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        get_hosting_capacity_run_calibration_request_handler)
+        get_hosting_capacity_run_calibration_request_handler
+    )
     res = eas_client.get_hosting_capacity_calibration_run("calibration-id")
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
 
-def test_get_hosting_capacity_calibration_run_invalid_certificate_failure(httpserver: HTTPServer):
+def test_get_hosting_capacity_calibration_run_invalid_certificate_failure(
+    httpserver: HTTPServer,
+):
     eas_client = _invalid_ca(httpserver.port)
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"result": "success"}
+    )
     with pytest.raises(httpx.ConnectError):
         eas_client.get_hosting_capacity_calibration_run("calibration-id")
 
 
-def test_get_hosting_capacity_calibration_run_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+def test_get_hosting_capacity_calibration_run_valid_certificate_success(
+    httpserver: HTTPServer, ca: trustme.CA
+):
     eas_client = _valid_ca(httpserver.port, ca)
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        get_hosting_capacity_run_calibration_request_handler)
+        get_hosting_capacity_run_calibration_request_handler
+    )
     res = eas_client.get_hosting_capacity_calibration_run("calibration-id")
     httpserver.check_assertions()
     assert res == {"result": "success"}
@@ -469,46 +592,30 @@ def test_get_hosting_capacity_calibration_run_valid_certificate_success(httpserv
 
 def hosting_capacity_run_calibration_with_calibration_time_request_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    assert query == "mutation runCalibration($calibrationName_0: String!, $calibrationTimeLocal_0: LocalDateTime, $feeders_0: [String!], $generatorConfig_0: HcGeneratorConfigInput) { runCalibration( calibrationName: $calibrationName_0 calibrationTimeLocal: $calibrationTimeLocal_0 feeders: $feeders_0 generatorConfig: $generatorConfig_0 ) }"
-    assert actual_body['variables'] == {"calibrationName_0": "TEST CALIBRATION",
-                                        "calibrationTimeLocal_0": datetime(1902, month=1, day=28, hour=0, minute=0,
-                                                                         second=20).isoformat(),
-                                        "feeders_0": ["one", "two"],
-                                        "generatorConfig_0": {
-                                            'model': {
-                                                'transformerTapSettings': 'test_tap_settings'
-                                            },
-                                        }
-                                    }
+    assert (
+        query
+        == "mutation runCalibration($calibrationName_0: String!, $calibrationTimeLocal_0: LocalDateTime, $feeders_0: [String!], $generatorConfig_0: HcGeneratorConfigInput) { runCalibration( calibrationName: $calibrationName_0 calibrationTimeLocal: $calibrationTimeLocal_0 feeders: $feeders_0 generatorConfig: $generatorConfig_0 ) }"
+    )
+    assert actual_body["variables"] == {
+        "calibrationName_0": "TEST CALIBRATION",
+        "calibrationTimeLocal_0": datetime(
+            1902, month=1, day=28, hour=0, minute=0, second=20
+        ).isoformat(),
+        "feeders_0": ["one", "two"],
+        "generatorConfig_0": {
+            "model": {"transformerTapSettings": "test_tap_settings"},
+        },
+    }
 
-    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
-
-
-def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_success(httpserver: HTTPServer):
-    eas_client = EasClient(
-        host=LOCALHOST,
-        port=httpserver.port,
-        verify_certificate=False,
-        enable_legacy_methods=True,
+    return Response(
+        json.dumps({"result": "success"}), status=200, content_type="application/json"
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        hosting_capacity_run_calibration_with_calibration_time_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION",
-                                                      datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
-                                                      ["one", "two"],
-                                                      generator_config=HcGeneratorConfigInput(model=HcModelConfigInput(
-                                                          transformerTapSettings="test_tap_settings"
-                                                      ))
-                                                      )
-    httpserver.check_assertions()
-    assert res == {"result": "success"}
 
-
-def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_no_generator_config(
-        httpserver: HTTPServer
+def test_run_hosting_capacity_calibration_with_calibration_time_no_verify_success(
+    httpserver: HTTPServer,
 ):
     eas_client = EasClient(
         host=LOCALHOST,
@@ -518,40 +625,74 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        hosting_capacity_run_calibration_with_calibration_time_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION",
-                                                      datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
-                                                      ["one", "two"],
-                                                      transformer_tap_settings="test_tap_settings"
-                                                      )
+        hosting_capacity_run_calibration_with_calibration_time_request_handler
+    )
+    res = eas_client.run_hosting_capacity_calibration(
+        "TEST CALIBRATION",
+        datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
+        ["one", "two"],
+        generator_config=HcGeneratorConfigInput(
+            model=HcModelConfigInput(transformerTapSettings="test_tap_settings")
+        ),
+    )
+    httpserver.check_assertions()
+    assert res == {"result": "success"}
+
+
+def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_no_generator_config(
+    httpserver: HTTPServer,
+):
+    eas_client = EasClient(
+        host=LOCALHOST,
+        port=httpserver.port,
+        verify_certificate=False,
+        enable_legacy_methods=True,
+    )
+
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        hosting_capacity_run_calibration_with_calibration_time_request_handler
+    )
+    res = eas_client.run_hosting_capacity_calibration(
+        "TEST CALIBRATION",
+        datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
+        ["one", "two"],
+        transformer_tap_settings="test_tap_settings",
+    )
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
 
 def hosting_capacity_run_calibration_with_generator_config_request_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    assert query == "mutation runCalibration($calibrationName_0: String!, $calibrationTimeLocal_0: LocalDateTime, $feeders_0: [String!], $generatorConfig_0: HcGeneratorConfigInput) { runCalibration( calibrationName: $calibrationName_0 calibrationTimeLocal: $calibrationTimeLocal_0 feeders: $feeders_0 generatorConfig: $generatorConfig_0 ) }"
-    assert actual_body['variables'] == {"calibrationName_0": "TEST CALIBRATION",
-                                        "calibrationTimeLocal_0": datetime(1902, month=1, day=28, hour=0, minute=0,
-                                                                         second=20).isoformat(),
-                                        "feeders_0": ["one", "two"],
-                                        "generatorConfig_0": {
-                                            'model': {
-                                                'transformerTapSettings': 'test_tap_settings',
-                                            },
-                                            'solve': {
-                                                'normVMaxPu': 23.9,
-                                            }
-                                        }
-                                        }
+    assert (
+        query
+        == "mutation runCalibration($calibrationName_0: String!, $calibrationTimeLocal_0: LocalDateTime, $feeders_0: [String!], $generatorConfig_0: HcGeneratorConfigInput) { runCalibration( calibrationName: $calibrationName_0 calibrationTimeLocal: $calibrationTimeLocal_0 feeders: $feeders_0 generatorConfig: $generatorConfig_0 ) }"
+    )
+    assert actual_body["variables"] == {
+        "calibrationName_0": "TEST CALIBRATION",
+        "calibrationTimeLocal_0": datetime(
+            1902, month=1, day=28, hour=0, minute=0, second=20
+        ).isoformat(),
+        "feeders_0": ["one", "two"],
+        "generatorConfig_0": {
+            "model": {
+                "transformerTapSettings": "test_tap_settings",
+            },
+            "solve": {
+                "normVMaxPu": 23.9,
+            },
+        },
+    }
 
-    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+    return Response(
+        json.dumps({"result": "success"}), status=200, content_type="application/json"
+    )
 
 
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_generator_config(
-        httpserver: HTTPServer
+    httpserver: HTTPServer,
 ):
     eas_client = EasClient(
         host=LOCALHOST,
@@ -561,40 +702,47 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        hosting_capacity_run_calibration_with_generator_config_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION",
-                                                      datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
-                                                      ["one", "two"],
-                                                      transformer_tap_settings="test_tap_settings",
-                                                      generator_config=HcGeneratorConfigInput(
-                                                          solve=HcSolveConfigInput(normVMaxPu=23.9))
-                                                      )
+        hosting_capacity_run_calibration_with_generator_config_request_handler
+    )
+    res = eas_client.run_hosting_capacity_calibration(
+        "TEST CALIBRATION",
+        datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
+        ["one", "two"],
+        transformer_tap_settings="test_tap_settings",
+        generator_config=HcGeneratorConfigInput(
+            solve=HcSolveConfigInput(normVMaxPu=23.9)
+        ),
+    )
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
 
 def hosting_capacity_run_calibration_with_partial_model_config_request_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    assert query == "mutation runCalibration($calibrationName_0: String!, $calibrationTimeLocal_0: LocalDateTime, $feeders_0: [String!], $generatorConfig_0: HcGeneratorConfigInput) { runCalibration( calibrationName: $calibrationName_0 calibrationTimeLocal: $calibrationTimeLocal_0 feeders: $feeders_0 generatorConfig: $generatorConfig_0 ) }"
-    assert actual_body['variables'] == {"calibrationName_0": "TEST CALIBRATION",
-                                        "calibrationTimeLocal_0": datetime(1902, month=1, day=28, hour=0, minute=0,
-                                                                         second=20).isoformat(),
-                                        "feeders_0": ["one", "two"],
-                                        "generatorConfig_0": {
-                                            'model': {
-                                                'transformerTapSettings': 'test_tap_settings',
-                                                'vmPu': 123.4
-                                            },
-                                        }
-                                        }
+    assert (
+        query
+        == "mutation runCalibration($calibrationName_0: String!, $calibrationTimeLocal_0: LocalDateTime, $feeders_0: [String!], $generatorConfig_0: HcGeneratorConfigInput) { runCalibration( calibrationName: $calibrationName_0 calibrationTimeLocal: $calibrationTimeLocal_0 feeders: $feeders_0 generatorConfig: $generatorConfig_0 ) }"
+    )
+    assert actual_body["variables"] == {
+        "calibrationName_0": "TEST CALIBRATION",
+        "calibrationTimeLocal_0": datetime(
+            1902, month=1, day=28, hour=0, minute=0, second=20
+        ).isoformat(),
+        "feeders_0": ["one", "two"],
+        "generatorConfig_0": {
+            "model": {"transformerTapSettings": "test_tap_settings", "vmPu": 123.4},
+        },
+    }
 
-    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+    return Response(
+        json.dumps({"result": "success"}), status=200, content_type="application/json"
+    )
 
 
 def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings_partial_model_config(
-        httpserver: HTTPServer
+    httpserver: HTTPServer,
 ):
     eas_client = EasClient(
         host=LOCALHOST,
@@ -604,18 +752,22 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        hosting_capacity_run_calibration_with_partial_model_config_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION",
-                                                      datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
-                                                      ["one", "two"],
-                                                      transformer_tap_settings="test_tap_settings",
-                                                      generator_config=HcGeneratorConfigInput(model=HcModelConfigInput(vmPu=123.4))
-                                                      )
+        hosting_capacity_run_calibration_with_partial_model_config_request_handler
+    )
+    res = eas_client.run_hosting_capacity_calibration(
+        "TEST CALIBRATION",
+        datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
+        ["one", "two"],
+        transformer_tap_settings="test_tap_settings",
+        generator_config=HcGeneratorConfigInput(model=HcModelConfigInput(vmPu=123.4)),
+    )
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
 
-def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings(httpserver: HTTPServer):
+def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings(
+    httpserver: HTTPServer,
+):
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
@@ -624,29 +776,37 @@ def test_run_hosting_capacity_calibration_with_explicit_transformer_tap_settings
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        hosting_capacity_run_calibration_with_calibration_time_request_handler)
-    res = eas_client.run_hosting_capacity_calibration("TEST CALIBRATION",
-                                                      datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
-                                                      ["one", "two"],
-                                                      transformer_tap_settings="test_tap_settings",
-                                                      generator_config=HcGeneratorConfigInput(model=HcModelConfigInput(
-                                                          transformerTapSettings="this_should_be_over_written"
-                                                      ))
-                                                      )
+        hosting_capacity_run_calibration_with_calibration_time_request_handler
+    )
+    res = eas_client.run_hosting_capacity_calibration(
+        "TEST CALIBRATION",
+        datetime(1902, month=1, day=28, hour=0, minute=0, second=20),
+        ["one", "two"],
+        transformer_tap_settings="test_tap_settings",
+        generator_config=HcGeneratorConfigInput(
+            model=HcModelConfigInput(
+                transformerTapSettings="this_should_be_over_written"
+            )
+        ),
+    )
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
 
 def get_hosting_capacity_calibration_sets_request_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = actual_body['query'].replace('\n', '')
+    query = actual_body["query"].replace("\n", "")
 
     assert query == "query getCalibrationSets {  getCalibrationSets}"
 
-    return Response(json.dumps(["one", "two", "three"]), status=200, content_type="application/json")
+    return Response(
+        json.dumps(["one", "two", "three"]), status=200, content_type="application/json"
+    )
 
 
-def test_get_hosting_capacity_calibration_sets_no_verify_success(httpserver: HTTPServer):
+def test_get_hosting_capacity_calibration_sets_no_verify_success(
+    httpserver: HTTPServer,
+):
     eas_client = EasClient(
         host=LOCALHOST,
         port=httpserver.port,
@@ -655,7 +815,8 @@ def test_get_hosting_capacity_calibration_sets_no_verify_success(httpserver: HTT
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        get_hosting_capacity_calibration_sets_request_handler)
+        get_hosting_capacity_calibration_sets_request_handler
+    )
     res = eas_client.get_hosting_capacity_calibration_sets()
     httpserver.check_assertions()
     assert res == ["one", "two", "three"]
@@ -663,10 +824,13 @@ def test_get_hosting_capacity_calibration_sets_no_verify_success(httpserver: HTT
 
 def run_opendss_export_request_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    assert query == "mutation createOpenDssModel($input_0: OpenDssModelInput!) { createOpenDssModel(input: $input_0) }"
-    assert actual_body['variables'] == {
+    assert (
+        query
+        == "mutation createOpenDssModel($input_0: OpenDssModelInput!) { createOpenDssModel(input: $input_0) }"
+    )
+    assert actual_body["variables"] == {
         "input_0": {
             "modelName": "TEST OPENDSS MODEL 1",
             "isPublic": True,
@@ -674,31 +838,35 @@ def run_opendss_export_request_handler(request):
                 "modelOptions": {
                     "feeder": "feeder1",
                     "scenario": "scenario1",
-                    "year": 2024
+                    "year": 2024,
                 },
                 "modulesConfiguration": {
                     "common": {
                         "fixedTime": {
                             "loadTime": "2022-04-01T00:00:00",
-                            "overrides": [{
-                                'loadId': 'meter1',
-                                'loadWattsOverride': [4.0],
-                                'genWattsOverride': [2.0],
-                                'loadVarOverride': [3.0],
-                                'genVarOverride': [1.0]
-                            }]
+                            "overrides": [
+                                {
+                                    "loadId": "meter1",
+                                    "loadWattsOverride": [4.0],
+                                    "genWattsOverride": [2.0],
+                                    "loadVarOverride": [3.0],
+                                    "genVarOverride": [1.0],
+                                }
+                            ],
                         },
                         "timePeriod": {
-                               "startTime": "2022-04-01T10:13:00",
-                               "endTime": "2023-04-01T12:14:00",
-                               "overrides": [{
-                                   'loadId': 'meter1',
-                                   'loadWattsOverride': [4.0],
-                                   'genWattsOverride': [2.0],
-                                   'loadVarOverride': [3.0],
-                                   'genVarOverride': [1.0]
-                           }]
-                        }
+                            "startTime": "2022-04-01T10:13:00",
+                            "endTime": "2023-04-01T12:14:00",
+                            "overrides": [
+                                {
+                                    "loadId": "meter1",
+                                    "loadWattsOverride": [4.0],
+                                    "genWattsOverride": [2.0],
+                                    "loadVarOverride": [3.0],
+                                    "genVarOverride": [1.0],
+                                }
+                            ],
+                        },
                     },
                     "generator": {
                         "model": {
@@ -724,8 +892,6 @@ def run_opendss_export_request_handler(request):
                             "simplifyNetwork": False,
                             "collapseLvNetworks": False,
                             "collapseNegligibleImpedances": False,
-                            "negligibleImpedanceMinHvThreshold": 0.12,
-                            "negligibleImpedanceMinLvThreshold": 0.34,
                             "combineCommonImpedances": False,
                             "feederScenarioAllocationStrategy": "ADDITIVE",
                             "closedLoopVRegEnabled": True,
@@ -746,7 +912,7 @@ def run_opendss_export_request_handler(request):
                                 [6350, 11000],
                                 [6400, 11000],
                                 [12700, 22000],
-                                [19100, 33000]
+                                [19100, 33000],
                             ],
                             "loadPlacement": "PER_USAGE_POINT",
                             "loadIntervalLengthHours": 0.5,
@@ -756,10 +922,10 @@ def run_opendss_export_request_handler(request):
                                 "switchMeterPlacementConfigs": [
                                     {
                                         "meterSwitchClass": "LOAD_BREAK_SWITCH",
-                                        "namePattern": ".*"
+                                        "namePattern": ".*",
                                     }
                                 ],
-                                "energyConsumerMeterGroup": "meter group 1"
+                                "energyConsumerMeterGroup": "meter group 1",
                             },
                             "seed": 42,
                             "defaultLoadWatts": [100.0, 200.0, 300.0],
@@ -772,10 +938,10 @@ def run_opendss_export_request_handler(request):
                             "ratingThreshold": 20.0,
                             "simplifyPLSIThreshold": 20.0,
                             "emergAmpScaling": 1.8,
-                            'inverterControlConfig': {
-                                'afterCutOffProfile': 'afterProfile',
-                                'beforeCutOffProfile': 'beforeProfile',
-                                'cutOffDate': '2024-04-12T11:42:00'
+                            "inverterControlConfig": {
+                                "afterCutOffProfile": "afterProfile",
+                                "beforeCutOffProfile": "beforeProfile",
+                                "cutOffDate": "2024-04-12T11:42:00",
                             },
                         },
                         "solve": {
@@ -784,18 +950,27 @@ def run_opendss_export_request_handler(request):
                             "emergVMinPu": 0.8,
                             "emergVMaxPu": 1.1,
                             "baseFrequency": 50,
-                            "voltageBases": [0.4, 0.433, 6.6, 11.0, 22.0, 33.0, 66.0, 132.0],
+                            "voltageBases": [
+                                0.4,
+                                0.433,
+                                6.6,
+                                11.0,
+                                22.0,
+                                33.0,
+                                66.0,
+                                132.0,
+                            ],
                             "maxIter": 25,
                             "maxControlIter": 20,
                             "mode": "YEARLY",
-                            "stepSizeMinutes": 60
+                            "stepSizeMinutes": 60,
                         },
                         "rawResults": {
                             "energyMeterVoltagesRaw": True,
                             "energyMetersRaw": True,
                             "resultsPerMeter": True,
                             "overloadsRaw": True,
-                            "voltageExceptionsRaw": True
+                            "voltageExceptionsRaw": True,
                         },
                         "nodeLevelResults": {
                             "collectVoltage": True,
@@ -805,15 +980,18 @@ def run_opendss_export_request_handler(request):
                             "collectAllSwitches": False,
                             "collectAllTransformers": True,
                             "collectAllConductors": False,
-                            "collectAllEnergyConsumers": True
-                        }
-                    }
-                }
-            }
+                            "collectAllEnergyConsumers": True,
+                        },
+                    },
+                },
+            },
         }
     }
 
-    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+    return Response(
+        json.dumps({"result": "success"}), status=200, content_type="application/json"
+    )
+
 
 OPENDSS_CONFIG = OpenDssModelInput(
     modelName="TEST OPENDSS MODEL 1",
@@ -826,7 +1004,7 @@ OPENDSS_CONFIG = OpenDssModelInput(
         ),
         modulesConfiguration=OpenDssModulesConfigInput(
             common=OpenDssCommonConfigInput(
-                fixedTime= FixedTimeInput(
+                fixedTime=FixedTimeInput(
                     loadTime=datetime(2022, 4, 1),
                     overrides=[
                         FixedTimeLoadOverrideInput(
@@ -834,9 +1012,9 @@ OPENDSS_CONFIG = OpenDssModelInput(
                             genVarOverride=[1.0],
                             genWattsOverride=[2.0],
                             loadVarOverride=[3.0],
-                            loadWattsOverride=[4.0]
+                            loadWattsOverride=[4.0],
                         )
-                    ]
+                    ],
                 ),
                 timePeriod=TimePeriodInput(
                     startTime=datetime(2022, 4, 1, 10, 13),
@@ -847,9 +1025,9 @@ OPENDSS_CONFIG = OpenDssModelInput(
                             genVarOverride=[1.0],
                             genWattsOverride=[2.0],
                             loadVarOverride=[3.0],
-                            loadWattsOverride=[4.0]
+                            loadWattsOverride=[4.0],
                         )
-                    ]
+                    ],
                 ),
             ),
             generator=HcGeneratorConfigInput(
@@ -876,8 +1054,6 @@ OPENDSS_CONFIG = OpenDssModelInput(
                     simplify_network=False,
                     collapse_lv_networks=False,
                     collapse_negligible_impedances=False,
-                    negligible_impedance_min_hv_threshold=0.12,
-                    negligible_impedance_min_lv_threshold=0.34,
                     combine_common_impedances=False,
                     feeder_scenario_allocation_strategy=HcFeederScenarioAllocationStrategy.ADDITIVE,
                     closed_loop_v_reg_enabled=True,
@@ -898,7 +1074,7 @@ OPENDSS_CONFIG = OpenDssModelInput(
                         [6350, 11000],
                         [6400, 11000],
                         [12700, 22000],
-                        [19100, 33000]
+                        [19100, 33000],
                     ],
                     load_placement=HcLoadPlacement.PER_USAGE_POINT,
                     loadIntervalLengthHours=0.5,
@@ -908,10 +1084,10 @@ OPENDSS_CONFIG = OpenDssModelInput(
                         switchMeterPlacementConfigs=[
                             HcSwitchMeterPlacementConfigInput(
                                 meterSwitchClass=HcSwitchClass.LOAD_BREAK_SWITCH,
-                                namePattern=".*"
+                                namePattern=".*",
                             )
                         ],
-                        energyConsumerMeterGroup="meter group 1"
+                        energyConsumerMeterGroup="meter group 1",
                     ),
                     seed=42,
                     default_load_watts=[100.0, 200.0, 300.0],
@@ -927,8 +1103,8 @@ OPENDSS_CONFIG = OpenDssModelInput(
                     inverter_control_config=HcInverterControlConfigInput(
                         cut_off_date=datetime(2024, 4, 12, 11, 42),
                         before_cut_off_profile="beforeProfile",
-                        after_cut_off_profile="afterProfile"
-                    )
+                        after_cut_off_profile="afterProfile",
+                    ),
                 ),
                 solve=HcSolveConfigInput(
                     normVMinPu=0.9,
@@ -940,14 +1116,14 @@ OPENDSS_CONFIG = OpenDssModelInput(
                     max_iter=25,
                     max_control_iter=20,
                     mode=HcSolveMode.YEARLY,
-                    step_size_minutes=60
+                    step_size_minutes=60,
                 ),
                 rawResults=HcRawResultsConfigInput(
                     energy_meter_voltages_raw=True,
                     energy_meters_raw=True,
                     results_per_meter=True,
                     overloads_raw=True,
-                    voltage_exceptions_raw=True
+                    voltage_exceptions_raw=True,
                 ),
                 nodeLevelResults=HcNodeLevelResultsConfigInput(
                     collect_voltage=True,
@@ -957,11 +1133,10 @@ OPENDSS_CONFIG = OpenDssModelInput(
                     collect_all_switches=False,
                     collect_all_transformers=True,
                     collect_all_conductors=False,
-                    collect_all_energy_consumers=True
-                )
-
-            )
-        )
+                    collect_all_energy_consumers=True,
+                ),
+            ),
+        ),
     ),
 )
 
@@ -974,7 +1149,9 @@ def test_run_opendss_export_no_verify_success(httpserver: HTTPServer):
         enable_legacy_methods=True,
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(run_opendss_export_request_handler)
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        run_opendss_export_request_handler
+    )
     res = eas_client.run_opendss_export(OPENDSS_CONFIG)
     httpserver.check_assertions()
     assert res == {"result": "success"}
@@ -983,44 +1160,56 @@ def test_run_opendss_export_no_verify_success(httpserver: HTTPServer):
 def test_run_opendss_export_invalid_certificate_failure(httpserver: HTTPServer):
     eas_client = _invalid_ca(httpserver.port)
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"result": "success"}
+    )
     with pytest.raises(httpx.ConnectError):
         eas_client.run_opendss_export(OPENDSS_CONFIG)
 
 
-def test_run_opendss_export_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+def test_run_opendss_export_valid_certificate_success(
+    httpserver: HTTPServer, ca: trustme.CA
+):
     eas_client = _valid_ca(httpserver.port, ca)
 
     dss_conf = OPENDSS_CONFIG.model_copy()
-    dss_conf.generation_spec.modules_configuration.common.fixed_time = FixedTimeInput(load_time=datetime(2022, 4, 1),
-                                         overrides=[
-                                             FixedTimeLoadOverrideInput(
-                                                 loadId="meter1",
-                                                 genVarOverride=[1.0],
-                                                 genWattsOverride=[2.0],
-                                                 loadVarOverride=[3.0],
-                                                 loadWattsOverride=[4.0]
-                                             )
-                                         ])
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(run_opendss_export_request_handler)
+    dss_conf.generation_spec.modules_configuration.common.fixed_time = FixedTimeInput(
+        load_time=datetime(2022, 4, 1),
+        overrides=[
+            FixedTimeLoadOverrideInput(
+                loadId="meter1",
+                genVarOverride=[1.0],
+                genWattsOverride=[2.0],
+                loadVarOverride=[3.0],
+                loadWattsOverride=[4.0],
+            )
+        ],
+    )
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        run_opendss_export_request_handler
+    )
     res = eas_client.run_opendss_export(dss_conf)
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
 
-get_paged_opendss_models_query = ("query pagedOpenDssModels($limit_0: Int, $offset_0: Long, $filter_0: "
-                                  "GetOpenDssModelsFilterInput, $sort_0: GetOpenDssModelsSortCriteriaInput) { "
-                                  "pagedOpenDssModels( limit: $limit_0 offset: $offset_0 filter: $filter_0 "
-                                  "sort: $sort_0 ) { totalCount offset models { id name createdAt state "
-                                  "downloadUrl isPublic errors generationSpec } } }")
+get_paged_opendss_models_query = (
+    "query pagedOpenDssModels($limit_0: Int, $offset_0: Long, $filter_0: "
+    "GetOpenDssModelsFilterInput, $sort_0: GetOpenDssModelsSortCriteriaInput) { "
+    "pagedOpenDssModels( limit: $limit_0 offset: $offset_0 filter: $filter_0 "
+    "sort: $sort_0 ) { totalCount offset models { id name createdAt state "
+    "downloadUrl isPublic errors generationSpec } } }"
+)
 
 
 def get_paged_opendss_models_request_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    assert query == " ".join(line.strip() for line in get_paged_opendss_models_query.strip().splitlines())
-    assert actual_body['variables'] == {
+    assert query == " ".join(
+        line.strip() for line in get_paged_opendss_models_query.strip().splitlines()
+    )
+    assert actual_body["variables"] == {
         "limit_0": 5,
         "offset_0": 0,
         "filter_0": {
@@ -1030,10 +1219,12 @@ def get_paged_opendss_models_request_handler(request):
         },
         "sort_0": {
             "state": "ASC",
-        }
+        },
     }
 
-    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+    return Response(
+        json.dumps({"result": "success"}), status=200, content_type="application/json"
+    )
 
 
 def test_get_paged_opendss_models_no_verify_success(httpserver: HTTPServer):
@@ -1045,10 +1236,18 @@ def test_get_paged_opendss_models_no_verify_success(httpserver: HTTPServer):
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        get_paged_opendss_models_request_handler)
+        get_paged_opendss_models_request_handler
+    )
     res = eas_client.get_paged_opendss_models(
-        5, 0, GetOpenDssModelsFilterInput(name="TEST OPENDSS MODEL 1", isPublic=True, state=[OpenDssModelState.COMPLETED.name]),
-        GetOpenDssModelsSortCriteriaInput(state=SortOrder.ASC))
+        5,
+        0,
+        GetOpenDssModelsFilterInput(
+            name="TEST OPENDSS MODEL 1",
+            isPublic=True,
+            state=[OpenDssModelState.COMPLETED.name],
+        ),
+        GetOpenDssModelsSortCriteriaInput(state=SortOrder.ASC),
+    )
     httpserver.check_assertions()
     assert res == {"result": "success"}
 
@@ -1056,27 +1255,36 @@ def test_get_paged_opendss_models_no_verify_success(httpserver: HTTPServer):
 def test_get_paged_opendss_models_invalid_certificate_failure(httpserver: HTTPServer):
     eas_client = _invalid_ca(httpserver.port)
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_json({"result": "success"})
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_json(
+        {"result": "success"}
+    )
     with pytest.raises(httpx.ConnectError):
         eas_client.get_paged_opendss_models()
 
 
 def get_paged_opendss_models_no_param_request_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    assert query == ('query pagedOpenDssModels { pagedOpenDssModels { totalCount offset models { id name createdAt '
-                     'state downloadUrl isPublic errors generationSpec } } }')
-    assert actual_body['variables'] == {}
+    assert query == (
+        "query pagedOpenDssModels { pagedOpenDssModels { totalCount offset models { id name createdAt "
+        "state downloadUrl isPublic errors generationSpec } } }"
+    )
+    assert actual_body["variables"] == {}
 
-    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+    return Response(
+        json.dumps({"result": "success"}), status=200, content_type="application/json"
+    )
 
 
-def test_get_paged_opendss_models_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+def test_get_paged_opendss_models_valid_certificate_success(
+    httpserver: HTTPServer, ca: trustme.CA
+):
     eas_client = _valid_ca(httpserver.port, ca)
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        get_paged_opendss_models_no_param_request_handler)
+        get_paged_opendss_models_no_param_request_handler
+    )
     res = eas_client.get_paged_opendss_models()
     httpserver.check_assertions()
     assert res == {"result": "success"}
@@ -1090,33 +1298,49 @@ def test_get_opendss_model_download_url_no_verify_success(httpserver: HTTPServer
         enable_legacy_methods=True,
     )
 
-    httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
-        status=HTTPStatus.FOUND,
-        headers={"Location": "https://example.com/download/1"}
-    ))
+    httpserver.expect_oneshot_request(
+        "/api/opendss-model/1", method="GET"
+    ).respond_with_response(
+        Response(
+            status=HTTPStatus.FOUND,
+            headers={"Location": "https://example.com/download/1"},
+        )
+    )
     res = eas_client.get_opendss_model_download_url(1)
     httpserver.check_assertions()
     assert res == "https://example.com/download/1"
 
 
-def test_get_opendss_model_download_url_invalid_certificate_failure(httpserver: HTTPServer):
+def test_get_opendss_model_download_url_invalid_certificate_failure(
+    httpserver: HTTPServer,
+):
     eas_client = _invalid_ca(httpserver.port)
 
-    httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
-        status=HTTPStatus.FOUND,
-        headers={"Location": "https://example.com/download/1"}
-    ))
+    httpserver.expect_oneshot_request(
+        "/api/opendss-model/1", method="GET"
+    ).respond_with_response(
+        Response(
+            status=HTTPStatus.FOUND,
+            headers={"Location": "https://example.com/download/1"},
+        )
+    )
     with pytest.raises(httpx.ConnectError):
         eas_client.get_opendss_model_download_url(1)
 
 
-def test_get_opendss_model_download_url_valid_certificate_success(httpserver: HTTPServer, ca: trustme.CA):
+def test_get_opendss_model_download_url_valid_certificate_success(
+    httpserver: HTTPServer, ca: trustme.CA
+):
     eas_client = _valid_ca(httpserver.port, ca)
 
-    httpserver.expect_oneshot_request("/api/opendss-model/1", method="GET").respond_with_response(Response(
-        status=HTTPStatus.FOUND,
-        headers={"Location": "https://example.com/download/1"}
-    ))
+    httpserver.expect_oneshot_request(
+        "/api/opendss-model/1", method="GET"
+    ).respond_with_response(
+        Response(
+            status=HTTPStatus.FOUND,
+            headers={"Location": "https://example.com/download/1"},
+        )
+    )
     res = eas_client.get_opendss_model_download_url(1)
     httpserver.check_assertions()
     assert res == "https://example.com/download/1"
@@ -1124,13 +1348,22 @@ def test_get_opendss_model_download_url_valid_certificate_success(httpserver: HT
 
 def run_ingestor_request_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    assert query == "mutation executeIngestor($runConfig_0: [IngestorConfigInput!]) { executeIngestor(runConfig: $runConfig_0) }"
-    assert actual_body['variables'] == {'runConfig_0': [{'key': 'random.config', 'value': 'random.value'},
-                                                      {'key': 'dataStorePath', 'value': '/some/place/with/data'}]}
+    assert (
+        query
+        == "mutation executeIngestor($runConfig_0: [IngestorConfigInput!]) { executeIngestor(runConfig: $runConfig_0) }"
+    )
+    assert actual_body["variables"] == {
+        "runConfig_0": [
+            {"key": "random.config", "value": "random.value"},
+            {"key": "dataStorePath", "value": "/some/place/with/data"},
+        ]
+    }
 
-    return Response(json.dumps({"executeIngestor": 5}), status=200, content_type="application/json")
+    return Response(
+        json.dumps({"executeIngestor": 5}), status=200, content_type="application/json"
+    )
 
 
 def test_run_ingestor_no_verify_success(httpserver: HTTPServer):
@@ -1142,23 +1375,32 @@ def test_run_ingestor_no_verify_success(httpserver: HTTPServer):
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        run_ingestor_request_handler)
-    res = eas_client.run_ingestor([IngestorConfigInput(key="random.config", value="random.value"),
-                                   IngestorConfigInput(key="dataStorePath", value="/some/place/with/data")])
+        run_ingestor_request_handler
+    )
+    res = eas_client.run_ingestor(
+        [
+            IngestorConfigInput(key="random.config", value="random.value"),
+            IngestorConfigInput(key="dataStorePath", value="/some/place/with/data"),
+        ]
+    )
     httpserver.check_assertions()
     assert res == {"executeIngestor": 5}
 
 
 def get_ingestor_run_request_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    assert query == ("query getIngestorRun($id_0: Int!) { getIngestorRun(id: $id_0) { completedAt "
-                     "containerRuntimeType id payload startedAt status statusLastUpdatedAt token } "
-                     "}")
-    assert actual_body['variables'] == {"id_0": 1}
+    assert query == (
+        "query getIngestorRun($id_0: Int!) { getIngestorRun(id: $id_0) { completedAt "
+        "containerRuntimeType id payload startedAt status statusLastUpdatedAt token } "
+        "}"
+    )
+    assert actual_body["variables"] == {"id_0": 1}
 
-    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+    return Response(
+        json.dumps({"result": "success"}), status=200, content_type="application/json"
+    )
 
 
 def test_get_ingestor_run_no_verify_success(httpserver: HTTPServer):
@@ -1169,7 +1411,9 @@ def test_get_ingestor_run_no_verify_success(httpserver: HTTPServer):
         enable_legacy_methods=True,
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_request_handler)
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        get_ingestor_run_request_handler
+    )
     res = eas_client.get_ingestor_run(1)
     httpserver.check_assertions()
     assert res == {"result": "success"}
@@ -1177,14 +1421,20 @@ def test_get_ingestor_run_no_verify_success(httpserver: HTTPServer):
 
 def get_ingestor_run_list_request_empty_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    get_ingestor_run_list_query = ("query listIngestorRuns { listIngestorRuns { id containerRuntimeType payload "
-                                   "token status startedAt statusLastUpdatedAt completedAt } }")
-    assert query == " ".join(line.strip() for line in get_ingestor_run_list_query.strip().splitlines())
-    assert actual_body['variables'] == {}
+    get_ingestor_run_list_query = (
+        "query listIngestorRuns { listIngestorRuns { id containerRuntimeType payload "
+        "token status startedAt statusLastUpdatedAt completedAt } }"
+    )
+    assert query == " ".join(
+        line.strip() for line in get_ingestor_run_list_query.strip().splitlines()
+    )
+    assert actual_body["variables"] == {}
 
-    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+    return Response(
+        json.dumps({"result": "success"}), status=200, content_type="application/json"
+    )
 
 
 def test_get_ingestor_run_list_empty_filter_no_verify_success(httpserver: HTTPServer):
@@ -1195,7 +1445,9 @@ def test_get_ingestor_run_list_empty_filter_no_verify_success(httpserver: HTTPSe
         enable_legacy_methods=True,
     )
 
-    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(get_ingestor_run_list_request_empty_handler)
+    httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
+        get_ingestor_run_list_request_empty_handler
+    )
     res = eas_client.get_ingestor_run_list()
     httpserver.check_assertions()
     assert res == {"result": "success"}
@@ -1203,19 +1455,23 @@ def test_get_ingestor_run_list_empty_filter_no_verify_success(httpserver: HTTPSe
 
 def get_ingestor_run_list_request_complete_handler(request):
     actual_body = json.loads(request.data.decode())
-    query = " ".join(actual_body['query'].split())
+    query = " ".join(actual_body["query"].split())
 
-    get_ingestor_run_list_query = ("query listIngestorRuns($filter_0: IngestorRunsFilterInput, $sort_0: "
-                                   "IngestorRunsSortCriteriaInput) { listIngestorRuns(filter: $filter_0, sort: "
-                                   "$sort_0) { id containerRuntimeType payload token status startedAt "
-                                   "statusLastUpdatedAt completedAt } }")
-    assert query == " ".join(line.strip() for line in get_ingestor_run_list_query.strip().splitlines())
-    assert actual_body['variables'] == {
+    get_ingestor_run_list_query = (
+        "query listIngestorRuns($filter_0: IngestorRunsFilterInput, $sort_0: "
+        "IngestorRunsSortCriteriaInput) { listIngestorRuns(filter: $filter_0, sort: "
+        "$sort_0) { id containerRuntimeType payload token status startedAt "
+        "statusLastUpdatedAt completedAt } }"
+    )
+    assert query == " ".join(
+        line.strip() for line in get_ingestor_run_list_query.strip().splitlines()
+    )
+    assert actual_body["variables"] == {
         "filter_0": {
-            "id": '4',
+            "id": "4",
             "status": ["SUCCESS", "STARTED", "FAILED_TO_START"],
             "completed": True,
-            "containerRuntimeType": ["TEMPORAL_KUBERNETES", "AZURE_CONTAINER_APP_JOB"]
+            "containerRuntimeType": ["TEMPORAL_KUBERNETES", "AZURE_CONTAINER_APP_JOB"],
         },
         "sort_0": {
             "status": "ASC",
@@ -1223,10 +1479,12 @@ def get_ingestor_run_list_request_complete_handler(request):
             "statusLastUpdatedAt": "ASC",
             "completedAt": "DESC",
             "containerRuntimeType": "ASC",
-        }
+        },
     }
 
-    return Response(json.dumps({"result": "success"}), status=200, content_type="application/json")
+    return Response(
+        json.dumps({"result": "success"}), status=200, content_type="application/json"
+    )
 
 
 def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPServer):
@@ -1238,22 +1496,29 @@ def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPSer
     )
 
     httpserver.expect_oneshot_request("/api/graphql").respond_with_handler(
-        get_ingestor_run_list_request_complete_handler)
+        get_ingestor_run_list_request_complete_handler
+    )
     res = eas_client.get_ingestor_run_list(
         query_filter=IngestorRunsFilterInput(
-            id='4',
-            status=[IngestorRunState.SUCCESS, IngestorRunState.STARTED, IngestorRunState.FAILED_TO_START],
+            id="4",
+            status=[
+                IngestorRunState.SUCCESS,
+                IngestorRunState.STARTED,
+                IngestorRunState.FAILED_TO_START,
+            ],
             completed=True,
-            containerRuntimeType=[IngestorRuntimeKind.TEMPORAL_KUBERNETES,
-                                    IngestorRuntimeKind.AZURE_CONTAINER_APP_JOB]
+            containerRuntimeType=[
+                IngestorRuntimeKind.TEMPORAL_KUBERNETES,
+                IngestorRuntimeKind.AZURE_CONTAINER_APP_JOB,
+            ],
         ),
         query_sort=IngestorRunsSortCriteriaInput(
             status=SortOrder.ASC,
             startedAt=SortOrder.DESC,
             statusLastUpdatedAt=SortOrder.ASC,
             completedAt=SortOrder.DESC,
-            containerRuntimeType=SortOrder.ASC
-        )
+            containerRuntimeType=SortOrder.ASC,
+        ),
     )
     httpserver.check_assertions()
     assert res == {"result": "success"}
@@ -1264,16 +1529,16 @@ def test_work_package_config_to_json_omits_server_defaulted_fields_if_unspecifie
     wp_config = WorkPackageInput(
         feederConfigs=FeederConfigsInput(configs=[]),
         intervention=InterventionConfigInput(
-            baseWorkPackageId="abc",
-            interventionType=InterventionClass.COMMUNITY_BESS
-        )
+            baseWorkPackageId="abc", interventionType=InterventionClass.COMMUNITY_BESS
+        ),
     )
     json_config = wp_config.model_dump_json(by_alias=True, exclude_defaults=True)
 
-    assert json.loads(json_config)['intervention'] == {
+    assert json.loads(json_config)["intervention"] == {
         "baseWorkPackageId": "abc",
         "interventionType": "COMMUNITY_BESS",
     }
+
 
 def test_work_package_config_to_json_includes_server_defaulted_fields_if_specified():
 
@@ -1283,25 +1548,23 @@ def test_work_package_config_to_json_includes_server_defaulted_fields_if_specifi
             baseWorkPackageId="abc",
             yearRange=YearRangeInput(minYear=2020, maxYear=2025),
             interventionType=InterventionClass.COMMUNITY_BESS,
-            allocationLimitPerYear=5
-        )
+            allocationLimitPerYear=5,
+        ),
     )
     json_config = wp_config.model_dump_json(by_alias=True)
 
-    assert json.loads(json_config)['intervention'] == {
+    assert json.loads(json_config)["intervention"] == {
         "baseWorkPackageId": "abc",
-        "yearRange": {
-            "maxYear": 2025,
-            "minYear": 2020
-        },
+        "yearRange": {"maxYear": 2025, "minYear": 2020},
         "interventionType": "COMMUNITY_BESS",
         "candidateGeneration": None,
         "allocationCriteria": None,
         "specificAllocationInstance": None,
         "phaseRebalanceProportions": None,
         "dvms": None,
-        "allocationLimitPerYear": 5
+        "allocationLimitPerYear": 5,
     }
+
 
 def test_work_package_config_to_json_for_tap_optimization():
     wp_config = WorkPackageInput(
@@ -1317,9 +1580,9 @@ def test_work_package_config_to_json_for_tap_optimization():
                 voltageUnderLimitHoursThreshold=1,
                 voltageOverLimitHoursThreshold=2,
                 tapWeightingFactorLowerThreshold=-0.3,
-                tapWeightingFactorUpperThreshold=0.4
-            )
-        )
+                tapWeightingFactorUpperThreshold=0.4,
+            ),
+        ),
     )
     json_config = wp_config.model_dump_json(by_alias=True)
 
@@ -1330,10 +1593,7 @@ def test_work_package_config_to_json_for_tap_optimization():
         "generatorConfig": None,
         "intervention": {
             "baseWorkPackageId": "abc",
-            "yearRange": {
-                "maxYear": 2025,
-                "minYear": 2020
-            },
+            "yearRange": {"maxYear": 2025, "minYear": 2020},
             "interventionType": "DISTRIBUTION_TAP_OPTIMIZATION",
             "candidateGeneration": {
                 "type": "TAP_OPTIMIZATION",
@@ -1348,7 +1608,7 @@ def test_work_package_config_to_json_for_tap_optimization():
             "specificAllocationInstance": None,
             "phaseRebalanceProportions": None,
             "dvms": None,
-            "allocationLimitPerYear": 5
+            "allocationLimitPerYear": 5,
         },
         "qualityAssuranceProcessing": None,
         "resultProcessorConfig": None,

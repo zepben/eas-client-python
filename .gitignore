@@ -72,3 +72,11 @@ docs/yarn-error.log*
 docs/versioned_docs/static/
 
 .tox/
+
+src/zepben/eas/lib/generated_graphql_client/
+
+src/zepben/eas/lib/
+
+.coverage
+
+coverage.xml

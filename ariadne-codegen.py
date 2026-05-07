@@ -23,11 +23,17 @@ class ZBPatchedPluginManager(PluginManager):
         return self._apply_plugins_on_object("generate_custom_method", method_def)
 
 
-class ZBPatchedCustomOperationGenerator(ariadne_codegen.client_generators.custom_operation.CustomOperationGenerator):
+class ZBPatchedCustomOperationGenerator(
+    ariadne_codegen.client_generators.custom_operation.CustomOperationGenerator
+):
     plugin_manager: ZBPatchedPluginManager
 
     def _generate_method(
-        self, operation_name: str, operation_args, final_type, description: Optional[str] = None
+        self,
+        operation_name: str,
+        operation_args,
+        final_type,
+        description: Optional[str] = None,
     ) -> ast.FunctionDef:
         return self.plugin_manager.generate_custom_method(
             super()._generate_method(
@@ -39,15 +45,20 @@ class ZBPatchedCustomOperationGenerator(ariadne_codegen.client_generators.custom
         )
 
     def generate(self) -> ast.Module:
-        return self.plugin_manager.generate_custom_module(
-            super().generate()
-        )
+        return self.plugin_manager.generate_custom_module(super().generate())
 
-ariadne_codegen.client_generators.custom_operation.CustomOperationGenerator = ZBPatchedCustomOperationGenerator
+
+ariadne_codegen.client_generators.custom_operation.CustomOperationGenerator = (
+    ZBPatchedCustomOperationGenerator
+)
 
 
 from ariadne_codegen.client_generators.package import get_package_generator
-from ariadne_codegen.config import get_client_settings, get_config_dict, get_graphql_schema_settings
+from ariadne_codegen.config import (
+    get_client_settings,
+    get_config_dict,
+    get_graphql_schema_settings,
+)
 from ariadne_codegen.graphql_schema_generators.schema import (
     generate_graphql_schema_graphql_file,
     generate_graphql_schema_python_file,
@@ -67,10 +78,16 @@ from ariadne_codegen.settings import Strategy, get_validation_rule
 Plugin.generate_custom_method = lambda self, method: method
 Plugin.generate_custom_module = lambda self, module: module
 
+
 @click.command()
 @click.version_option()
 @click.option("--config", default=None, help="Path to custom configuration file.")
-@click.argument("strategy", default=Strategy.CLIENT.value, type=click.Choice([e.value for e in Strategy]), required=False,)
+@click.argument(
+    "strategy",
+    default=Strategy.CLIENT.value,
+    type=click.Choice([e.value for e in Strategy]),
+    required=False,
+)
 def main(strategy=Strategy.CLIENT.value, config=None):
     config_dict = get_config_dict(config)
     if strategy == Strategy.CLIENT:
@@ -168,5 +185,9 @@ def graphql_schema(config_dict):
 
 
 if __name__ == "__main__":
-    print("TEMPORARY PATCHED VERSION IN USE. check if ariadne-codegen has been released > 0.10.8")
+    import os
+    print(os.getcwd())
+    print(
+        "TEMPORARY PATCHED VERSION IN USE. check if ariadne-codegen has been released > 0.10.8"
+    )
     main()

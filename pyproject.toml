@@ -12,8 +12,8 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "zepben.eas"
-version = "1.0.0b4"
+name = "zepben.test-eas-client-python"
+version = "0.0.0b1"
 description = "Python SDK for interacting with the Evolve App Server"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = "MPL-2.0"
@@ -51,24 +51,27 @@ test = [
     "trustme==0.9.0"
 ]
 codegen = [
-    "ariadne-codegen==0.18.0"
-#    "ariadne-codegen>0.18.0"  # Waiting on https://github.com/mirumee/ariadne-codegen/pull/413 to be included in a release
+    "ariadne-codegen==0.18.0",
+    "click"
 ]
 
 [tool.setuptools.packages.find]
 where = ["src/"]
 
 [tool.ariadne-codegen]
-remote_schema_url = "http://127.0.0.1:7654/api/graphql"  # Set to address of Evolve App Server
+remote_schema_url = "http://evolve-app-server:7654/api/graphql"  # Set to address of Evolve App Server
 enable_custom_operations=true
 include_comments=false
-target_package_path='src/zepben/eas/lib'
-target_package_name='generated_graphql_client'
+target_package_path='src/zepben/eas'
+target_package_name='lib'
 introspection_descriptions=true
 introspection_input_value_deprecations=true
 plugins=[
-    "zepben.eas.lib.ariadne_plugins.custom_query_type_hinter.CustomQueryTypeHinterPlugin",
-    "zepben.eas.lib.ariadne_plugins.missed_import_checker.MissedImportCheckerPlugin",
-    "zepben.eas.lib.ariadne_plugins.gql_all_fields.GqlAllFieldsPlugin",
-    "zepben.eas.lib.ariadne_plugins.license_headers.LicenseHeadersPlugin",
+    "ariadne_plugins.custom_query_type_hinter.CustomQueryTypeHinterPlugin",
+    "ariadne_plugins.missed_import_checker.MissedImportCheckerPlugin",
+    "ariadne_plugins.gql_all_fields.GqlAllFieldsPlugin",
+    "ariadne_plugins.license_headers.LicenseHeadersPlugin",
+]
+files_to_include=[
+    "./ariadne_plugins/types.py"
 ]

@@ -33,8 +33,8 @@ def all_fields(cls) -> "Generator[GraphQLField | MethodType, None, None]":
             yield v().fields(*v().all_fields())
 """).body[0]
 
-class GqlAllFieldsPlugin(Plugin):
 
+class GqlAllFieldsPlugin(Plugin):
     def copy_code(self, copied_code: str) -> str:
         code_as_ast = ast.parse(copied_code)
         for b in code_as_ast.body:
@@ -42,4 +42,3 @@ class GqlAllFieldsPlugin(Plugin):
                 if class_def.name == "GraphQLField":
                     class_def.body.append(gql_field_all_fields_ast)
         return ast.unparse(code_as_ast)
-

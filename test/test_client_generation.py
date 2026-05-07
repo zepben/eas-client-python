@@ -6,10 +6,12 @@
 import ast
 import pytest
 
+
 @pytest.mark.skip("deleteme")
 @pytest.mark.asyncio
 async def test_do_things():
-    from zepben.eas.lib.generated_graphql_client import custom_queries
+    from zepben.eas.lib import custom_queries
+
     with open(custom_queries.__file__) as f:
         orig_ast = ast.parse(
             f.read(),
@@ -24,25 +26,33 @@ async def test_do_things():
             for func in b.body:
                 if isinstance(func, ast.FunctionDef):
                     func.body = [ast.Pass()]
-                    extra_imports.append(func.returns.id.replace("Fields", "GraphQLField"))
-                    func.returns = ast.Name(f'\"GraphQLQuery[{func.returns.id}, {func.returns.id.replace("Fields", "GraphQLField")}]\"')
+                    extra_imports.append(
+                        func.returns.id.replace("Fields", "GraphQLField")
+                    )
+                    func.returns = ast.Name(
+                        f'"GraphQLQuery[{func.returns.id}, {func.returns.id.replace("Fields", "GraphQLField")}]"'
+                    )
 
-    orig_ast.body.insert(n, ast.parse(
-        """
+    orig_ast.body.insert(
+        n,
+        ast.parse(
+            """
 class GraphQLQuery(Generic[TGraphQLQueryField, TGraphQLField]):
 def fields(self, *fields: TGraphQLField):  ...
     """
-    ).body[0])
-    orig_ast.body.insert(n, ast.parse(
-        'TGraphQLField = TypeVar("TGraphQLField")'
-    ).body[0])
-    orig_ast.body.insert(n, ast.parse(
-        'TGraphQLQueryField = TypeVar("TGraphQLQueryField")'
-    ).body[0])
+        ).body[0],
+    )
+    orig_ast.body.insert(
+        n, ast.parse('TGraphQLField = TypeVar("TGraphQLField")').body[0]
+    )
+    orig_ast.body.insert(
+        n, ast.parse('TGraphQLQueryField = TypeVar("TGraphQLQueryField")').body[0]
+    )
 
     orig_ast.body.insert(n, ast.parse("from typing import Generic, TypeVar").body[0])
-    orig_ast.body.insert(n, ast.parse(f"from zepben.eas import {', '.join(extra_imports)}").body[0])
+    orig_ast.body.insert(
+        n, ast.parse(f"from zepben.eas import {', '.join(extra_imports)}").body[0]
+    )
 
-    with open(custom_queries.__file__ + 'i', 'w') as f:
+    with open(custom_queries.__file__ + "i", "w") as f:
         f.write(ast.unparse(orig_ast))
-

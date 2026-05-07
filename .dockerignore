@@ -1,0 +1,5 @@
+.tox
+.git
+.github/workflows
+.venv*
+src/zepben/lib/generated_graphql_client

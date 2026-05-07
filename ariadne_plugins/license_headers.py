@@ -22,8 +22,8 @@ license = f"""#  Copyright {now.year} Zeppelin Bend Pty Ltd
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """
 
-class LicenseHeadersPlugin(Plugin):
 
+class LicenseHeadersPlugin(Plugin):
     def get_file_comment(
         self, comment: str, code: str, source: Optional[str] = None
     ) -> str:
