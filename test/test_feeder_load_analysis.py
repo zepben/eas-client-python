@@ -3,7 +3,10 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-from zepben.eas.lib.generated_graphql_client import FeederLoadAnalysisInput, FlaForecastConfigInput
+from zepben.eas import (
+    FeederLoadAnalysisInput,
+    FlaForecastConfigInput,
+)
 
 
 def test_feeder_load_analysis_constructor():
@@ -25,8 +28,8 @@ def test_feeder_load_analysis_constructor():
             year=2030,
             pv_upgrade_threshold=8000,
             bess_upgrade_threshold=8000,
-            seed=64513
-        )
+            seed=64513,
+        ),
     )
 
     assert feeder_load_analysis_input is not None

@@ -4,7 +4,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-__all__ = ['catch_warnings', 'async_func', 'opt_in']
+__all__ = ["catch_warnings", "async_func", "opt_in"]
 
 import asyncio
 import functools
@@ -16,10 +16,12 @@ def catch_warnings(func: Callable) -> Callable:
     """
     Wrap a function in `warnings.catch_warnings()
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         with warnings.catch_warnings():
             return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -36,15 +38,22 @@ def async_func(func):
             return func(self, *args, **kwargs)
 
         try:
-            return asyncio.get_running_loop().run_until_complete(func(self, *args, **kwargs))
+            return asyncio.get_running_loop().run_until_complete(
+                func(self, *args, **kwargs)
+            )
         except RuntimeError:
             return asyncio.run(func(self, *args, **kwargs))
+
     return wrapper
+
 
 def opt_in(func: Callable) -> Callable:
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         if self._opt_in_legacy:
             return func(self, *args, **kwargs)
-        raise AttributeError(f"'{func.__qualname__}' is a legacy function and must be explicitly opted into.")
+        raise AttributeError(
+            f"'{func.__qualname__}' is a legacy function and must be explicitly opted into."
+        )
+
     return wrapper

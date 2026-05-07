@@ -1,0 +1,38 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "publicAddress": "http://localhost",
+    "useTls": false,
+    "port": 7654,
+    "webRoot": "../evolve-web-app/dist",
+    "webClientHost": "*",
+  "logFile": "logs/logFile.log"
+  },
+  "ewb": {
+    "host": "ewb.local",
+    "port": 9000,
+    "protocol": "HTTPS",
+    "requestMethod": "GET",
+    "verifyCertificate": false
+  },
+  "database": {
+      "url": "jdbc:postgresql://localhost:5432/eas?user=eas&password=password",
+      "driver": "org.postgresql.Driver",
+      "createSchemaOnStart": true
+  },
+  "ui": {
+    "powerFactoryExporterEnabled": true
+  },
+  "jwks": {
+    "issuer": "http://localhost:7654"
+  },
+  "auth": {
+    "audience": "80b6b329-bc8f-4479-943a-9daf755a06a7",
+    "method": "none",
+    "defaultUserId": "guy1",
+    "defaultUsername": "some",
+    "defaultUserEmail": "a@b",
+    "defaultUserRoles": ["MAP_VIEWER", "SUPER_ADMIN", "EWB_ADMIN", "DEVELOPER", "METRICS_VIEWER"]
+  }
+
+}

@@ -1,0 +1,54 @@
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: eas
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: eas
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  evolve-app-server:
+    image: ghcr.io/zepben/evolve-app-server:${EAS_TAG}
+    container_name: evolve-app-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./.github/evolve-app-server:/config
+    environment:
+      EAS_HOST: localhost
+    ports:
+      - "7654:7654"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7654/internal/health/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  codegen:
+    build:
+      context: .
+      no_cache: true
+    container_name: eas-client-generate
+#    command: ["sleep", "10000"]
+    depends_on:
+      evolve-app-server:
+        condition: service_healthy
+    restart: "no"
+    volumes:
+      - ./src/zepben/eas/lib:/app/src/zepben/eas/lib
+
+volumes:
+  postgres_data:

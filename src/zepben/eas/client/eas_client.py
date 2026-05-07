@@ -26,21 +26,35 @@ from graphql import OperationType
 
 from zepben.eas.client.decorators import async_func, catch_warnings, opt_in
 
-try:
-    from zepben.eas.lib.generated_graphql_client import GraphQLClientHttpError, GraphQLClientInvalidResponseError, \
-        GraphQLClientGraphQLMultiError, Client, WorkPackageInput, FeederLoadAnalysisInput, StudyInput, IngestorConfigInput, \
-        IngestorRunsFilterInput, IngestorRunsSortCriteriaInput, HcGeneratorConfigInput, HcModelConfigInput, OpenDssModelInput, \
-        GetOpenDssModelsFilterInput, GetOpenDssModelsSortCriteriaInput
-    from zepben.eas.lib.generated_graphql_client.base_operation import GraphQLField
-    from zepben.eas.lib.generated_graphql_client.custom_fields import FeederLoadAnalysisReportFields, IngestionRunFields, \
-        HcCalibrationFields, GqlTxTapRecordFields, OpenDssModelPageFields, OpenDssModelFields
-    from zepben.eas.lib.generated_graphql_client.custom_mutations import Mutation
-    from zepben.eas.lib.generated_graphql_client.custom_queries import Query
+from zepben.eas.lib import (
+    GraphQLClientHttpError,
+    GraphQLClientInvalidResponseError,
+    GraphQLClientGraphQLMultiError,
+    Client,
+    WorkPackageInput,
+    FeederLoadAnalysisInput,
+    StudyInput,
+    IngestorConfigInput,
+    IngestorRunsFilterInput,
+    IngestorRunsSortCriteriaInput,
+    HcGeneratorConfigInput,
+    HcModelConfigInput,
+    OpenDssModelInput,
+    GetOpenDssModelsFilterInput,
+    GetOpenDssModelsSortCriteriaInput,
+)
+from zepben.eas.lib.custom_typing_fields import GraphQLField
+from zepben.eas.lib.custom_fields import (
+    FeederLoadAnalysisReportFields,
+    IngestionRunFields,
+    HcCalibrationFields,
+    GqlTxTapRecordFields,
+    OpenDssModelPageFields,
+    OpenDssModelFields,
+)
+from zepben.eas.lib.custom_mutations import Mutation
+from zepben.eas.lib.custom_queries import Query
 
-
-except ImportError:
-    warnings.warn("could not import generated graphql client.")
-    Client = object
 
 if TYPE_CHECKING:
     from zepben.eas import GraphQLQuery
@@ -103,7 +117,9 @@ class EasClient(Client):
                 verify = ssl.create_default_context(capath=ca_filename)
 
         http_client = httpx.AsyncClient(
-            headers=dict(authorization=f"Bearer {access_token}") if access_token else None,
+            headers=dict(authorization=f"Bearer {access_token}")
+            if access_token
+            else None,
             verify=verify,
         )
         super().__init__(
@@ -116,21 +132,31 @@ class EasClient(Client):
         await self.http_client.aclose()
 
     @async_func
-    async def query(self, query: GraphQLQuery[T, R], *returned_fields: R, operation_name: str = None) -> T:
+    async def query(
+        self, query: GraphQLQuery[T, R], *returned_fields: R, operation_name: str = None
+    ) -> T:
         """Execute a query against the Evolve App Server."""
         query = query.fields(*returned_fields) if hasattr(query, "fields") else query
         return await super().query(query, operation_name=operation_name)
 
     @async_func
-    async def mutation(self, *fields: GraphQLField, operation_name: str = None) -> dict[str, Any]:
+    async def mutation(
+        self, *fields: GraphQLField, operation_name: str = None
+    ) -> dict[str, Any]:
         """Execute a mutation against the Evolve App Server."""
         return await super().mutation(*fields, operation_name=operation_name)
 
-    async def execute_custom_operation(self, *fields: GraphQLField, operation_type: OperationType, operation_name: str = None) -> dict[str, Any]:
+    async def execute_custom_operation(
+        self,
+        *fields: GraphQLField,
+        operation_type: OperationType,
+        operation_name: str = None,
+    ) -> dict[str, Any]:
         return await super().execute_custom_operation(
             *fields,
             operation_type=operation_type,
-            operation_name=operation_name or str('-'.join(f._field_name for f in fields))
+            operation_name=operation_name
+            or str("-".join(f._field_name for f in fields)),
         )
 
     @async_func
@@ -141,11 +167,11 @@ class EasClient(Client):
         :param run_id: The opendss export run ID
         :return: The HTTP response received from the Evolve App Server after requesting opendss export model download url
         """
-        response = (await self.http_client.get(
+        response = await self.http_client.get(
             f"{self._base_url}/api/opendss-model/{run_id}",
             headers=self.headers,
-            follow_redirects=False
-        ))
+            follow_redirects=False,
+        )
         if response.status_code == HTTPStatus.FOUND:
             return response.headers["Location"]
         elif not response.ok:
@@ -212,7 +238,9 @@ class EasClient(Client):
     @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
     @opt_in
-    def run_hosting_capacity_work_package(self, work_package: WorkPackageInput, work_package_name: str):
+    def run_hosting_capacity_work_package(
+        self, work_package: WorkPackageInput, work_package_name: str
+    ):
         """
         Send request to hosting capacity service to run work package
 
@@ -221,7 +249,9 @@ class EasClient(Client):
         :return: The HTTP response received from the Evolve App Server after attempting to run work package
         """
         return self.mutation(
-            Mutation.run_work_package(work_package, work_package_name=work_package_name),
+            Mutation.run_work_package(
+                work_package, work_package_name=work_package_name
+            ),
         )
 
     @deprecated("Use query()/mutation() methods directly instead.")
@@ -241,7 +271,9 @@ class EasClient(Client):
     @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
     @opt_in
-    def get_hosting_capacity_work_packages_progress(self):  # FIXME: why is this info not returned by get_work_package_by_id ?
+    def get_hosting_capacity_work_packages_progress(
+        self,
+    ):  # FIXME: why is this info not returned by get_work_package_by_id ?
         """
         Retrieve running work packages progress information from hosting capacity service
 
@@ -251,11 +283,12 @@ class EasClient(Client):
             Query.get_active_work_packages(),
         )
 
-
     @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
     @opt_in
-    def run_feeder_load_analysis_report(self, feeder_load_analysis_input: FeederLoadAnalysisInput):
+    def run_feeder_load_analysis_report(
+        self, feeder_load_analysis_input: FeederLoadAnalysisInput
+    ):
         """
         Send request to evolve app server to run a feeder load analysis study
 
@@ -269,7 +302,9 @@ class EasClient(Client):
     @deprecated("Use query()/mutation() methods directly instead.")
     @catch_warnings
     @opt_in
-    def get_feeder_load_analysis_report_status(self, report_id: str, full_spec: bool = False):
+    def get_feeder_load_analysis_report_status(
+        self, report_id: str, full_spec: bool = False
+    ):
         """
         Send request to evolve app server to retrieve a feeder load analysis report status
 
@@ -278,9 +313,9 @@ class EasClient(Client):
         :return: The HTTP response received from the Evolve App Server after requesting a feeder load analysis report status
         """
         return self.query(
-            Query.get_feeder_load_analysis_report_status(report_id, full_spec=full_spec).fields(
-                *FeederLoadAnalysisReportFields.all_fields()
-            ),
+            Query.get_feeder_load_analysis_report_status(
+                report_id, full_spec=full_spec
+            ).fields(*FeederLoadAnalysisReportFields.all_fields()),
         )
 
     @deprecated("Use query()/mutation() methods directly instead.")
@@ -330,9 +365,9 @@ class EasClient(Client):
     @catch_warnings
     @opt_in
     def get_ingestor_run_list(
-            self,
-            query_filter: IngestorRunsFilterInput | None = None,
-            query_sort: IngestorRunsSortCriteriaInput | None = None
+        self,
+        query_filter: IngestorRunsFilterInput | None = None,
+        query_sort: IngestorRunsSortCriteriaInput | None = None,
     ):
         """
         Send request to retrieve a list of ingestor run records matching the provided filter parameters.
@@ -359,12 +394,13 @@ class EasClient(Client):
     @catch_warnings
     @opt_in
     def run_hosting_capacity_calibration(
-            self,
-            calibration_name: str,
-            local_calibration_time: datetime,
-            feeders: list[str] | None = None,
-            transformer_tap_settings: str | None = None,
-            generator_config: HcGeneratorConfigInput | None = None):
+        self,
+        calibration_name: str,
+        local_calibration_time: datetime,
+        feeders: list[str] | None = None,
+        transformer_tap_settings: str | None = None,
+        generator_config: HcGeneratorConfigInput | None = None,
+    ):
         """
         Send request to run hosting capacity calibration
 
@@ -385,7 +421,9 @@ class EasClient(Client):
             if generator_config.model is None:
                 generator_config.model = HcModelConfigInput()
             if generator_config.model:
-                generator_config.model.transformer_tap_settings = transformer_tap_settings
+                generator_config.model.transformer_tap_settings = (
+                    transformer_tap_settings
+                )
 
         return self.mutation(
             Mutation.run_calibration(
@@ -438,10 +476,10 @@ class EasClient(Client):
     @catch_warnings
     @opt_in
     def get_transformer_tap_settings(
-            self,
-            calibration_name: str,
-            feeder: str | None = None,
-            transformer_mrid: str | None = None
+        self,
+        calibration_name: str,
+        feeder: str | None = None,
+        transformer_mrid: str | None = None,
     ):
         """
         Retrieve distribution transformer tap settings from a calibration set in the hosting capacity input database
@@ -455,7 +493,7 @@ class EasClient(Client):
             Query.get_transformer_tap_settings(
                 calibration_name=calibration_name,
                 feeder=feeder,
-                transformer_mrid=transformer_mrid
+                transformer_mrid=transformer_mrid,
             ).fields(
                 GqlTxTapRecordFields.id,
                 GqlTxTapRecordFields.high_step,
@@ -489,7 +527,8 @@ class EasClient(Client):
         limit: int | None = None,
         offset: int | None = None,
         query_filter: GetOpenDssModelsFilterInput | None = None,
-        query_sort: GetOpenDssModelsSortCriteriaInput | None = None):
+        query_sort: GetOpenDssModelsSortCriteriaInput | None = None,
+    ):
         """
         Retrieve a paginated opendss export run information
 
@@ -501,10 +540,7 @@ class EasClient(Client):
         """
         return self.query(
             Query.paged_open_dss_models(
-                limit=limit,
-                offset=offset,
-                filter_=query_filter,
-                sort=query_sort
+                limit=limit, offset=offset, filter_=query_filter, sort=query_sort
             ),
             OpenDssModelPageFields.total_count,
             OpenDssModelPageFields.offset,
@@ -516,7 +552,7 @@ class EasClient(Client):
                 OpenDssModelFields.download_url,
                 OpenDssModelFields.is_public,
                 OpenDssModelFields.errors,
-                OpenDssModelFields.generation_spec
+                OpenDssModelFields.generation_spec,
             ),
         )
 

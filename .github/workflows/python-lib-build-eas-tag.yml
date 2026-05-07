@@ -1,0 +1,21 @@
+name: Python Lib Build (Tagged Evolve App Server)
+
+on:
+  workflow_dispatch:
+    inputs:
+      eas-tag:
+        description: 'evolve-app-server version tag (e.g. 2.13.0) to generate client for.'
+        required: true
+        type: string
+
+jobs:
+  run:
+    uses: zepben/.github/.github/workflows/python-build.yml@main
+    if: ${{ inputs.eas-tag }} != ''
+    with:
+      docker-compose-env: '{"EAS_TAG": "${{ inputs.eas-tag }}"}'
+      override-version: "${{ inputs.eas-tag }}"
+      python-versions-to-test: "['3.10', '3.11', '3.12']"
+      docker-container: codegen
+    secrets: inherit
+

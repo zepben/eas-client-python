@@ -7,7 +7,8 @@ the Evolve App Server and upload studies.
 
 ```python
 from geojson import FeatureCollection
-from zepben.eas import EasClient, StudyInput, StudyResultInput, GeoJsonOverlayInput, ResultSectionInput, SectionType, Mutation
+from src.zepben.eas import EasClient, StudyInput, StudyResultInput, GeoJsonOverlayInput, ResultSectionInput,
+    SectionType, Mutation
 
 eas_client = EasClient(
     host="<host>",
@@ -40,8 +41,10 @@ eas_client.mutation(
                                     {"key": "<column 2 key>", "name": "<column 2 name>"},
                                 ],
                                 data=[
-                                    {"<column 1 key>": "<column 1 row 1 value>", "<column 2 key>": "<column 2 row 1 value>"},
-                                    {"<column 1 key>": "<column 1 row 2 value>", "<column 2 key>": "<column 2 row 2 value>"}
+                                    {"<column 1 key>": "<column 1 row 1 value>",
+                                     "<column 2 key>": "<column 2 row 1 value>"},
+                                    {"<column 1 key>": "<column 1 row 2 value>",
+                                     "<column 2 key>": "<column 2 row 2 value>"}
                                 ]
                             )
                         ]
@@ -67,7 +70,8 @@ The EasClient can operate in async mode if specified, like so:
 ```python
 from aiohttp import ClientSession
 from geojson import FeatureCollection
-from zepben.eas import EasClient, StudyInput, StudyResultInput, GeoJsonOverlayInput, ResultSectionInput, SectionType, Mutation
+from src.zepben.eas import EasClient, StudyInput, StudyResultInput, GeoJsonOverlayInput, ResultSectionInput,
+    SectionType, Mutation
 
 
 async def upload():
@@ -102,8 +106,10 @@ async def upload():
                                         {"key": "<column 2 key>", "name": "<column 2 name>"},
                                     ],
                                     data=[
-                                        {"<column 1 key>": "<column 1 row 1 value>", "<column 2 key>": "<column 2 row 1 value>"},
-                                        {"<column 1 key>": "<column 1 row 2 value>", "<column 2 key>": "<column 2 row 2 value>"}
+                                        {"<column 1 key>": "<column 1 row 1 value>",
+                                         "<column 2 key>": "<column 2 row 1 value>"},
+                                        {"<column 1 key>": "<column 1 row 2 value>",
+                                         "<column 2 key>": "<column 2 row 2 value>"}
                                     ]
                                 )
                             ]
@@ -133,7 +139,7 @@ The new EasClient is fully type hinted and self documenting.
 For example.
 
 ```python
-from zepben.eas import EasClient, WorkPackageInput, HcExecutorConfigInput, FeederConfigsInput, FeederConfigInput
+from src.zepben.eas import EasClient, WorkPackageInput, HcExecutorConfigInput, FeederConfigsInput, FeederConfigInput
 
 client = EasClient(host='host', port=1234)
 client.get_work_package_cost_estimation(
@@ -158,7 +164,7 @@ Hovering over any kwarg or looking at any class definition will show all possibl
 Legacy convenience methods can be enabled by passing `enable_legacy_methods` to `__init__` of `EasClient`. eg:
 
 ```python
-from zepben.eas import EasClient
+from src.zepben.eas import EasClient
 
 client = EasClient(enable_legacy_methods=True)
 ```
@@ -167,14 +173,16 @@ This will enable all `deprecated` and `opt_in` methods on the class, they are di
 
 # Development #
 
-To regenerate the graphql client you will need to install `zepben.eas` with `eas-codegen` optional dependencies:
+To regenerate the graphql client, run the following command
 
 ```shell
-pip install -e ".[eas-codegen]"
+docker compose run codegen
 ```
 
-With these installed and EAS running locally on port 7654, you can then generate the client:
+If you have done any of the following, you will need to regenerate the docker image if testing locally.
+- Made changes to anything that affects the python package
+- Changed anything under `ariadne_plugins`
 
 ```shell
-python ariadne-codegen.py
+docker build .
 ```
