@@ -6,7 +6,7 @@ on:
 
 jobs:
   run:
-    uses: zepben/.github/.github/workflows/python-build.yml@eas-client-test
+    uses: zepben/.github/.github/workflows/python-build.yml@main
     with:
       python-versions-to-test: "['3.10', '3.11', '3.12']"
       docker-container: codegen
