@@ -1,0 +1,17 @@
+name: Python Library Release
+
+on:
+  repository_dispatch:
+    types:
+      [evolve-app-server-build]
+
+jobs:
+  run:
+    uses: zepben/.github/.github/workflows/python-lib-release.yml@eas-client-test
+    with:
+      private: false
+      python-version: "3.10"
+      docker-container: codegen
+      docker-compose-env: '{"EAS_TAG": "${{ github.event.client_payload.eas-tag }}"}'
+      package-release-version: "${{ github.event.client_payload.eas-tag }}"
+    secrets: inherit

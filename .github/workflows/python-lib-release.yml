@@ -1,0 +1,26 @@
+name: Python Library Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      eas-tag:
+        description: 'evolve-app-server version tag (e.g. 2.13.0) to generate client for.'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      eas-tag:
+        description: 'evolve-app-server version tag (e.g. 2.13.0) to generate client for.'
+        required: true
+        type: string
+
+jobs:
+  run:
+    uses: zepben/.github/.github/workflows/python-lib-release.yml@eas-client-test
+    with:
+      private: false
+      python-version: "3.10"
+      docker-container: codegen
+      docker-compose-env: '{"EAS_TAG": "${{ inputs.eas-tag }}"}'
+      package-release-version: "${{ inputs.eas-tag }}"
+    secrets: inherit

@@ -1,0 +1,13 @@
+name: Python Lib Build (Latest Evolve App Server)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  run:
+    uses: zepben/.github/.github/workflows/python-build.yml@eas-client-test
+    with:
+      python-versions-to-test: "['3.10', '3.11', '3.12']"
+      docker-container: codegen
+    secrets: inherit
