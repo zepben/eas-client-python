@@ -44,6 +44,10 @@ class CandidateGenerationConfigInput(BaseModel):
         alias="interventionCriteriaName", default=None
     )
     "The ID of the set of criteria used to select intervention candidates from enhanced metrics of the base work package run. Only used when `type` is `CRITERIA`."
+    sizing_lookahead_years: Optional[int] = Field(
+        alias="sizingLookaheadYears", default=0
+    )
+    "The number of years to look ahead from the first constraint violation when determining the size of each community BESS candidate. `None` means all years from the first constraint violation are considered. Only used when `type` is CRITERIA and `intervention_class` is COMMUNITY_BESS."
     tap_weighting_factor_lower_threshold: Optional[float] = Field(
         alias="tapWeightingFactorLowerThreshold", default=None
     )
