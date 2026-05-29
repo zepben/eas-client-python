@@ -21,6 +21,7 @@
   * get_paged_opendss_models
   * get_opendss_model
 * Most Input object will need to be migrated over to the new data model
+* For `InterventionConfigInput`, replaced `specificAllocationInstance` with `allocationInstanceSelection`, allowing multiple allocation instances to be selected.
 
 ### New Features
 * None.
@@ -28,6 +29,7 @@
 ### Enhancements
 * EasClient has new `query` and `mutation` methods that will accept `Query` and `Mutation` objects respectively.
   * Available queries and mutations can be found as `@classmethods` on `Queries` and `Mutations`.
+* Added `sizingLookaheadYears` to `CandidateGenerationConfigInput` for configuring community BESS candidate sizing lookahead.
 
 ### Fixes
 * Patched ariadne-codegen while waiting for release of dependent code.

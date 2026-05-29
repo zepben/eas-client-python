@@ -1293,11 +1293,40 @@ def test_work_package_config_to_json_includes_server_defaulted_fields_if_specifi
         "interventionType": "COMMUNITY_BESS",
         "candidateGeneration": None,
         "allocationCriteria": None,
-        "specificAllocationInstance": None,
+        "allocationInstanceSelection": None,
         "phaseRebalanceProportions": None,
         "dvms": None,
         "allocationLimitPerYear": 5
     }
+
+
+def test_work_package_config_to_json_includes_allocation_instance_selection_if_specified():
+    wp_config = WorkPackageInput(
+        feederConfigs=FeederConfigsInput(configs=[]),
+        intervention=InterventionConfigInput(
+            baseWorkPackageId="abc",
+            interventionType=InterventionClass.COMMUNITY_BESS,
+            allocationInstanceSelection=["bess-small", "bess-large"],
+            candidateGeneration=CandidateGenerationConfigInput(
+                type=CandidateGenerationType.CRITERIA,
+                interventionCriteriaName="community-bess-candidates",
+                sizingLookaheadYears=None
+            )
+        )
+    )
+    json_config = wp_config.model_dump_json(by_alias=True, exclude_defaults=True)
+
+    assert json.loads(json_config)['intervention'] == {
+        "baseWorkPackageId": "abc",
+        "interventionType": "COMMUNITY_BESS",
+        "candidateGeneration": {
+            "type": "CRITERIA",
+            "interventionCriteriaName": "community-bess-candidates",
+            "sizingLookaheadYears": None
+        },
+        "allocationInstanceSelection": ["bess-small", "bess-large"],
+    }
+
 
 def test_work_package_config_to_json_for_tap_optimization():
     wp_config = WorkPackageInput(
@@ -1334,6 +1363,7 @@ def test_work_package_config_to_json_for_tap_optimization():
             "candidateGeneration": {
                 "type": "TAP_OPTIMIZATION",
                 "interventionCriteriaName": None,
+                "sizingLookaheadYears": 0,
                 "averageVoltageSpreadThreshold": 40,
                 "voltageUnderLimitHoursThreshold": 1,
                 "voltageOverLimitHoursThreshold": 2,
@@ -1341,7 +1371,7 @@ def test_work_package_config_to_json_for_tap_optimization():
                 "tapWeightingFactorUpperThreshold": 0.4,
             },
             "allocationCriteria": None,
-            "specificAllocationInstance": None,
+            "allocationInstanceSelection": None,
             "phaseRebalanceProportions": None,
             "dvms": None,
             "allocationLimitPerYear": 5
