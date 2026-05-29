@@ -657,10 +657,10 @@ class InterventionConfigInput(BaseModel):
         alias="phaseRebalanceProportions", default=None
     )
     "The proportions to use for phase rebalancing. If this is unspecified and interventionType = PHASE_REBALANCING, phases will be rebalanced to equal proportions."
-    specific_allocation_instance: Optional[str] = Field(
-        alias="specificAllocationInstance", default=None
+    allocation_instance_selection: Optional[list[str]] = Field(
+        alias="allocationInstanceSelection", default=None
     )
-    "The specific instance of intervention to use for every allocation. If this is unspecified, all instances of the intervention class will be considered when choosing one for each candidate."
+    "The names of the instances of allocation to consider for this intervention. If unspecified, all valid instances of the specified intervention_type will be considered."
     year_range: Optional["YearRangeInput"] = Field(alias="yearRange", default=None)
     "The range of years to search for and apply interventions. All years within this range should be included in the work package. Defaults to 1AD to 9999AD."
 
