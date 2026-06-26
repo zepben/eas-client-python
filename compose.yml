@@ -37,7 +37,7 @@ services:
       timeout: 5s
       retries: 5
 
-  codegen:
+  codegen: # stands up and runs ./Dockerfile - this does the code gen.
     build:
       context: .
       no_cache: true
