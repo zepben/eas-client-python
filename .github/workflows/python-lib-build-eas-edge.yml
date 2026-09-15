@@ -7,6 +7,6 @@ jobs:
   run:
     uses: zepben/.github/.github/workflows/python-build.yml@main
     with:
-      python-versions-to-test: "['3.10', '3.11', '3.12']"
+      python-versions-to-test: "['3.11', '3.12', '3.13', '3.14']"
       docker-container: codegen
     secrets: inherit
