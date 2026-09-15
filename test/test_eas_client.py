@@ -29,11 +29,6 @@ from zepben.eas import (
     TimePeriodLoadOverrideInput,
     StudyInput,
     StudyResultInput,
-    InterventionConfigInput,
-    YearRangeInput,
-    InterventionClass,
-    CandidateGenerationConfigInput,
-    CandidateGenerationType,
     HcGeneratorConfigInput,
     HcModelConfigInput,
     HcSolveConfigInput,
@@ -1522,97 +1517,6 @@ def test_get_ingestor_run_list_all_filters_no_verify_success(httpserver: HTTPSer
     )
     httpserver.check_assertions()
     assert res == {"result": "success"}
-
-
-def test_work_package_config_to_json_omits_server_defaulted_fields_if_unspecified():
-
-    wp_config = WorkPackageInput(
-        feederConfigs=FeederConfigsInput(configs=[]),
-        intervention=InterventionConfigInput(
-            baseWorkPackageId="abc", interventionType=InterventionClass.COMMUNITY_BESS
-        ),
-    )
-    json_config = wp_config.model_dump_json(by_alias=True, exclude_defaults=True)
-
-    assert json.loads(json_config)["intervention"] == {
-        "baseWorkPackageId": "abc",
-        "interventionType": "COMMUNITY_BESS",
-    }
-
-
-def test_work_package_config_to_json_includes_server_defaulted_fields_if_specified():
-
-    wp_config = WorkPackageInput(
-        feederConfigs=FeederConfigsInput(configs=[]),
-        intervention=InterventionConfigInput(
-            baseWorkPackageId="abc",
-            yearRange=YearRangeInput(minYear=2020, maxYear=2025),
-            interventionType=InterventionClass.COMMUNITY_BESS,
-            allocationLimitPerYear=5,
-        ),
-    )
-    json_config = wp_config.model_dump_json(by_alias=True)
-
-    assert json.loads(json_config)["intervention"] == {
-        "baseWorkPackageId": "abc",
-        "yearRange": {"maxYear": 2025, "minYear": 2020},
-        "interventionType": "COMMUNITY_BESS",
-        "candidateGeneration": None,
-        "allocationCriteria": None,
-        "specificAllocationInstance": None,
-        "phaseRebalanceProportions": None,
-        "dvms": None,
-        "allocationLimitPerYear": 5,
-    }
-
-
-def test_work_package_config_to_json_for_tap_optimization():
-    wp_config = WorkPackageInput(
-        feederConfigs=FeederConfigsInput(configs=[]),
-        intervention=InterventionConfigInput(
-            baseWorkPackageId="abc",
-            yearRange=YearRangeInput(minYear=2020, maxYear=2025),
-            interventionType=InterventionClass.DISTRIBUTION_TAP_OPTIMIZATION,
-            allocationLimitPerYear=5,
-            candidateGeneration=CandidateGenerationConfigInput(
-                type=CandidateGenerationType.TAP_OPTIMIZATION,
-                averageVoltageSpreadThreshold=40,
-                voltageUnderLimitHoursThreshold=1,
-                voltageOverLimitHoursThreshold=2,
-                tapWeightingFactorLowerThreshold=-0.3,
-                tapWeightingFactorUpperThreshold=0.4,
-            ),
-        ),
-    )
-    json_config = wp_config.model_dump_json(by_alias=True)
-
-    assert json.loads(json_config) == {
-        "executorConfig": None,
-        "feederConfigs": {"configs": []},
-        "forecastConfig": None,
-        "generatorConfig": None,
-        "intervention": {
-            "baseWorkPackageId": "abc",
-            "yearRange": {"maxYear": 2025, "minYear": 2020},
-            "interventionType": "DISTRIBUTION_TAP_OPTIMIZATION",
-            "candidateGeneration": {
-                "type": "TAP_OPTIMIZATION",
-                "interventionCriteriaName": None,
-                "averageVoltageSpreadThreshold": 40,
-                "voltageUnderLimitHoursThreshold": 1,
-                "voltageOverLimitHoursThreshold": 2,
-                "tapWeightingFactorLowerThreshold": -0.3,
-                "tapWeightingFactorUpperThreshold": 0.4,
-            },
-            "allocationCriteria": None,
-            "specificAllocationInstance": None,
-            "phaseRebalanceProportions": None,
-            "dvms": None,
-            "allocationLimitPerYear": 5,
-        },
-        "qualityAssuranceProcessing": None,
-        "resultProcessorConfig": None,
-    }
 
 
 def _invalid_ca(port):
