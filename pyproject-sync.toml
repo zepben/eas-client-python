@@ -1,0 +1,16 @@
+[tool.ariadne-codegen]
+remote_schema_url = "http://evolve-app-server:7654/api/graphql"
+enable_custom_operations = true
+include_comments = false
+target_package_path = "src/zepben/eas/lib"
+target_package_name = "sync"
+async_client = false
+introspection_descriptions = true
+introspection_input_value_deprecations = true
+plugins = [
+    "ariadne_plugins.custom_query_type_hinter.CustomQueryTypeHinterPlugin",
+    "ariadne_plugins.missed_import_checker.MissedImportCheckerPlugin",
+    "ariadne_plugins.gql_all_fields.GqlAllFieldsPlugin",
+    "ariadne_plugins.license_headers.LicenseHeadersPlugin",
+]
+files_to_include = ["./assets/types.py"]

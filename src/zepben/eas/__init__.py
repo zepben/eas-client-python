@@ -7,8 +7,8 @@
 
 from zepben.eas.client.eas_client import *
 
-from zepben.eas.lib import *
-from zepben.eas.lib.custom_mutations import *
-from zepben.eas.lib.custom_queries import *
-from zepben.eas.lib.custom_fields import *
-from zepben.eas.lib.enums import *
+from zepben.eas.lib.sync import *
+from zepben.eas.lib.sync.custom_mutations import *
+from zepben.eas.lib.sync.custom_queries import *
+from zepben.eas.lib.sync.custom_fields import *
+from zepben.eas.lib.sync.enums import *
