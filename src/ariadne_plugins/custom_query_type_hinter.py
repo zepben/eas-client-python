@@ -30,9 +30,9 @@ class CustomQueryTypeHinterPlugin(Plugin):
                                     level=0,
                                 ),
                                 ast.ImportFrom(
-                                    "zepben.eas.lib.types",
+                                    "types",
                                     [ast.alias("GraphQLQuery")],
-                                    level=0,
+                                    level=1,
                                 ),
                             ]
                         )
