@@ -23,23 +23,19 @@ class MockResponse:
 
 
 def test_patched_client_used_in_eas_client():
-
     client = EasClient(host="test_host", port=9876)
     assert isinstance(client, EasClient)
+    client.close()
 
 
 def test_patched_client_overrides_get_data_to_return_the_whole_json_response():
-
     client = EasClient(host="test_host", port=9876)
     assert client.get_data(MockResponse()) == {"json": "probably"}
+    client.close()
 
 
 def test_all_fields():
-    _all_fields = FeederLoadAnalysisReportFields.all_fields()
-    assert FeederLoadAnalysisReportFields.completed_at in _all_fields
+    all_fields = list(FeederLoadAnalysisReportFields.all_fields())
 
-    for f in _all_fields:
-        if isinstance(f, FeederLoadAnalysisSpecFields):
-            break
-    else:
-        assert False
+    assert "completedAt" in [field._field_name for field in all_fields]
+    assert any(isinstance(field, FeederLoadAnalysisSpecFields) for field in all_fields)
