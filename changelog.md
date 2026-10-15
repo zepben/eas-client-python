@@ -1,5 +1,41 @@
 # EAS Python client
-## [0.30.0] - UNRELEASED
+## [1.0.0.b4] - [UNRELEASED]
+### Breaking Changes
+* Deprecated methods removed
+  * aclose
+  * get_work_package_cost_estimation
+  * run_hosting_capacity_work_package
+  * cancel_hosting_capacity_work_package
+  * get_hosting_capacity_work_packages_progress
+  * run_feeder_load_analysis_report
+  * get_feeder_load_analysis_report_status
+  * upload_study
+  * run_ingestor
+  * get_ingestor_run
+  * get_ingestor_run_list
+  * run_hosting_capacity_calibration
+  * get_hosting_capacity_calibration_run
+  * get_hosting_capacity_calibration_sets
+  * get_transformer_tap_settings
+  * run_opendss_export
+  * get_paged_opendss_models
+  * get_opendss_model
+
+### New Features
+* None.
+
+### Enhancements
+* None.
+
+### Fixes
+* Internal async/sync internals have been rewritten,
+  * will no longer attempt to auto await commands.
+  * async/sync functions are auto swapped into the client.
+
+### Notes
+* None.
+
+## [1.0.0b1] - 2026-04-14
 ### Breaking Changes
 * Deprecated methods in EasClient:
   * aclose
